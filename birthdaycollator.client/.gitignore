@@ -1,6 +1,6 @@
-# -------------------------
+# =========================
 # Visual Studio / .NET
-# -------------------------
+# =========================
 .vs/
 *.user
 *.suo
@@ -14,9 +14,9 @@ obj/
 **/Release/
 **/Debug/
 
-# -------------------------
+# =========================
 # React / Vite / Node
-# -------------------------
+# =========================
 node_modules/
 dist/
 dist-ssr/
@@ -26,9 +26,9 @@ ClientApp/node_modules/
 ClientApp/.vite/
 ClientApp/.turbo/
 
-# -------------------------
+# =========================
 # Logs
-# -------------------------
+# =========================
 logs/
 *.log
 npm-debug.log*
@@ -37,9 +37,9 @@ yarn-error.log*
 pnpm-debug.log*
 lerna-debug.log*
 
-# -------------------------
-# Editor directories and files
-# -------------------------
+# =========================
+# Editor directories/files
+# =========================
 .vscode/*
 !.vscode/extensions.json
 .idea/
@@ -48,14 +48,14 @@ lerna-debug.log*
 *.njsproj
 *.sw?
 
-# -------------------------
-# DO NOT ignore solution files
-# -------------------------
+# =========================
+# Solution files to keep
+# =========================
 # (You WANT your .sln in Git)
-# *.sln   <-- REMOVE THIS LINE
+# *.sln
 
-# -------------------------
+# =========================
 # Secrets (never commit)
-# -------------------------
+# =========================
 appsettings.Development.json
 .env
