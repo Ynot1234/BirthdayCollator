@@ -1,0 +1,235 @@
+/* ---------------------------------------------------------
+   Page Layout
+--------------------------------------------------------- */
+.page {
+    display: flex;
+    flex-direction: column;
+    align-items: center; /* center the card horizontally */
+    justify-content: flex-start;
+    width: 100%; /* REQUIRED for centering */
+    min-height: 100vh;
+    padding: 20px;
+    background: #fafafa;
+}
+
+
+/* Wider, centered card */
+.card {
+    width: 1200px; /* expanded from 600px */
+    background: white;
+    padding: 32px; /* more breathing room */
+    border-radius: 18px;
+    box-shadow: 0 4px 18px rgba(0,0,0,0.08);
+    margin: 0 auto; /* ensures centering */
+}
+
+/* ---------------------------------------------------------
+   Title
+--------------------------------------------------------- */
+.title {
+    font-size: 36px;
+    font-weight: 800;
+    background: linear-gradient(90deg, #ff6b6b, #f06595, #845ef7);
+    background-clip: text;
+    -webkit-background-clip: text;
+    color: transparent;
+    display: block; /* ensures the title creates its own box */
+    padding: 8px 0; /* gives the descender room above/below */
+    margin-bottom: 28px; /* spacing before the toolbar */
+    text-align: center;
+    line-height: 1.25; /* slightly taller line box for descenders */
+}
+
+
+
+/* ---------------------------------------------------------
+   Backend Offline Banner
+--------------------------------------------------------- */
+.offlineBox {
+    padding: 16px;
+    background: #ffe3e3;
+    border: 1px solid #ffa8a8;
+    border-radius: 12px;
+    color: #c92a2a;
+    font-weight: 600;
+    margin-bottom: 20px;
+    text-align: center;
+}
+
+.loadingText {
+    font-size: 16px;
+    opacity: 0.7;
+}
+
+/* ---------------------------------------------------------
+   Toolbar
+--------------------------------------------------------- */
+.toolbar {
+    display: flex;
+    justify-content: center; /* center the whole row */
+    align-items: center;
+    gap: 20px; /* spacing between groups */
+    width: 100%;
+    margin-top: 16px; /* THIS fixes the clipped 'y' */
+}
+
+
+
+.toolbarGroup {
+    display: flex;
+    gap: 10px;
+}
+
+.toolbarButton {
+    background: #f1f3f5;
+    border: none;
+    padding: 10px 16px;
+    border-radius: 10px;
+    cursor: pointer;
+    font-weight: 600;
+    transition: transform 0.15s, background 0.15s;
+}
+
+    .toolbarButton:hover {
+        transform: scale(1.05);
+        background: #e9ecef;
+    }
+
+.runButton {
+    background: #845ef7;
+    color: white;
+}
+
+    .runButton:hover {
+        background: #7048e8;
+    }
+
+/* ---------------------------------------------------------
+   Date Selectors
+--------------------------------------------------------- */
+.dateSelectors {
+    display: flex;
+    gap: 16px;
+    margin-bottom: 24px;
+    justify-content: center; /* center the selectors */
+}
+
+select {
+    padding: 10px 14px;
+    border-radius: 8px;
+    border: 1px solid #ced4da;
+    font-size: 15px;
+}
+
+/* ---------------------------------------------------------
+   Results
+--------------------------------------------------------- */
+.resultsHeader {
+    font-weight: 700;
+    margin-bottom: 16px;
+    text-align: center; /* centered header */
+}
+
+.list {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+}
+
+/* Wider, cleaner birthday items */
+.item {
+    background: #fff;
+    padding: 20px;
+    border-radius: 14px;
+    margin-bottom: 14px;
+    box-shadow: 0 2px 6px rgba(0,0,0,0.06);
+    transition: transform 0.15s;
+}
+
+    .item:hover {
+        transform: translateY(-2px);
+    }
+
+.inlineRow {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+}
+
+/* ---------------------------------------------------------
+   Age Badge
+--------------------------------------------------------- */
+.ageBadge {
+    background: #ff922b;
+    color: white;
+    padding: 6px 14px;
+    border-radius: 20px;
+    font-weight: 700;
+    font-size: 0.95rem;
+}
+
+/* ---------------------------------------------------------
+   Name Link
+--------------------------------------------------------- */
+.nameLink {
+    font-weight: 700;
+    color: #364fc7;
+    text-decoration: none;
+    font-size: 1.1rem;
+}
+
+    .nameLink:hover {
+        text-decoration: underline;
+    }
+
+/* ---------------------------------------------------------
+   Summary
+--------------------------------------------------------- */
+.summaryRow {
+    margin-top: 12px;
+}
+
+.summaryChip {
+    background: #d0bfff;
+    color: #5f3dc4;
+    border: none;
+    padding: 8px 16px;
+    border-radius: 20px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: transform 0.15s, background 0.15s;
+}
+
+    .summaryChip:hover {
+        transform: scale(1.05);
+        background: #c0a7ff;
+    }
+
+.summaryBox {
+    margin-top: 12px;
+    padding: 14px;
+    background: #f8f0fc;
+    border-left: 4px solid #da77f2;
+    border-radius: 8px;
+}
+
+/* ---------------------------------------------------------
+   Override Pill
+--------------------------------------------------------- */
+.overridePill {
+    margin-left: 8px;
+    background: #ffd43b;
+    color: #7f5f00;
+    padding: 4px 12px;
+    border-radius: 12px;
+    font-weight: 700;
+    font-size: 0.85rem;
+    align-self: center;
+    white-space: nowrap;
+}
+.milestone {
+    border: 2px solid #e63946;
+    border-radius: 12px;
+    padding: 12px;
+    background: #fff5f5;
+}

@@ -1,0 +1,4 @@
+Summarize the following text in 3–5 sentences.
+Keep the summary factual, concise, and neutral.
+
+{{$input}}

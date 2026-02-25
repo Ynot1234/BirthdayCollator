@@ -1,0 +1,6 @@
+@BirthdayCollator.Server_HostAddress = http://localhost:5262
+
+GET {{BirthdayCollator.Server_HostAddress}}/weatherforecast/
+Accept: application/json
+
+###
