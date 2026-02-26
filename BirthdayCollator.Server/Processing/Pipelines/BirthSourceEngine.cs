@@ -41,9 +41,7 @@ public sealed class BirthSourceEngine(
             htmlExtractor,
             dateParser,
             entrySplitter,
-            linkResolver,
-            nameResolver
-        );
+            linkResolver);
 
         List<Task<List<Person>>> tasks = [];
 
