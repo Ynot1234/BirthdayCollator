@@ -67,14 +67,5 @@ public class BirthdaysController(BirthdayFetcher fetcher) : ControllerBase
 
         return BadRequest("Invalid year");
     }
-
-    [ApiController]
-    [Route("api/health")]
-    public class HealthController : ControllerBase
-    {
-        [HttpGet]
-        public IActionResult Get() => Ok(new { status = "ok" });
-    }
-
 }
 

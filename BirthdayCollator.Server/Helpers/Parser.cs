@@ -34,12 +34,6 @@ namespace BirthdayCollator.Helpers
             foreach (HtmlNode li in liNodes)
             {
 
-              if(li.InnerText.Contains("Reinsdorf"))
-                {
-                    int r = 4;
-
-                }
-
                 string raw = HtmlEntity.DeEntitize(li.InnerText).Trim();
 
                 bool isMulti = IsMultiPersonEntry(raw);

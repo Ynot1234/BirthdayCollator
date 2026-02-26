@@ -91,10 +91,10 @@ export default function BirthdaysPage() {
         const base = import.meta.env.VITE_API_BASE_URL;
 
         try {
-            const res = await fetch(`${base}/api/health`);
+            const res = await fetch(`${base}/health`);
             return res.ok;
         } catch {
-            return false;
+            return false;   
         }
     }
 

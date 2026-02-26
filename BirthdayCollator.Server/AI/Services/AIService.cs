@@ -1,8 +1,7 @@
 ﻿using Microsoft.SemanticKernel;
 using Microsoft.SemanticKernel.ChatCompletion;
-using System.Threading.Tasks;
 
-namespace BirthdayCollator.AI.Services;
+namespace BirthdayCollator.Server.AI.Services;
 
 public interface IAIService
 {

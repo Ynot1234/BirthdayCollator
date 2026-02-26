@@ -1,4 +1,4 @@
-﻿using BirthdayCollator.AI.Services;
+﻿using BirthdayCollator.Server.AI.Services;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Configuration;
 using System.Threading.Tasks;
