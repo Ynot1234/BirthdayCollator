@@ -1,5 +1,5 @@
-﻿using BirthdayCollator.Resources;
-using BirthdayCollator.Server.Models;
+﻿using BirthdayCollator.Server.Models;
+using BirthdayCollator.Server.Resources;
 
 namespace BirthdayCollator.Server.Processing.Sources
 {

@@ -38,22 +38,19 @@ public partial class PersonFilter(IHttpClientFactory factory)
         }
         catch
         {
-            return false; // assume alive if page can't load
+            return false; 
         }
 
         string? paren = ExtractParen(html);
 
         if (paren == null)
-            return false; // no info → assume alive
+            return false; 
 
-        // Rule 1: If dash exists → dead
         if (paren.Contains('–'))
             return true;
 
-        // Rule 2: No dash → must match birthdate to be alive
         bool matches = FirstParenDateMatches(paren, birthdate);
 
-        // If it doesn't match → treat as dead/unreliable
         return !matches;
     }
 

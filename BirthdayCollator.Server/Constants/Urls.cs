@@ -1,4 +1,4 @@
-﻿namespace BirthdayCollator.Constants;
+﻿namespace BirthdayCollator.Server.Constants;
 
 public static class Urls
 {

@@ -11,8 +11,6 @@ using BirthdayCollator.Server.Processing.Names;
 using BirthdayCollator.Server.Processing.Parsers;
 using BirthdayCollator.Server.Processing.Validation;
 
-namespace BirthdayCollator.Server.Processing.Pipelines;
-
 public sealed class BirthSourceEngine(
     IHtmlBirthSectionExtractor htmlExtractor,
     IBirthDateParser dateParser,
@@ -45,6 +43,20 @@ public sealed class BirthSourceEngine(
 
         List<Task<List<Person>>> tasks = [];
 
+        Task<List<Person>> Enqueue(string year, string suffix, DateTime adjustedDate)
+        {
+            return ProcessAsync(
+                slugBuilder(year, suffix),
+                adjustedDate,
+                suffix,
+                xpath,
+                useThrottle,
+                logError,
+                fetcher,
+                parser,
+                token);
+        }
+
         foreach (string year in years)
         {
             token.ThrowIfCancellationRequested();
@@ -54,19 +66,7 @@ public sealed class BirthSourceEngine(
             foreach (string suffix in suffixes)
             {
                 token.ThrowIfCancellationRequested();
-
-                string slug = slugBuilder(year, suffix);
-
-                tasks.Add(ProcessAsync(
-                    slug,
-                    adjustedDate,
-                    suffix,
-                    xpath,
-                    useThrottle,
-                    logError,
-                    fetcher,
-                    parser,
-                    token));
+                tasks.Add(Enqueue(year, suffix, adjustedDate));
             }
         }
 

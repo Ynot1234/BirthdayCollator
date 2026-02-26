@@ -33,5 +33,3 @@ public sealed class PersonPipeline(
         return people;
     }
 }
-
-

@@ -1,6 +1,6 @@
 ﻿using System.Net;
 
-namespace BirthdayCollator.Helpers
+namespace BirthdayCollator.Server.Helpers
 {
 
     //currently unused, but may be useful for normalizing HTML content

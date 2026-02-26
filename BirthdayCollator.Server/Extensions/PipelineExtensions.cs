@@ -1,5 +1,4 @@
-﻿using BirthdayCollator.Resources;
-using BirthdayCollator.Server.Processing.Builders;
+﻿using BirthdayCollator.Server.Processing.Builders;
 using BirthdayCollator.Server.Processing.Dates;
 using BirthdayCollator.Server.Processing.Entries;
 using BirthdayCollator.Server.Processing.Html;
@@ -8,6 +7,7 @@ using BirthdayCollator.Server.Processing.Names;
 using BirthdayCollator.Server.Processing.Parsers;
 using BirthdayCollator.Server.Processing.Pipelines;
 using BirthdayCollator.Server.Processing.Sources;
+using BirthdayCollator.Server.Resources;
 using BirthdayCollator.Server.Services;
 
 namespace BirthdayCollator.Server.Extensions;
@@ -21,33 +21,26 @@ public static class PipelineExtensions
         services.AddScoped<IBirthSource, CategoryBirthSource>();
         services.AddScoped<IBirthSource, GenariansBirthSource>();
         services.AddScoped<IBirthSource, OnThisDaySource>();
-        
-        services.AddScoped<BirthSourceEngine>();
-        services.AddScoped<IPersonPipeline, PersonPipeline>();
-        services.AddScoped<IFetchPipeline, FetchPipeline>();
-
-        services.AddSingleton<IYearRangeProvider, YearRangeProvider>();
-        services.AddSingleton<IEntrySplitter, EntrySplitter>();
-        services.AddSingleton<ILinkResolver, LinkResolver>();
-        services.AddSingleton<IPersonNameResolver, PersonNameResolver>();
-
-
-
         services.AddScoped<BirthdayFetcher>();
         services.AddScoped<Genarians>();
         services.AddScoped<GenariansPageParser>();
-
-        // New helpers
-        services.AddSingleton<IHtmlBirthSectionExtractor, HtmlBirthSectionExtractor>();
-        services.AddSingleton<IBirthDateParser, BirthDateParser>();
+        services.AddScoped<BirthSourceEngine>();
+        services.AddScoped<IPersonPipeline, PersonPipeline>();
+        services.AddScoped<IFetchPipeline, FetchPipeline>();
 
         // Pipeline components
         services.AddScoped<BirthSourceEngine>();
         services.AddScoped<IFetchPipeline, FetchPipeline>();
         services.AddScoped<IPersonPipeline, PersonPipeline>();
 
-        services.AddSingleton<Func<string, string>>(sp =>
-            WikiUrlBuilder.NormalizeWikiHref);
+        services.AddSingleton<IYearRangeProvider, YearRangeProvider>();
+        services.AddSingleton<IEntrySplitter, EntrySplitter>();
+        services.AddSingleton<ILinkResolver, LinkResolver>();
+        services.AddSingleton<IPersonNameResolver, PersonNameResolver>();
+        services.AddSingleton<IHtmlBirthSectionExtractor, HtmlBirthSectionExtractor>();
+        services.AddSingleton<IBirthDateParser, BirthDateParser>();
+        
+        services.AddSingleton<Func<string, string>>(sp => WikiUrlBuilder.NormalizeWikiHref);
 
         return services;
     }

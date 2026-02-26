@@ -2,7 +2,9 @@
 using BirthdayCollator.Server.Processing.Builders;
 using BirthdayCollator.Server.Processing.Fetching;
 using BirthdayCollator.Server.Processing.Parsers;
-using BirthdayCollator.Server.Processing.Sources;
+
+namespace BirthdayCollator.Server.Processing.Sources;
+
 
 public sealed class OnThisDaySource(
     OnThisDayHtmlFetcher fetcher,

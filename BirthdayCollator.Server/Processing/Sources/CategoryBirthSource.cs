@@ -1,8 +1,7 @@
-﻿using BirthdayCollator.Constants;
+﻿using BirthdayCollator.Server.Constants;
 using BirthdayCollator.Server.Models;
 using BirthdayCollator.Server.Processing.Builders;
 using BirthdayCollator.Server.Processing.Fetching;
-using BirthdayCollator.Server.Processing.Pipelines;
 
 namespace BirthdayCollator.Server.Processing.Sources;
 
@@ -17,6 +16,7 @@ public sealed class CategoryBirthSource(
     private string[]? _debugSuffixes;
 
     public void ForceSuffixes(params string[] suffixes) => _debugSuffixes = suffixes;
+
     public void ResetSuffixes() => _debugSuffixes = null;
 
     public Task<List<Person>> GetPeopleAsync(

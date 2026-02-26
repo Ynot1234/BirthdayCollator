@@ -1,5 +1,4 @@
-﻿using BirthdayCollator.Constants;
-using BirthdayCollator.Server.Constants;
+﻿using BirthdayCollator.Server.Constants;
 using BirthdayCollator.Server.Models;
 using BirthdayCollator.Server.Processing.Builders;
 using HtmlAgilityPack;
@@ -17,8 +16,6 @@ public interface ILinkResolver
     bool TryApplyHrefOverride(Person person, string? href);
 }
 
-
-
 public sealed class LinkResolver : ILinkResolver
 {
     public HtmlNode? FindPersonLink(HtmlNode li, string entry)
@@ -30,9 +27,7 @@ public sealed class LinkResolver : ILinkResolver
         string personName = ExtractPersonName(entry);
         string normalizedPerson = HtmlEntity.DeEntitize(personName).Trim();
 
-        List<HtmlNode> nonDateLinks = links
-            .Where(a => !IsDateHref(a.GetAttributeValue("href", "")))
-            .ToList();
+        List<HtmlNode> nonDateLinks = [.. links.Where(a => !IsDateHref(a.GetAttributeValue("href", "")))];
 
         if (nonDateLinks.Count == 0)
             return null;
@@ -141,6 +136,4 @@ public sealed class LinkResolver : ILinkResolver
 
         return HrefMatchesName(href, person.Name);
     }
-
-
 }

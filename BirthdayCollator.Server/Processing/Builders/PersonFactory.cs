@@ -1,4 +1,4 @@
-﻿using BirthdayCollator.Constants;
+﻿using BirthdayCollator.Server.Constants;
 using BirthdayCollator.Server.Models;
 using BirthdayCollator.Server.Processing.Names;
 using HtmlAgilityPack;
@@ -92,7 +92,6 @@ public class PersonFactory(Func<string, string> normalizeHref, IPersonNameResolv
 
     public Person Finalize(Person person)
     {
-        // This keeps all name‑normalization inside the factory pipeline.
         nameResolver.FixSwappedName(person);
         return person;
     }

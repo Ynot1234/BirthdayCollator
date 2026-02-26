@@ -9,7 +9,7 @@ public interface IYearRangeProvider
     void ForceYears(params string[] years);
     void ResetToDefault();
 
-    // NEW: single-year override (pull model)
+    // single-year override (pull model)
     void ForceYear(int year);
     void ClearYear();
 

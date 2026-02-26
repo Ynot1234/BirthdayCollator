@@ -1,7 +1,4 @@
-﻿using System;
-using Microsoft.Extensions.Configuration;
-using Microsoft.Extensions.DependencyInjection;
-using Microsoft.SemanticKernel;
+﻿using Microsoft.SemanticKernel;
 
 namespace BirthdayCollator.AI.Semantic;
 

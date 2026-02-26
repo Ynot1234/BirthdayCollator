@@ -1,6 +1,4 @@
 ﻿using BirthdayCollator.Server.Models;
-using System.Collections.Generic;
-using System.Threading.Tasks;
 
 namespace BirthdayCollator.Server.Processing.Pipelines;
 

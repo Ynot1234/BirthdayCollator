@@ -1,9 +1,7 @@
 ﻿using BirthdayCollator.Server.AI.Services;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.Extensions.Configuration;
-using System.Threading.Tasks;
 
-namespace BirthdayCollator.Controllers;
+namespace BirthdayCollator.Server.Controllers;
 
 public sealed class SummarizeRequest
 {
@@ -13,31 +11,17 @@ public sealed class SummarizeRequest
 
 [ApiController]
 [Route("api/ai")]
-public class AIController : ControllerBase
+public class AIController(IAIService ai, IConfiguration config) : ControllerBase
 {
-    private readonly IAIService _ai;
-    private readonly IConfiguration _config;
 
-    public AIController(IAIService ai, IConfiguration config)
-    {
-        _ai = ai;
-        _config = config;
-    }
-
-    // ---------------------------------------------------------
-    // NEW: Check if an OpenAI API key is configured
-    // ---------------------------------------------------------
     [HttpGet("has-key")]
     public IActionResult HasKey()
     {
-        var key = _config["OpenAI:ApiKey"];
+        var key = config["OpenAI:ApiKey"];
         bool hasKey = !string.IsNullOrWhiteSpace(key);
         return Ok(new { hasKey });
     }
 
-    // ---------------------------------------------------------
-    // Existing: Generate a summary using your AI service
-    // ---------------------------------------------------------
     [HttpPost("summarize")]
     public async Task<IActionResult> Summarize([FromBody] SummarizeRequest request)
     {
@@ -47,7 +31,7 @@ public class AIController : ControllerBase
         if (string.IsNullOrWhiteSpace(request.Description))
             return BadRequest("The 'description' field is required.");
 
-        string result = await _ai.SummarizeAsync(request.Name, request.Description);
+        string result = await ai.SummarizeAsync(request.Name, request.Description);
         return Ok(result);
     }
 }

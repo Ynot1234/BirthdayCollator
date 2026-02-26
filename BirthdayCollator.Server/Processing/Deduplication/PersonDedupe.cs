@@ -1,4 +1,5 @@
 ﻿using BirthdayCollator.Server.Models;
+using BirthdayCollator.Server.Constants;
 
 namespace BirthdayCollator.Server.Processing.Deduplication
 {
@@ -39,11 +40,6 @@ namespace BirthdayCollator.Server.Processing.Deduplication
             return name.Split(' ')[0].Trim().ToLowerInvariant();
         }
 
-        private static readonly HashSet<string> StopWords =
-         [
-             "of", "in", "the", "and", "to", "for", "on", "at", "by", "a", "an"
-         ];
-
         private static HashSet<string> ExtractKeywords(string? text)
         {
             if (string.IsNullOrWhiteSpace(text))
@@ -53,7 +49,7 @@ namespace BirthdayCollator.Server.Processing.Deduplication
                 .ToLowerInvariant()
                 .Split(' ', StringSplitOptions.RemoveEmptyEntries)
                 .Select(w => w.Trim(',', '.', ';', ':', '!', '?', '(', ')', '[', ']'))
-                .Where(w => w.Length >= 3 && !StopWords.Contains(w))];
+                .Where(w => w.Length >= 3 && !NameParsing.Stopwords.Contains(w))];
         }
 
 
@@ -82,9 +78,5 @@ namespace BirthdayCollator.Server.Processing.Deduplication
 
             return 0;
         }
-
-
-
     }
-
 }

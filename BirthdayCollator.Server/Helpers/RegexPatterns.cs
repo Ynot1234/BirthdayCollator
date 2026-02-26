@@ -19,24 +19,14 @@ namespace BirthdayCollator.Helpers
         [GeneratedRegex(@"\b(\d+)(st|nd|rd|th)\b")]
         public static partial Regex OrdinalSuffixRegex();
 
-
-        [GeneratedRegex(@"\b(?:January|February|March|April|May|June|July|August|September|October|November|December)\s+\d{1,2}\b", RegexOptions.IgnoreCase, "en-US")]
-        public static partial Regex MonthsRegex();
-
         [GeneratedRegex(@"(\d{4})")]
         public static partial Regex YearMatchRegex();
 
         [GeneratedRegex("<.*?>")]
         public static partial Regex HtmlTagsRegex();
 
-       
         [GeneratedRegex(@"([A-Za-z]+)\s+(\d{1,2})")]
         public static partial Regex MonthDayLooseRegex();
-
-
-        [GeneratedRegex(@"^(January|February|March|April|May|June|July|August|September|October|November|December)\s+\d{1,2}\b", RegexOptions.Compiled)]
-        public static partial Regex StartsWithFullMonthDayRegex();
-
 
         [GeneratedRegex(@"[\(\)\[\]]")]
         public static partial Regex RemoveParanthsesBracketsRegex();
@@ -53,15 +43,18 @@ namespace BirthdayCollator.Helpers
         [GeneratedRegex(@"^\\u([0-9A-Fa-f]{4})?")]
         public static partial Regex RemoveLeadingU();
 
-      
-
         [GeneratedRegex(@"href=""/wiki/([^""]+)""[^>]*>([^<]+)</a>", RegexOptions.Compiled)]
         public static partial Regex WikiLinkRegex();
 
 
-        [GeneratedRegex(@"^\s*(January|February|March|April|May|June|July|August|September|October|November|December)\s+\d{1,2}\s*$")]
-        public static partial Regex IsDateRegex();
+        [GeneratedRegex(@"^" + Months + @"\s+\d{1,2}\b", RegexOptions.Compiled)]
+        public static partial Regex StartsWithFullMonthDayRegex();
 
+        [GeneratedRegex(@"\b" + Months + @"\s+\d{1,2}\b", RegexOptions.IgnoreCase, "en-US")]
+        public static partial Regex MonthsRegex();
+
+        [GeneratedRegex(@"^\s*" + Months + @"\s+\d{1,2}\s*$")]
+        public static partial Regex IsDateRegex();
 
         [GeneratedRegex(@"""text"":\s*\{\s*""\*"":\s*""(.*?)""\s*\}", RegexOptions.Singleline)]
         public static partial Regex ExtractTextStarRegex();
@@ -74,9 +67,6 @@ namespace BirthdayCollator.Helpers
 
         [GeneratedRegex(@"^[12]\d{3}\b")]
         public static partial Regex StartswithYear();
-
-
-
 
         // Removes {...} blocks (templates, metadata, etc.)
         [GeneratedRegex(@"\{.*?\}", RegexOptions.Singleline)]
@@ -101,6 +91,7 @@ namespace BirthdayCollator.Helpers
           RegexOptions.IgnoreCase | RegexOptions.Compiled, "en-US")]
         public static partial Regex LongFormDateRegex();
 
+        private const string Months = "(January|February|March|April|May|June|July|August|September|October|November|December)";
 
     }
 }

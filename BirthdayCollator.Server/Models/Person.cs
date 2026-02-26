@@ -39,21 +39,5 @@
         // Optional convenience
         public DateTime BirthDate => new(BirthYear, Month, Day);
 
-
-        public string? WikipediaTitle
-        {
-            get
-            {
-                if (string.IsNullOrWhiteSpace(Url))
-                    return null;
-
-                int index = Url.LastIndexOf("/wiki/", StringComparison.OrdinalIgnoreCase);
-                if (index < 0)
-                    return null;
-
-                return Url[(index + "/wiki/".Length)..];
-            }
-        }
-
     }
 }

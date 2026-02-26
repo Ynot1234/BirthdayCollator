@@ -9,21 +9,17 @@ namespace BirthdayCollator.Server.Controllers;
 [Route("api/[controller]")]
 public class BirthdaysController(BirthdayFetcher fetcher) : ControllerBase
 {
-    // ---------------------------------------------------------
     // PUSH MODEL (existing)
     // React sends month/day explicitly
-    // ---------------------------------------------------------
     [HttpGet]
     public Task<List<Person>> Get(int month, int day, CancellationToken token) =>
     fetcher.GetBirthdays(month, day, token);
 
 
 
-    // ---------------------------------------------------------
     // PULL MODEL #1
     // Server decides the date (today), applies override automatically
     // GET /api/birthdays/current
-    // ---------------------------------------------------------
     [HttpGet("current")]
     public Task<List<Person>> GetCurrent(CancellationToken token)
     {
@@ -33,11 +29,9 @@ public class BirthdaysController(BirthdayFetcher fetcher) : ControllerBase
 
 
 
-    // ---------------------------------------------------------
     // PULL MODEL #2
     // React pulls the current override from the server
     // GET /api/birthdays/override
-    // ---------------------------------------------------------
     [HttpGet("override")]
     public IActionResult GetOverride([FromServices] IYearRangeProvider provider)
     {
@@ -45,11 +39,9 @@ public class BirthdaysController(BirthdayFetcher fetcher) : ControllerBase
     }
 
 
-    // ---------------------------------------------------------
     // PULL MODEL #3
     // React sets the override on the server
     // POST /api/birthdays/override?value=1933
-    // ---------------------------------------------------------
     [HttpPost("override")]
     public IActionResult SetOverride([FromQuery] string? value, [FromServices] IYearRangeProvider provider)
     {
@@ -68,4 +60,3 @@ public class BirthdaysController(BirthdayFetcher fetcher) : ControllerBase
         return BadRequest("Invalid year");
     }
 }
-

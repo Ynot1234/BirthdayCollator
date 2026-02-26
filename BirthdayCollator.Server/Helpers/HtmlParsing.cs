@@ -1,11 +1,9 @@
 ﻿using HtmlAgilityPack;
 
-namespace BirthdayCollator.Helpers
+namespace BirthdayCollator.Server.Helpers
 {
     public class HtmlParsing
     {
-
-
         public static HtmlNode? SelectNode(string html, string xpath)
         {
             if (string.IsNullOrWhiteSpace(html))
@@ -16,6 +14,5 @@ namespace BirthdayCollator.Helpers
 
             return doc.DocumentNode.SelectSingleNode(xpath);
         }
-
     }
 }

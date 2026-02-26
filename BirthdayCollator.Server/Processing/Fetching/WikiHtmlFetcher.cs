@@ -1,22 +1,21 @@
-﻿using BirthdayCollator.Constants;
+﻿using BirthdayCollator.Server.Constants;
 
-namespace BirthdayCollator.Server.Processing.Fetching
+namespace BirthdayCollator.Server.Processing.Fetching;
+
+public class WikiHtmlFetcher(HttpClient httpClient)
 {
-    public class WikiHtmlFetcher(HttpClient httpClient)
+    private readonly HttpClient _client = httpClient;
+
+    public async Task<string> FetchHtmlAsync(string pageName, CancellationToken token)
     {
-        private readonly HttpClient _client = httpClient;
+        string url = $"{Urls.API}/{pageName}";
 
-        public async Task<string> FetchHtmlAsync(string pageName, CancellationToken token)
-        {
-            string url = $"{Urls.API}/{pageName}";
+        HttpResponseMessage response = await _client.GetAsync(url, token);
 
-            HttpResponseMessage response = await _client.GetAsync(url, token);
+        response.EnsureSuccessStatusCode();
 
-            response.EnsureSuccessStatusCode();
+        string html = await response.Content.ReadAsStringAsync(token);
 
-            string html = await response.Content.ReadAsStringAsync(token);
-
-            return html;
-        }
+        return html;
     }
 }

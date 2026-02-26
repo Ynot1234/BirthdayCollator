@@ -1,4 +1,4 @@
-﻿using BirthdayCollator.Helpers;
+﻿using BirthdayCollator.Server.Helpers;
 using HtmlAgilityPack;
 
 namespace BirthdayCollator.Server.Processing.Html;
