@@ -1,9 +1,6 @@
 ﻿using BirthdayCollator.Constants;
-using System.Net.Http;
-using System.Threading;
-using System.Threading.Tasks;
 
-namespace BirthdayCollator.Processing
+namespace BirthdayCollator.Server.Processing
 {
     public class WikiHtmlFetcher(HttpClient httpClient)
     {

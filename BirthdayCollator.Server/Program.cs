@@ -1,8 +1,8 @@
-using BirthdayCollator;
 using BirthdayCollator.AI.Semantic;
 using BirthdayCollator.AI.Services;
 using BirthdayCollator.Processing;
 using BirthdayCollator.Resources;
+using BirthdayCollator.Server;
 using BirthdayCollator.Server.Processing;
 using BirthdayCollator.Services;
 
@@ -52,7 +52,7 @@ builder.Services.AddCors(options =>
 // ---------------------------------------------
 static void ConfigureWikiClient(HttpClient client)
 {
-    client.Timeout = TimeSpan.FromSeconds(10);
+    client.Timeout = Timeout.InfiniteTimeSpan;
     client.DefaultRequestHeaders.UserAgent.ParseAdd(
         "BirthdayApp/1.0 (https://github.com/anthony/birthdayapp; anthony@example.com)");
 }
@@ -61,7 +61,7 @@ static void ConfigureWikiClient(HttpClient client)
 // HTTP CLIENTS
 // ---------------------------------------------
 builder.Services.AddHttpClient<OnThisDayHtmlFetcher>(ConfigureWikiClient);
-builder.Services.AddHttpClient<WikiBirthdayFetcher>(ConfigureWikiClient);
+//builder.Services.AddHttpClient<WikiBirthdayFetcher>(ConfigureWikiClient);
 
 builder.Services.AddHttpClient("WikiClient", client =>
 {

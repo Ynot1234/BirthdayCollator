@@ -34,7 +34,11 @@ namespace BirthdayCollator.Helpers
             foreach (HtmlNode li in liNodes)
             {
 
-              
+              if(li.InnerText.Contains("Reinsdorf"))
+                {
+                    int r = 4;
+
+                }
 
                 string raw = HtmlEntity.DeEntitize(li.InnerText).Trim();
 
@@ -84,14 +88,14 @@ namespace BirthdayCollator.Helpers
         private static string? ExtractHrefForEntry(HtmlNode li, string personName)
         {
             var anchors = li.SelectNodes(".//a");
-            if (anchors == null)
+            if (anchors == null || anchors.Count < 2)
                 return null;
 
-            foreach (var a in anchors)
+            // Skip the date anchor
+            foreach (var a in anchors.Skip(1))
             {
                 string text = HtmlEntity.DeEntitize(a.InnerText).Trim();
 
-                // More forgiving match
                 if (personName.Contains(text, StringComparison.OrdinalIgnoreCase) ||
                     text.Contains(personName, StringComparison.OrdinalIgnoreCase))
                 {
@@ -101,6 +105,7 @@ namespace BirthdayCollator.Helpers
 
             return null;
         }
+
 
 
         public List<Person> ParseBirthsForDate(string html, int year, int month, int day)

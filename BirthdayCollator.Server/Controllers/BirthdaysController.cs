@@ -14,8 +14,9 @@ public class BirthdaysController(BirthdayFetcher fetcher) : ControllerBase
     // React sends month/day explicitly
     // ---------------------------------------------------------
     [HttpGet]
-    public Task<List<Person>> Get(int month, int day) =>
-        fetcher.GetBirthdays(month, day);
+    public Task<List<Person>> Get(int month, int day, CancellationToken token) =>
+    fetcher.GetBirthdays(month, day, token);
+
 
 
     // ---------------------------------------------------------
@@ -24,11 +25,12 @@ public class BirthdaysController(BirthdayFetcher fetcher) : ControllerBase
     // GET /api/birthdays/current
     // ---------------------------------------------------------
     [HttpGet("current")]
-    public Task<List<Person>> GetCurrent()
+    public Task<List<Person>> GetCurrent(CancellationToken token)
     {
         var today = DateTime.Today;
-        return fetcher.GetBirthdays(today.Month, today.Day);
+        return fetcher.GetBirthdays(today.Month, today.Day, token);
     }
+
 
 
     // ---------------------------------------------------------

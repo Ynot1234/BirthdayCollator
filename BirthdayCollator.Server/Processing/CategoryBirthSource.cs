@@ -38,8 +38,6 @@ public sealed class CategoryBirthSource(
                 string message =
                     $"{DateTime.Now:yyyy-MM-dd HH:mm:ss} | SLUG: {slug} | ERROR: {ex.Message}{Environment.NewLine}";
 
-              //  File.AppendAllText("debug-errors.log", message);
-
                 return Task.CompletedTask;
             },
             fetcher: fetcher,

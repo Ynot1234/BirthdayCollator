@@ -26,6 +26,10 @@ export default function BirthdaysPage() {
 
   const [backendOnline, setBackendOnline] = useState(null);
 
+  const [runController, setRunController] = useState(null);
+  const [isRunning, setIsRunning] = useState(false);
+
+
   const monthNames = [
     "January","February","March","April","May","June",
     "July","August","September","October","November","December"
@@ -165,21 +169,31 @@ export default function BirthdaysPage() {
   // ---------------------------------------------------------
   // Fetch birthdays
   // ---------------------------------------------------------
-  async function run() {
-    setLoading(true);
-    setError("");
+    async function run() {
+        const controller = new AbortController();
+        setRunController(controller);
+        setIsRunning(true);
+        setLoading(true);
+        setError("");
 
-    try {
-      const data = await fetchBirthdays(month, day);
-      setResults(data);
-      setFetchedMonth(month);
-      setFetchedDay(day);
-    } catch (err) {
-      setError(err.message);
-    } finally {
-      setLoading(false);
+        try {
+            const data = await fetchBirthdays(month, day, controller.signal);
+            setResults(data);
+            setFetchedMonth(month);
+            setFetchedDay(day);
+        } catch (err) {
+            if (err.name === "AbortError") {
+                console.log("Run cancelled");
+            } else {
+                setError(err.message);
+            }
+        } finally {
+            setLoading(false);
+            setIsRunning(false);
+            setRunController(null);
+        }
     }
-  }
+
 
   function setToToday() {
     setMonth(todayMonth);
@@ -283,13 +297,24 @@ export default function BirthdaysPage() {
                             }}
                         > -
                         </button>
-                        <button
-                            className={`${styles.toolbarButton} ${styles.runButton}`}
-                            onClick={run}
-                            disabled={loading}
-                        >
-                            {loading ? "Loading…" : "Run"}
-                        </button>
+                        {isRunning ? (
+                            <button
+                                className={`${styles.toolbarButton} ${styles.cancelButton}`}
+                                onClick={() => runController?.abort()}
+                                disabled={!runController}
+                            >
+                                Cancel
+                            </button>
+                        ) : (
+                            <button
+                                className={`${styles.toolbarButton} ${styles.runButton}`}
+                                onClick={run}
+                                disabled={loading}
+                            >
+                                {loading ? "Loading…" : "Run"}
+                            </button>
+                        )}
+
                     </div>
                 </div>
              

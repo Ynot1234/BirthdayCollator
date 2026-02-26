@@ -233,3 +233,7 @@ select {
     padding: 12px;
     background: #fff5f5;
 }
+.cancelButton {
+    background-color: #c62828; /* red */
+    color: white;
+}
