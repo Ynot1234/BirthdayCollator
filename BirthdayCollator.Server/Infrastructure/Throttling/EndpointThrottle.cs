@@ -1,8 +1,4 @@
-﻿using System;
-using System.Threading;
-using System.Threading.Tasks;
-
-namespace BirthdayCollator;
+﻿namespace BirthdayCollator.Server.Infrastructure.Throttling;
 
 public sealed class EndpointThrottle(int concurrency, int delayMs)
 {

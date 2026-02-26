@@ -1,6 +1,8 @@
 ﻿using BirthdayCollator.Constants;
+using BirthdayCollator.Helpers;
 using BirthdayCollator.Models;
 using BirthdayCollator.Processing;
+using BirthdayCollator.Server.Constants;
 using HtmlAgilityPack;
 using System;
 using System.Collections.Generic;
@@ -8,7 +10,7 @@ using System.Globalization;
 using System.Linq;
 using System.Text;
 
-namespace BirthdayCollator.Helpers
+namespace BirthdayCollator.Server.Helpers
 {
     public partial class Parser(BirthEntryValidator validator, PersonFactory personFactory)
     {
@@ -101,21 +103,6 @@ namespace BirthdayCollator.Helpers
         }
 
 
-
-        public List<Person> ParseBirthsForDate(string html, int year, int month, int day)
-        {
-            var date = new DateTime(year, month, day);
-
-
-            return Parse(
-                html: html,
-                actualDate: date,
-                suffix: null,
-                xpath:  XPathSelectors.GeneralYearHeader
-            );
-        }
-
-
         private static bool TryParseMonthDay(string text, int year, out DateTime result)
         {
             result = default;
@@ -153,7 +140,7 @@ namespace BirthdayCollator.Helpers
 
             Person parsed = personFactory.BuildPerson(entry, birthDate, personLink);
 
-            string idSuffix = suffix == String.Empty 
+            string idSuffix = suffix == string.Empty 
                 ? $"{birthDate.Year}" 
                 : $"{birthDate.Year}_{suffix}";
 
@@ -425,12 +412,12 @@ namespace BirthdayCollator.Helpers
             List<string> nameTokens = Tokenize(name);
 
             // Remove stopwords
-            hrefTokens = [.. hrefTokens.Except(Stopwords)];
-            nameTokens = [.. nameTokens.Except(Stopwords)];
+            hrefTokens = [.. hrefTokens.Except(Constants.NameParsing.Stopwords)];
+            nameTokens = [.. nameTokens.Except(Constants.NameParsing.Stopwords)];
 
             // Titles to ignore
-            hrefTokens = [.. hrefTokens.Except(Titles)];
-            nameTokens = [.. nameTokens.Except(Titles)];
+            hrefTokens = [.. hrefTokens.Except(Constants.NameParsing.Titles)];
+            nameTokens = [.. nameTokens.Except(Constants.NameParsing.Titles)];
 
            // Every name token must appear in href tokens (partial match allowed)
             foreach (string nt in nameTokens)
@@ -465,18 +452,5 @@ namespace BirthdayCollator.Helpers
                 .Select(t => t.Trim())
                 .Where(t => t.Length > 0)];
         }
-
-        private static readonly HashSet<string> Stopwords = new(StringComparer.OrdinalIgnoreCase)
-        {
-            "of", "the", "and", "a", "an"
-        };
-
-        private static readonly HashSet<string> Titles = new(StringComparer.OrdinalIgnoreCase)
-        {
-            "sir", "dr", "mr", "mrs", "ms", "prof",
-            "earl", "duke", "baron", "lord", "lady",
-            "king", "queen", "prince", "princess",
-            "count", "countess", "viscount", "marquess"
-        };
     }
 }

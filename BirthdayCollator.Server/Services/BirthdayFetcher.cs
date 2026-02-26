@@ -1,12 +1,8 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Threading;
-using System.Threading.Tasks;
-using BirthdayCollator.Models;
+﻿using BirthdayCollator.Models;
 using BirthdayCollator.Processing;
 using BirthdayCollator.Server.Processing;
 
-namespace BirthdayCollator.Services;
+namespace BirthdayCollator.Server.Services;
 
 public sealed class BirthdayFetcher(
     IFetchPipeline fetchPipeline,

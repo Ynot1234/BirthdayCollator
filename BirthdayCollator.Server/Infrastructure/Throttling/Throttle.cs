@@ -1,4 +1,6 @@
-﻿namespace BirthdayCollator
+﻿using BirthdayCollator.Server;
+
+namespace BirthdayCollator.Server.Infrastructure.Throttling
 {
     public static class Throttle
     {

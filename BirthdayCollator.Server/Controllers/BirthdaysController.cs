@@ -1,6 +1,6 @@
 ﻿using BirthdayCollator.Models;
 using BirthdayCollator.Processing;
-using BirthdayCollator.Services;
+using BirthdayCollator.Server.Services;
 using Microsoft.AspNetCore.Mvc;
 
 namespace BirthdayCollator.Server.Controllers;

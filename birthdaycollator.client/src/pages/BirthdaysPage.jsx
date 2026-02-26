@@ -1,7 +1,13 @@
 import { useState, useEffect } from "react";
-import styles from "./BirthdaysPage.module.css";
 import { fetchBirthdays } from "../api/birthdays";
+import { useBackendHealth } from "../hooks/useBackendHealth";
+import { useOverrideYear } from "../hooks/useOverrideYear";
+import { useOpenAIKey } from "../hooks/useOpenAIKey";
+import { useSummaries } from "../hooks/useSummaries";
+import { daysInMonth, incrementDay, decrementDay } from "../utils/dateUtils";
+import styles from "./BirthdaysPage.module.css";
 import ToolsDropdown from "../components/ToolsDropdown";
+
 
 export default function BirthdaysPage() {
   const today = new Date();
@@ -18,17 +24,25 @@ export default function BirthdaysPage() {
   const [fetchedMonth, setFetchedMonth] = useState(null);
   const [fetchedDay, setFetchedDay] = useState(null);
 
-  const [overrideYear, setOverrideYear] = useState(null);
-  const [overrideInput, setOverrideInput] = useState("");
-
-  const [summaries, setSummaries] = useState({});
-  const [hasOpenAIKey, setHasOpenAIKey] = useState(false);
-
-  const [backendOnline, setBackendOnline] = useState(null);
-
   const [runController, setRunController] = useState(null);
   const [isRunning, setIsRunning] = useState(false);
 
+  const { hasOpenAIKey, checkOpenAIKey } = useOpenAIKey();
+
+  const { summaries, setSummaries, summarizePerson } = useSummaries();
+
+
+
+  const backendOnline = useBackendHealth();
+
+  const {
+        overrideYear,
+        overrideInput,
+        setOverrideInput,
+        loadOverride,
+        applyOverride,
+        clearOverride
+    } = useOverrideYear();
 
   const monthNames = [
     "January","February","March","April","May","June",
@@ -40,39 +54,7 @@ export default function BirthdaysPage() {
     fetchedDay !== null &&
     (fetchedMonth !== month || fetchedDay !== day);
 
-  // ---------------------------------------------------------
-  // Determine active year (override or real year)
-  // ---------------------------------------------------------
   const activeYear = overrideYear || new Date().getFullYear();
-
-  // ---------------------------------------------------------
-  // Correct days-in-month using active year
-  // ---------------------------------------------------------
-  function daysInMonth(year, month) {
-    return new Date(year, month, 0).getDate();
-  }
-
-  // ---------------------------------------------------------
-  // Rolling increment logic
-  // ---------------------------------------------------------
-  function incrementDay(m, d) {
-    const max = daysInMonth(activeYear, m);
-    if (d < max) return { month: m, day: d + 1 };
-
-    const nextMonth = m === 12 ? 1 : m + 1;
-    return { month: nextMonth, day: 1 };
-  }
-
-  // ---------------------------------------------------------
-  // Rolling decrement logic
-  // ---------------------------------------------------------
-  function decrementDay(m, d) {
-    if (d > 1) return { month: m, day: d - 1 };
-
-    const prevMonth = m === 1 ? 12 : m - 1;
-    const maxPrev = daysInMonth(activeYear, prevMonth);
-    return { month: prevMonth, day: maxPrev };
-  }
 
   // ---------------------------------------------------------
   // Auto-correct invalid days when month changes
@@ -84,88 +66,7 @@ export default function BirthdaysPage() {
     }
   }, [month, activeYear]);
 
-  // ---------------------------------------------------------
-  // Backend health check
-  // ---------------------------------------------------------
-    async function checkBackend() {
-        const base = import.meta.env.VITE_API_BASE_URL;
-
-        try {
-            const res = await fetch(`${base}/health`);
-            return res.ok;
-        } catch {
-            return false;   
-        }
-    }
-
-
-    // ---------------------------------------------------------
-    // Override year
-    // ---------------------------------------------------------
-    async function loadOverride() {
-        try {
-            const base = import.meta.env.VITE_API_BASE_URL;
-            const res = await fetch(`${base}/api/birthdays/override`);
-            const data = await res.json();
-            setOverrideYear(data.overrideYear);
-        } catch (err) {
-            console.error("Failed to load override", err);
-        }
-    }
-
-    async function applyOverride() {
-        if (!overrideInput) return;
-
-        const base = import.meta.env.VITE_API_BASE_URL;
-
-        await fetch(`${base}/api/birthdays/override?value=${overrideInput}`, {
-            method: "POST"
-        });
-
-        setOverrideInput("");
-        await loadOverride();
-    }
-
-    async function clearOverride() {
-        const base = import.meta.env.VITE_API_BASE_URL;
-
-        await fetch(`${base}/api/birthdays/override?value=`, {
-            method: "POST"
-        });
-
-        await loadOverride();
-    }
-
-  // ---------------------------------------------------------
-  // OpenAI key check
-  // ---------------------------------------------------------
-  async function checkOpenAIKey() {
-    try {
-      const res = await fetch("/api/ai/has-key");
-      const data = await res.json();
-      setHasOpenAIKey(data.hasKey);
-    } catch {
-      setHasOpenAIKey(false);
-    }
-  }
-
-  // ---------------------------------------------------------
-  // Initialize backend + dependent data
-  // ---------------------------------------------------------
-  useEffect(() => {
-    async function init() {
-      const online = await checkBackend();
-      setBackendOnline(online);
-
-      if (online) {
-        loadOverride();
-        checkOpenAIKey();
-      }
-    }
-
-    init();
-  }, []);
-
+ 
   // ---------------------------------------------------------
   // Fetch birthdays
   // ---------------------------------------------------------
@@ -200,32 +101,7 @@ export default function BirthdaysPage() {
     setDay(todayDay);
   }
 
-  // ---------------------------------------------------------
-  // Summaries
-  // ---------------------------------------------------------
-  async function summarizePerson(p) {
-    try {
-      const res = await fetch("/api/ai/summarize", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          name: p.name,
-          description: p.description
-        })
-      });
-
-      const text = await res.text();
-
-      setSummaries(prev => ({
-        ...prev,
-        [p.name]: text
-      }));
-    } catch (err) {
-      console.error("Summarize failed:", err);
-      alert("Failed to summarize this person.");
-    }
-  }
-
+  
   // ---------------------------------------------------------
   // Backend offline UI
   // ---------------------------------------------------------
@@ -253,14 +129,10 @@ export default function BirthdaysPage() {
     );
   }
 
-  // ---------------------------------------------------------
-  // MAIN UI
-  // ---------------------------------------------------------
-    return (
+   return (
         <div className={styles.page}>
             <div className={styles.card}>
 
-                {/* TOOLS DROPDOWN — moved inside the card */}
                 <ToolsDropdown
                     overrideYear={overrideYear}
                     overrideInput={overrideInput}
@@ -269,10 +141,8 @@ export default function BirthdaysPage() {
                     clearOverride={clearOverride}
                 />
 
-                {/* TITLE */}
                 <h1 className={styles.title}>Birthdays</h1>
 
-                {/* TOOLBAR */}
                 <div className={styles.toolbar}>
                     <button className={styles.toolbarButton} onClick={setToToday}>
                         Today
@@ -282,7 +152,7 @@ export default function BirthdaysPage() {
                        <button
                             className={styles.toolbarButton}
                             onClick={() => {
-                                const next = incrementDay(month, day);
+                                const next = incrementDay(activeYear, month, day);
                                 setMonth(next.month);
                                 setDay(next.day);
                             }}
@@ -291,7 +161,7 @@ export default function BirthdaysPage() {
                         <button
                             className={styles.toolbarButton}
                             onClick={() => {
-                                const next = decrementDay(month, day);
+                                const next = decrementDay(activeYear, month, day);
                                 setMonth(next.month);
                                 setDay(next.day);
                             }}

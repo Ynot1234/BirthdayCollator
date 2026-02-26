@@ -1,4 +1,4 @@
-﻿namespace BirthdayCollator.Helpers
+﻿namespace BirthdayCollator.Server.Constants
 {
     public static class MonthNames
     {

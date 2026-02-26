@@ -1,5 +1,6 @@
 ﻿using BirthdayCollator.Models;
 using BirthdayCollator.Processing;
+using BirthdayCollator.Server.Configuration;
 using Microsoft.Extensions.Options;
 
 namespace BirthdayCollator.Server.Processing;

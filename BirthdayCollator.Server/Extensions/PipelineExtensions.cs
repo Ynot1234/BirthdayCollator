@@ -1,7 +1,7 @@
 ﻿using BirthdayCollator.Processing;
 using BirthdayCollator.Resources;
 using BirthdayCollator.Server.Processing;
-using BirthdayCollator.Services;
+using BirthdayCollator.Server.Services;
 
 namespace BirthdayCollator.Server.Extensions;
 

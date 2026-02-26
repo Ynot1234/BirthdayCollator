@@ -1,4 +1,4 @@
-﻿namespace BirthdayCollator.Server.Processing;
+﻿namespace BirthdayCollator.Server.Configuration;
 
 public sealed class BirthSourceOptions
 {
@@ -6,7 +6,7 @@ public sealed class BirthSourceOptions
     public bool EnableDateParser { get; set; } = true;
     public bool EnableCategoryParser { get; set; } = true;
 
-    public bool EnableGenarianParser { get; set; } = false;
+    public bool EnableGenarianParser { get; set; } = true;
 
     public bool EnableOnThisDayParser { get; set; } = true;
 }
