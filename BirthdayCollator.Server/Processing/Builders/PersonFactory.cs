@@ -1,14 +1,16 @@
-﻿using System;
-using BirthdayCollator.Constants;
+﻿using BirthdayCollator.Constants;
 using BirthdayCollator.Models;
+using BirthdayCollator.Server.Processing.Names;
 using HtmlAgilityPack;
+
 using static BirthdayCollator.Server.Processing.Parsers.GenariansPageParser;
 
 namespace BirthdayCollator.Server.Processing.Builders;
 
-public class PersonFactory(Func<string, string> normalizeHref)
+public class PersonFactory(Func<string, string> normalizeHref, IPersonNameResolver nameResolver)
 {
     private readonly Func<string, string> _normalizeHref = normalizeHref;
+    
 
     public Person Create(
         string name,
@@ -79,6 +81,21 @@ public class PersonFactory(Func<string, string> normalizeHref)
         };
     }
 
+    public Person CreateWithSuffix(Person parsed, DateTime birthDate, string? suffix)
+    {
+        string idSuffix = suffix == string.Empty
+            ? $"{birthDate.Year}"
+            : $"{birthDate.Year}_{suffix}";
+
+        return Create(parsed, idSuffix);
+    }
+
+    public Person Finalize(Person person)
+    {
+        // This keeps all name‑normalization inside the factory pipeline.
+        nameResolver.FixSwappedName(person);
+        return person;
+    }
 
 
     public Person BuildPerson(

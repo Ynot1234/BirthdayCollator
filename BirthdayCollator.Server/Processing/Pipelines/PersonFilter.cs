@@ -9,7 +9,7 @@ using BirthdayCollator.Server.Constants;
 
 
 
-namespace BirthdayCollator.Server.Processing.Resolvers;
+namespace BirthdayCollator.Server.Processing.Pipelines;
 
 public partial class PersonFilter(IHttpClientFactory factory)
 {

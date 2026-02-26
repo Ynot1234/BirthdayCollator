@@ -1,6 +1,6 @@
 ﻿using System;
 
-namespace BirthdayCollator.Server.Processing.Resolvers;
+namespace BirthdayCollator.Server.Processing.Dates;
 
 public class BirthDateResolver()
 {

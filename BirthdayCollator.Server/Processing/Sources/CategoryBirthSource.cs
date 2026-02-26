@@ -19,7 +19,9 @@ public sealed class CategoryBirthSource(
     public void ForceSuffixes(params string[] suffixes) => _debugSuffixes = suffixes;
     public void ResetSuffixes() => _debugSuffixes = null;
 
-    public Task<List<Person>> GetPeopleAsync(DateTime actualDate, CancellationToken token)
+    public Task<List<Person>> GetPeopleAsync(
+        DateTime actualDate,
+        CancellationToken token)
     {
         string[] suffixes =
             _debugSuffixes ??
@@ -36,14 +38,11 @@ public sealed class CategoryBirthSource(
             logError: (slug, ex) =>
             {
                 logger.LogError(ex, "Failed to fetch or parse slug '{Slug}'", slug);
-
-                string message =
-                    $"{DateTime.Now:yyyy-MM-dd HH:mm:ss} | SLUG: {slug} | ERROR: {ex.Message}{Environment.NewLine}";
-
                 return Task.CompletedTask;
             },
             fetcher: fetcher,
             actualDate: actualDate,
-            token: token);
+            token: token
+        );
     }
 }

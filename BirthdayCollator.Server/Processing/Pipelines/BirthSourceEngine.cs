@@ -1,14 +1,25 @@
 ﻿using BirthdayCollator.Helpers;
 using BirthdayCollator.Models;
-using BirthdayCollator.Server.Helpers;
 using BirthdayCollator.Server.Infrastructure.Throttling;
 using BirthdayCollator.Server.Processing.Builders;
+using BirthdayCollator.Server.Processing.Dates;
+using BirthdayCollator.Server.Processing.Entries;
 using BirthdayCollator.Server.Processing.Fetching;
+using BirthdayCollator.Server.Processing.Html;
+using BirthdayCollator.Server.Processing.Links;
+using BirthdayCollator.Server.Processing.Names;
+using BirthdayCollator.Server.Processing.Parsers;
 using BirthdayCollator.Server.Processing.Validation;
 
 namespace BirthdayCollator.Server.Processing.Pipelines;
 
-public sealed class BirthSourceEngine
+public sealed class BirthSourceEngine(
+    IHtmlBirthSectionExtractor htmlExtractor,
+    IBirthDateParser dateParser,
+    IEntrySplitter entrySplitter,
+    ILinkResolver linkResolver,
+    IPersonNameResolver nameResolver
+)
 {
     public async Task<List<Person>> RunAsync(
         IReadOnlyList<string> years,
@@ -22,8 +33,17 @@ public sealed class BirthSourceEngine
         CancellationToken token)
     {
         BirthEntryValidator validator = new([.. years], RegexPatterns.ExcludeDiedRegex());
-        PersonFactory factory = new(WikiUrlBuilder.NormalizeWikiHref);
-        Parser parser = new(validator, factory);
+        PersonFactory factory = new(WikiUrlBuilder.NormalizeWikiHref, nameResolver);
+
+        Parser parser = new(
+            validator,
+            factory,
+            htmlExtractor,
+            dateParser,
+            entrySplitter,
+            linkResolver,
+            nameResolver
+        );
 
         List<Task<List<Person>>> tasks = [];
 

@@ -4,7 +4,7 @@ using BirthdayCollator.Server.Processing.Deduplication;
 using BirthdayCollator.Server.Processing.Enrichment;
 using BirthdayCollator.Server.Processing.Fetching;
 using BirthdayCollator.Server.Processing.Parsers;
-using BirthdayCollator.Server.Processing.Resolvers;
+using BirthdayCollator.Server.Processing.Pipelines;
 using BirthdayCollator.Server.Processing.Sorting;
 
 namespace BirthdayCollator.Server.Extensions;
