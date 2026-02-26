@@ -1,6 +1,4 @@
-﻿using System.Collections.Generic;
-
-namespace BirthdayCollator.Server.Processing.Builders;
+﻿namespace BirthdayCollator.Server.Processing.Builders;
 
 public interface IYearRangeProvider
 {

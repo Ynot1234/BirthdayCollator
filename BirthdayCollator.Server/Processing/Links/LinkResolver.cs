@@ -1,6 +1,6 @@
 ﻿using BirthdayCollator.Constants;
-using BirthdayCollator.Models;
 using BirthdayCollator.Server.Constants;
+using BirthdayCollator.Server.Models;
 using BirthdayCollator.Server.Processing.Builders;
 using HtmlAgilityPack;
 using System.Globalization;

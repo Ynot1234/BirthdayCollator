@@ -1,6 +1,6 @@
 ﻿using BirthdayCollator.Helpers;
-using BirthdayCollator.Models;
 using BirthdayCollator.Server.Infrastructure.Throttling;
+using BirthdayCollator.Server.Models;
 using BirthdayCollator.Server.Processing.Builders;
 using BirthdayCollator.Server.Processing.Dates;
 using BirthdayCollator.Server.Processing.Entries;

@@ -1,5 +1,5 @@
 ﻿using BirthdayCollator.Constants;
-using BirthdayCollator.Models;
+using BirthdayCollator.Server.Models;
 using BirthdayCollator.Server.Processing.Builders;
 using BirthdayCollator.Server.Processing.Fetching;
 using BirthdayCollator.Server.Processing.Pipelines;

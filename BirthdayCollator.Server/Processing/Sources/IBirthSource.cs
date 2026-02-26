@@ -1,4 +1,4 @@
-﻿using BirthdayCollator.Models;
+﻿using BirthdayCollator.Server.Models;
 
 namespace BirthdayCollator.Server.Processing.Sources;
 

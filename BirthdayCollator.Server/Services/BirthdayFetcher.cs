@@ -1,4 +1,4 @@
-﻿using BirthdayCollator.Models;
+﻿using BirthdayCollator.Server.Models;
 using BirthdayCollator.Server.Processing.Pipelines;
 
 namespace BirthdayCollator.Server.Services;

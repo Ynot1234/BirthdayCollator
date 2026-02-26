@@ -1,4 +1,4 @@
-﻿using BirthdayCollator.Models;
+﻿using BirthdayCollator.Server.Models;
 using System.Collections.Generic;
 using System.Threading.Tasks;
 

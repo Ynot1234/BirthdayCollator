@@ -1,11 +1,7 @@
-﻿using BirthdayCollator.Models;
-using BirthdayCollator.Helpers;
+﻿using BirthdayCollator.Helpers;
 using HtmlAgilityPack;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Net.Http;
 using BirthdayCollator.Server.Constants;
+using BirthdayCollator.Server.Models;
 
 
 

@@ -1,8 +1,6 @@
 ﻿using BirthdayCollator.Constants;
-using BirthdayCollator.Models;
+using BirthdayCollator.Server.Models;
 using HtmlAgilityPack;
-using System;
-using System.Collections.Generic;
 using System.Globalization;
 
 namespace BirthdayCollator.Server.Processing.Parsers

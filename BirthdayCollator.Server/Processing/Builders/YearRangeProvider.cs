@@ -1,8 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-
-namespace BirthdayCollator.Server.Processing.Builders;
+﻿namespace BirthdayCollator.Server.Processing.Builders;
 
 public sealed class YearRangeProvider : IYearRangeProvider
 {

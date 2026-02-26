@@ -1,9 +1,5 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Globalization;
-using System.Linq;
+﻿using System.Globalization;
 using HtmlAgilityPack;
-using System.IO;
 
 namespace BirthdayCollator.Server.Processing.Parsers
 {

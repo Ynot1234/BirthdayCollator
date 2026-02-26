@@ -1,5 +1,5 @@
-﻿using BirthdayCollator.Models;
-using BirthdayCollator.Server.Configuration;
+﻿using BirthdayCollator.Server.Configuration;
+using BirthdayCollator.Server.Models;
 using BirthdayCollator.Server.Processing.Builders;
 using BirthdayCollator.Server.Processing.Sources;
 using Microsoft.Extensions.Options;

@@ -77,8 +77,4 @@
     <ProjectReference Include="..\BirthdayCollator.ServiceDefaults\BirthdayCollator.ServiceDefaults.csproj" />
   </ItemGroup>
 
-  <ItemGroup>
-    <Folder Include="Processing\Filters\" />
-  </ItemGroup>
-
 </Project>

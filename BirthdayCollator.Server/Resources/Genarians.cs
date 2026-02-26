@@ -3,7 +3,7 @@ using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using BirthdayCollator.Constants;
-using BirthdayCollator.Models;
+using BirthdayCollator.Server.Models;
 using BirthdayCollator.Server.Processing.Builders;
 using BirthdayCollator.Server.Processing.Parsers;
 using HtmlAgilityPack;

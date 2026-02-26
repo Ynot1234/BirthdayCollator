@@ -1,5 +1,5 @@
-﻿using BirthdayCollator.Models;
-using BirthdayCollator.Server.AI.Services;
+﻿using BirthdayCollator.Server.AI.Services;
+using BirthdayCollator.Server.Models;
 using System;
 using System.Collections.Generic;
 using System.Linq;

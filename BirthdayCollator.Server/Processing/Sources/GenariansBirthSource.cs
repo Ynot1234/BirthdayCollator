@@ -1,9 +1,5 @@
-﻿using BirthdayCollator.Models;
-using BirthdayCollator.Resources;
-using System;
-using System.Collections.Generic;
-using System.Threading;
-using System.Threading.Tasks;
+﻿using BirthdayCollator.Resources;
+using BirthdayCollator.Server.Models;
 
 namespace BirthdayCollator.Server.Processing.Sources
 {

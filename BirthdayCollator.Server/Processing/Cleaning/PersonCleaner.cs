@@ -1,8 +1,6 @@
-﻿using BirthdayCollator.Models;
-using System;
-using System.Collections.Generic;
-using System.Text;
+﻿using System.Text;
 using BirthdayCollator.Helpers;
+using BirthdayCollator.Server.Models;
 
 namespace BirthdayCollator.Server.Processing.Cleaning
 {

@@ -1,6 +1,4 @@
-﻿using System;
-
-namespace BirthdayCollator.Models
+﻿namespace BirthdayCollator.Server.Models
 {
     public sealed class Person
     {

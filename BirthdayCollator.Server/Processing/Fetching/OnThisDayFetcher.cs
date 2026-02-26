@@ -1,8 +1,5 @@
 ﻿using BirthdayCollator.Constants;
 using System.Globalization;
-using System.Net.Http;
-using System.Threading;
-using System.Threading.Tasks;
 
 namespace BirthdayCollator.Server.Processing.Fetching
 {

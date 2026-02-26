@@ -1,11 +1,6 @@
 ﻿using BirthdayCollator.Constants;
-using BirthdayCollator.Models;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Net.Http;
+using BirthdayCollator.Server.Models;
 using System.Text.Json;
-using System.Threading.Tasks;
 
 namespace BirthdayCollator.Server.Processing.Enrichment
 {
