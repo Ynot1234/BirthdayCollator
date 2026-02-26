@@ -9,6 +9,57 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <Compile Remove="Processing\Builders - Copy\**" />
+    <Compile Remove="Processing\Cleaning - Copy\**" />
+    <Compile Remove="Processing\Deduplication - Copy\**" />
+    <Compile Remove="Processing\Enrichment - Copy\**" />
+    <Compile Remove="Processing\Fetching - Copy\**" />
+    <Compile Remove="Processing\Filters - Copy\**" />
+    <Compile Remove="Processing\Parsers - Copy\**" />
+    <Compile Remove="Processing\Pipelines - Copy\**" />
+    <Compile Remove="Processing\Resolvers - Copy\**" />
+    <Compile Remove="Processing\Sorting - Copy\**" />
+    <Compile Remove="Processing\Sources - Copy\**" />
+    <Compile Remove="Processing\Validation - Copy\**" />
+    <Content Remove="Processing\Builders - Copy\**" />
+    <Content Remove="Processing\Cleaning - Copy\**" />
+    <Content Remove="Processing\Deduplication - Copy\**" />
+    <Content Remove="Processing\Enrichment - Copy\**" />
+    <Content Remove="Processing\Fetching - Copy\**" />
+    <Content Remove="Processing\Filters - Copy\**" />
+    <Content Remove="Processing\Parsers - Copy\**" />
+    <Content Remove="Processing\Pipelines - Copy\**" />
+    <Content Remove="Processing\Resolvers - Copy\**" />
+    <Content Remove="Processing\Sorting - Copy\**" />
+    <Content Remove="Processing\Sources - Copy\**" />
+    <Content Remove="Processing\Validation - Copy\**" />
+    <EmbeddedResource Remove="Processing\Builders - Copy\**" />
+    <EmbeddedResource Remove="Processing\Cleaning - Copy\**" />
+    <EmbeddedResource Remove="Processing\Deduplication - Copy\**" />
+    <EmbeddedResource Remove="Processing\Enrichment - Copy\**" />
+    <EmbeddedResource Remove="Processing\Fetching - Copy\**" />
+    <EmbeddedResource Remove="Processing\Filters - Copy\**" />
+    <EmbeddedResource Remove="Processing\Parsers - Copy\**" />
+    <EmbeddedResource Remove="Processing\Pipelines - Copy\**" />
+    <EmbeddedResource Remove="Processing\Resolvers - Copy\**" />
+    <EmbeddedResource Remove="Processing\Sorting - Copy\**" />
+    <EmbeddedResource Remove="Processing\Sources - Copy\**" />
+    <EmbeddedResource Remove="Processing\Validation - Copy\**" />
+    <None Remove="Processing\Builders - Copy\**" />
+    <None Remove="Processing\Cleaning - Copy\**" />
+    <None Remove="Processing\Deduplication - Copy\**" />
+    <None Remove="Processing\Enrichment - Copy\**" />
+    <None Remove="Processing\Fetching - Copy\**" />
+    <None Remove="Processing\Filters - Copy\**" />
+    <None Remove="Processing\Parsers - Copy\**" />
+    <None Remove="Processing\Pipelines - Copy\**" />
+    <None Remove="Processing\Resolvers - Copy\**" />
+    <None Remove="Processing\Sorting - Copy\**" />
+    <None Remove="Processing\Sources - Copy\**" />
+    <None Remove="Processing\Validation - Copy\**" />
+  </ItemGroup>
+
+  <ItemGroup>
     <Compile Remove="WikiBirthdayFetcher.cs" />
   </ItemGroup>
 
@@ -24,6 +75,10 @@
       <ReferenceOutputAssembly>false</ReferenceOutputAssembly>
     </ProjectReference>
     <ProjectReference Include="..\BirthdayCollator.ServiceDefaults\BirthdayCollator.ServiceDefaults.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Folder Include="Processing\Filters\" />
   </ItemGroup>
 
 </Project>

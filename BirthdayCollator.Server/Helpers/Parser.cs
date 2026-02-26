@@ -1,8 +1,9 @@
 ﻿using BirthdayCollator.Constants;
 using BirthdayCollator.Helpers;
 using BirthdayCollator.Models;
-using BirthdayCollator.Processing;
 using BirthdayCollator.Server.Constants;
+using BirthdayCollator.Server.Processing.Builders;
+using BirthdayCollator.Server.Processing.Validation;
 using HtmlAgilityPack;
 using System;
 using System.Collections.Generic;

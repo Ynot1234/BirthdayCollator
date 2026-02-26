@@ -1,4 +1,4 @@
-﻿using BirthdayCollator.Processing;
+﻿using BirthdayCollator.Server.Processing.Fetching;
 
 namespace BirthdayCollator.Server.Extensions;
 

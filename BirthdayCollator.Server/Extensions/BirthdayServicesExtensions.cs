@@ -1,5 +1,11 @@
-﻿using BirthdayCollator.Processing;
-using BirthdayCollator.Server.Processing;
+﻿using BirthdayCollator.Server.Processing.Builders;
+using BirthdayCollator.Server.Processing.Cleaning;
+using BirthdayCollator.Server.Processing.Deduplication;
+using BirthdayCollator.Server.Processing.Enrichment;
+using BirthdayCollator.Server.Processing.Fetching;
+using BirthdayCollator.Server.Processing.Parsers;
+using BirthdayCollator.Server.Processing.Resolvers;
+using BirthdayCollator.Server.Processing.Sorting;
 
 namespace BirthdayCollator.Server.Extensions;
 

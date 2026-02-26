@@ -4,7 +4,8 @@ using System.Threading;
 using System.Threading.Tasks;
 using BirthdayCollator.Constants;
 using BirthdayCollator.Models;
-using BirthdayCollator.Processing;
+using BirthdayCollator.Server.Processing.Builders;
+using BirthdayCollator.Server.Processing.Parsers;
 using HtmlAgilityPack;
 
 namespace BirthdayCollator.Resources

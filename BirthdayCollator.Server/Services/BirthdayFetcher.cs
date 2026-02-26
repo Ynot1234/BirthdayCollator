@@ -1,6 +1,5 @@
 ﻿using BirthdayCollator.Models;
-using BirthdayCollator.Processing;
-using BirthdayCollator.Server.Processing;
+using BirthdayCollator.Server.Processing.Pipelines;
 
 namespace BirthdayCollator.Server.Services;
 
