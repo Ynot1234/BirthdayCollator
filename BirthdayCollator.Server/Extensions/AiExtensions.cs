@@ -1,5 +1,6 @@
 ﻿using BirthdayCollator.AI.Semantic;
 using BirthdayCollator.Server.AI.Services;
+using BirthdayCollator.Server.Processing.Enrichment;
 
 namespace BirthdayCollator.Server.Extensions;
 
@@ -9,6 +10,11 @@ public static class AiExtensions
     {
         services.AddSemanticKernel(config);
         services.AddScoped<IAIService, AIService>();
+
+        services.AddMemoryCache();
+        services.AddScoped<IPersonEnrichmentService, PersonEnrichmentService>();
+
+
         return services;
     }
 }

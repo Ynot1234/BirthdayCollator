@@ -1,5 +1,4 @@
 using BirthdayCollator.Server.Extensions;
-using BirthdayCollator.Server.Processing.Enrichment;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -14,10 +13,6 @@ builder.Services.AddControllers();
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
 builder.Services.AddHealthChecks();
-
-builder.Services.AddMemoryCache();
-builder.Services.AddScoped<IPersonEnrichmentService, PersonEnrichmentService>();
-
 
 var app = builder.Build();
 
@@ -36,7 +31,6 @@ else
     app.UseHttpsRedirection();
 }
 
-app.UseRouting();
 app.UseCors("AllowFrontend");
 app.MapControllers();
 
