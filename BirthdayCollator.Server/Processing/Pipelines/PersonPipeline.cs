@@ -16,8 +16,9 @@ public sealed class PersonPipeline(
     NearDuplicateRemover nearDupes,
     DeduplicateByURL urlDeduper,
     PersonDedupe descriptionDupes,
-    PersonWikiEnricher enricher,
-    PersonAIEnricher aiEnricher) : IPersonPipeline
+    PersonWikiEnricher enricher
+    //PersonAIEnricher aiEnricher
+    ) : IPersonPipeline
 {
     public async Task<List<Person>> Process(List<Person> people)
     {

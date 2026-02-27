@@ -6,7 +6,6 @@ namespace BirthdayCollator.Server.Processing.Cleaning;
 
 public sealed class PersonCleaner
 {
-
     public List<Person> CleanPersons(List<Person> people)
     {
         List<Person> cleanedPeople = [];
@@ -16,6 +15,9 @@ public sealed class PersonCleaner
             string cleanedName = CleanField(p.Name);
             string cleanedDescription = CleanField(p.Description);
             string finalDescription = RemoveDuplicateLeadingName(cleanedName, cleanedDescription);
+
+            if (string.IsNullOrWhiteSpace(finalDescription))
+                continue;
 
             Person cleanedPerson = new()
             {
@@ -36,7 +38,6 @@ public sealed class PersonCleaner
 
         return cleanedPeople;
     }
-
 
     private static string CleanField(string input)
     {
