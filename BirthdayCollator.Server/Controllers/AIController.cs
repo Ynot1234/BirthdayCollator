@@ -1,5 +1,4 @@
-﻿using BirthdayCollator.Server.AI.Services;
-using BirthdayCollator.Server.Processing.Enrichment; // Ensure this namespace is here
+﻿using BirthdayCollator.Server.Processing.Enrichment; 
 using Microsoft.AspNetCore.Mvc;
 
 namespace BirthdayCollator.Server.Controllers;
@@ -12,7 +11,6 @@ public sealed class SummarizeRequest
 
 [ApiController]
 [Route("api/ai")]
-// Inject the EnrichmentService instead of the AI service directly
 public class AIController(IPersonEnrichmentService enrichmentService, IConfiguration config) : ControllerBase
 {
     [HttpGet("has-key")]

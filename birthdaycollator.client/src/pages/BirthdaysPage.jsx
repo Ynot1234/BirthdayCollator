@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { fetchBirthdays } from "../api/birthdays";
+import { fetchBirthdays, clearBirthdayCache } from "../api/birthdays";
 import { useBackendHealth } from "../hooks/useBackendHealth";
 import { useOverrideYear } from "../hooks/useOverrideYear";
 import { useOpenAIKey } from "../hooks/useOpenAIKey";
@@ -7,6 +7,7 @@ import { useSummaries } from "../hooks/useSummaries";
 import { daysInMonth, incrementDay, decrementDay } from "../utils/dateUtils";
 import styles from "./BirthdaysPage.module.css";
 import ToolsDropdown from "../components/ToolsDropdown";
+
 
 
 export default function BirthdaysPage() {
@@ -31,6 +32,7 @@ export default function BirthdaysPage() {
 
   const { summaries, setSummaries, summarizePerson } = useSummaries();
 
+  const base = import.meta.env.VITE_API_BASE_URL;
 
 
   const backendOnline = useBackendHealth();
@@ -47,7 +49,11 @@ export default function BirthdaysPage() {
   const monthNames = [
     "January","February","March","April","May","June",
     "July","August","September","October","November","December"
-  ];
+    ];
+
+    const [selectedMonth, setSelectedMonth] = useState(null);
+    const [selectedDay, setSelectedDay] = useState(null);
+
 
   const isStale =
     fetchedMonth !== null &&
@@ -66,8 +72,8 @@ export default function BirthdaysPage() {
     }
   }, [month, activeYear]);
 
- 
-  // ---------------------------------------------------------
+
+ // ---------------------------------------------------------
   // Fetch birthdays
   // ---------------------------------------------------------
     async function run() {
@@ -82,6 +88,9 @@ export default function BirthdaysPage() {
             setResults(data);
             setFetchedMonth(month);
             setFetchedDay(day);
+
+          //  await checkExists();
+
         } catch (err) {
             if (err.name === "AbortError") {
                 console.log("Run cancelled");
@@ -94,6 +103,17 @@ export default function BirthdaysPage() {
             setRunController(null);
         }
     }
+
+    const [isCached, setIsCached] = useState(false);
+
+    useEffect(() => {
+        async function check() {
+            const res = await fetch(`${base}/api/birthdays/exists/${month}/${day}`);
+            const exists = await res.json();
+            setIsCached(exists);
+        }
+        check();
+    }, [month, day]);
 
 
   function setToToday() {
@@ -129,7 +149,7 @@ export default function BirthdaysPage() {
     );
   }
 
-   return (
+    return (
         <div className={styles.page}>
             <div className={styles.card}>
 
@@ -149,15 +169,17 @@ export default function BirthdaysPage() {
                     </button>
 
                     <div className={styles.toolbarGroup}>
-                       <button
+                        <button
                             className={styles.toolbarButton}
                             onClick={() => {
                                 const next = incrementDay(activeYear, month, day);
                                 setMonth(next.month);
                                 setDay(next.day);
                             }}
-                        > +
+                        >
+                            +
                         </button>
+
                         <button
                             className={styles.toolbarButton}
                             onClick={() => {
@@ -165,8 +187,10 @@ export default function BirthdaysPage() {
                                 setMonth(next.month);
                                 setDay(next.day);
                             }}
-                        > -
+                        >
+                            -
                         </button>
+
                         {isRunning ? (
                             <button
                                 className={`${styles.toolbarButton} ${styles.cancelButton}`}
@@ -185,10 +209,21 @@ export default function BirthdaysPage() {
                             </button>
                         )}
 
+                        {/*{isCached && (*/}
+                        {/*    <button*/}
+                        {/*        className={styles.toolbarButton}*/}
+                        {/*        onClick={() => clearBirthdayCache(month, day)}*/}
+                        {/*        disabled={loading}*/}
+                        {/*    >*/}
+                        {/*        Clear Cache*/}
+                        {/*    </button>*/}
+                        {/*)}*/}
+
                     </div>
                 </div>
-             
+
                 <div style={{ height: "6px", width: "100%" }} />
+
                 <div className={styles.dateSelectors}>
                     <select value={month} onChange={e => setMonth(Number(e.target.value))}>
                         {monthNames.map((name, index) => (
@@ -253,11 +288,11 @@ export default function BirthdaysPage() {
                                             }
                                             onClick={() => {
                                                 if (summaries[p.name]) {
-                                                    const copy = { ...summaries }
-                                                    delete copy[p.name]
-                                                    setSummaries(copy)
+                                                    const copy = { ...summaries };
+                                                    delete copy[p.name];
+                                                    setSummaries(copy);
                                                 } else {
-                                                    summarizePerson(p)
+                                                    summarizePerson(p);
                                                 }
                                             }}
                                         >
@@ -271,7 +306,6 @@ export default function BirthdaysPage() {
                                         )}
                                     </div>
                                 </li>
-
                             ))}
                         </ul>
                     </div>
@@ -279,5 +313,6 @@ export default function BirthdaysPage() {
             </div>
         </div>
     );
+
 
 }

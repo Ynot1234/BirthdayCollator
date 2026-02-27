@@ -2,7 +2,7 @@
 using BirthdayCollator.Server.Processing.Builders;
 using BirthdayCollator.Server.Services;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.Extensions.Caching.Memory; // Required for IMemoryCache
+using Microsoft.Extensions.Caching.Memory; 
 
 namespace BirthdayCollator.Server.Controllers;
 
@@ -10,25 +10,41 @@ namespace BirthdayCollator.Server.Controllers;
 [Route("api/[controller]")]
 public class BirthdaysController(BirthdayFetcher fetcher, IMemoryCache cache) : ControllerBase
 {
-    // PUSH MODEL
     [HttpGet]
     public async Task<List<Person>> Get(int month, int day, CancellationToken token)
     {
-        string cacheKey = $"birthdays:{month}:{day}";
 
-        return await cache.GetOrCreateAsync(cacheKey, async entry =>
-        {
-            entry.Priority = CacheItemPriority.NeverRemove;
-            return await fetcher.GetBirthdays(month, day, token);
-        }) ?? [];
+        return await fetcher.GetBirthdays(month, day, token);
+
+        //string cacheKey = $"birthdays:{month}:{day}";
+
+        //return await cache.GetOrCreateAsync(cacheKey, async entry =>
+        //{
+        //    entry.Priority = CacheItemPriority.NeverRemove;
+        //    return await fetcher.GetBirthdays(month, day, token);
+        //}) ?? [];
     }
+
+    [HttpDelete("{month:int}/{day:int}")]
+    public void Clear(int month, int day)
+    {
+        string cacheKey = $"birthdays:{month}:{day}";
+        cache.Remove(cacheKey);
+    }
+
+    [HttpGet("exists/{month:int}/{day:int}")]
+    public bool Exists(int month, int day)
+    {
+        string cacheKey = $"birthdays:{month}:{day}";
+        return cache.TryGetValue(cacheKey, out _);
+    }
+
 
     // PULL MODEL #1
     [HttpGet("current")]
     public async Task<List<Person>> GetCurrent(CancellationToken token)
     {
         var today = DateTime.Today;
-        // Reuse the cached logic from the Get method above
         return await Get(today.Month, today.Day, token);
     }
 

@@ -1,5 +1,6 @@
 ﻿using HtmlAgilityPack;
 using System.Text.RegularExpressions;
+using BirthdayCollator.Server.Constants;
 
 namespace BirthdayCollator.Server.Processing.Validation;
 
@@ -22,7 +23,7 @@ public class BirthEntryValidator(
             return false;
 
 
-        HtmlNodeCollection links = liNode.SelectNodes(".//a[@href]");
+        HtmlNodeCollection links = liNode.SelectNodes(XPathSelectors.DescendantAnchorHref);
 
         if (links == null || links.Count == 0)
             return false;

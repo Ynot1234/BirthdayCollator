@@ -6,8 +6,7 @@ namespace BirthdayCollator.Server.Processing.Parsers;
 public sealed class GenariansPageParser()
 {
 
-    public sealed record ParsedGenarian(
-                                        string Name,
+    public sealed record ParsedGenarian(string Name,
                                         string Description,
                                         string WikipediaUrl,
                                         DateTime BirthDate,
@@ -23,34 +22,27 @@ public sealed class GenariansPageParser()
     {
         parsed = null!;
 
-        // Validate row structure
         HtmlNodeCollection cells = row.SelectNodes("./th");
+
         if (cells == null || cells.Count < 3)
             return false;
 
-        // Extract Wikipedia link
         string wikiUrl = ExtractWikipediaUrl(cells[0]);
 
-        // Extract spans
         HtmlNodeCollection? spans = GetSpans(cells[2]);
         if (spans == null || spans.Count < 2)
             return false;
 
-        // Extract name
         string name = ExtractName(spans);
 
-        // Extract description + date string
         var (description, dateString) = ExtractDescriptionAndDate(spans);
 
-        // Parse date
         if (!TryParseGenarianDate(dateString, out var parsedDate))
             return false;
 
-        // Filter by requested month/day
         if (!MatchesTargetDate(parsedDate, targetMonthName, targetDay))
             return false;
 
-        // Build birth date
         DateTime birthDate = new(parsedDate.Year, parsedDate.Month, parsedDate.Day);
 
         parsed = new ParsedGenarian(  Name: name,
@@ -121,8 +113,7 @@ public sealed class GenariansPageParser()
     }
 
 
-    private static (string Description, string Date)
-        ExtractDescriptionAndDate(HtmlNodeCollection spans)
+    private static (string Description, string Date) ExtractDescriptionAndDate(HtmlNodeCollection spans)
     {
         HtmlNode lastSpan = spans.Last();
 

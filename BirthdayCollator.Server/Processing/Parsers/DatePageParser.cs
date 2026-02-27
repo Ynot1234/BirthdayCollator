@@ -4,6 +4,7 @@ using System.Globalization;
 using BirthdayCollator.Server.Processing.Builders;
 using BirthdayCollator.Server.Processing.Validation;
 using BirthdayCollator.Server.Models;
+using BirthdayCollator.Server.Constants;
 
 namespace BirthdayCollator.Server.Processing.Parsers;
 
@@ -74,7 +75,7 @@ public sealed partial class DatePageParser(BirthEntryValidator validator, Person
 
     private static List<HtmlNode> ExtractBirthLiNodes(HtmlDocument htmlDoc)
     {
-        var birthsHeader = htmlDoc.DocumentNode.SelectSingleNode("//h2[@id='Births']");
+        var birthsHeader = htmlDoc.DocumentNode.SelectSingleNode(XPathSelectors.YearBirthsHeader);
         if (birthsHeader == null)
             return [];
 
@@ -114,7 +115,7 @@ public sealed partial class DatePageParser(BirthEntryValidator validator, Person
 
     private static HtmlNode? TryFindPersonLink(HtmlNode liNode)
     {
-        HtmlNodeCollection links = liNode.SelectNodes(".//a[@href]");
+        HtmlNodeCollection links = liNode.SelectNodes(XPathSelectors.DescendantAnchorHref);
         if (links == null || links.Count == 0)
             return null;
 

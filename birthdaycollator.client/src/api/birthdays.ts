@@ -24,7 +24,7 @@ export async function fetchBirthdays(
     } catch (err) {
         // Clean cancellation handling
         if (err instanceof DOMException && err.name === "AbortError") {
-            throw err; // Let the caller detect cancellation
+            throw err; 
         }
 
         let message = "Unexpected error occurred.";
@@ -42,5 +42,29 @@ export async function fetchBirthdays(
         }
 
         throw new Error(message);
+    }
+}
+
+export async function clearBirthdayCache(
+    month: number | string | { value: number },
+    day: number | string | { value: number }
+) {
+    const base = import.meta.env.VITE_API_BASE_URL;
+
+    // Normalize values coming from dropdowns, dates, or raw numbers
+    const monthValue =
+        typeof month === "object" && month !== null ? month.value : month;
+
+    const dayValue =
+        typeof day === "object" && day !== null ? day.value : day;
+
+    const response = await fetch(
+        `${base}/api/birthdays/${monthValue}/${dayValue}`,
+        { method: "DELETE" }
+    );
+
+
+    if (!response.ok) {
+        throw new Error(`Failed to clear cache: HTTP ${response.status}`);
     }
 }
