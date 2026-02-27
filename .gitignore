@@ -59,3 +59,4 @@ lerna-debug.log*
 # =========================
 appsettings.Development.json
 .env
+/BirthdayCollator.Server/Configuration/BirthSourceOptions.cs
