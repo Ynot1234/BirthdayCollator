@@ -29,7 +29,7 @@ public sealed class PersonPipeline(
         people = nearDupes.RemoveNearDuplicates(people);
         people = urlDeduper.DeduplicateByUrl(people);
         people = descriptionDupes.DedupePeople(people);
-        people = await aiEnricher.EnrichPeopleAsync(people);
+      //  people = await aiEnricher.EnrichPeopleAsync(people);
         return people;
     }
 }

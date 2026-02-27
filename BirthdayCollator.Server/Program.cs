@@ -1,4 +1,5 @@
 using BirthdayCollator.Server.Extensions;
+using BirthdayCollator.Server.Processing.Enrichment;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -14,6 +15,8 @@ builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
 builder.Services.AddHealthChecks();
 
+builder.Services.AddMemoryCache();
+builder.Services.AddScoped<IPersonEnrichmentService, PersonEnrichmentService>();
 
 
 var app = builder.Build();

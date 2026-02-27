@@ -1,4 +1,5 @@
 ﻿using BirthdayCollator.Server.AI.Services;
+using BirthdayCollator.Server.Processing.Enrichment; // Ensure this namespace is here
 using Microsoft.AspNetCore.Mvc;
 
 namespace BirthdayCollator.Server.Controllers;
@@ -11,9 +12,9 @@ public sealed class SummarizeRequest
 
 [ApiController]
 [Route("api/ai")]
-public class AIController(IAIService ai, IConfiguration config) : ControllerBase
+// Inject the EnrichmentService instead of the AI service directly
+public class AIController(IPersonEnrichmentService enrichmentService, IConfiguration config) : ControllerBase
 {
-
     [HttpGet("has-key")]
     public IActionResult HasKey()
     {
@@ -25,13 +26,12 @@ public class AIController(IAIService ai, IConfiguration config) : ControllerBase
     [HttpPost("summarize")]
     public async Task<IActionResult> Summarize([FromBody] SummarizeRequest request)
     {
-        if (string.IsNullOrWhiteSpace(request.Name))
-            return BadRequest("The 'name' field is required.");
+        if (string.IsNullOrWhiteSpace(request.Name) 
+         || string.IsNullOrWhiteSpace(request.Description))
+            return BadRequest("Name and description are required.");
 
-        if (string.IsNullOrWhiteSpace(request.Description))
-            return BadRequest("The 'description' field is required.");
+        string result = await enrichmentService.GetSummaryAsync(request.Name, request.Description);
 
-        string result = await ai.SummarizeAsync(request.Name, request.Description);
         return Ok(result);
     }
 }
