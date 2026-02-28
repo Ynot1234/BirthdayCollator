@@ -11,7 +11,6 @@ public class PersonFactory(Func<string, string> normalizeHref, IPersonNameResolv
 {
     private readonly Func<string, string> _normalizeHref = normalizeHref;
     
-
     public Person Create(
         string name,
         string description,
@@ -43,21 +42,16 @@ public class PersonFactory(Func<string, string> normalizeHref, IPersonNameResolv
             Name = parsed.Name,
             Description = parsed.Description,
             Url = parsed.WikipediaUrl,
-
             BirthYear = parsed.BirthDate.Year,
             Month = parsed.BirthDate.Month,
             Day = parsed.BirthDate.Day,
-
             Section = "Births",
-
             SourceSlug = parsed.SourceSlug,
             DisplaySlug = "Genarians"
         };
 
         Person person = Create(p, parsed.SourceSlug);
-
         person.SourceUrl = parsed.GenariansPageUrl;
-
         return person;
     }
 
@@ -68,25 +62,19 @@ public class PersonFactory(Func<string, string> normalizeHref, IPersonNameResolv
             Name = p.Name,
             Description = p.Description,
             Url = p.Url,
-
             BirthYear = p.BirthYear,
             Month = p.Month,
             Day = p.Day,
             Section = p.Section,
-
             SourceSlug = sourceSlug,
-            SourceUrl = p.SourceUrl ?? BuildWikiSourceUrl(sourceSlug),
-
+            SourceUrl = p.SourceUrl ?? $"{Urls.ArticleBase}/{sourceSlug}#Births",
             DisplaySlug = p.DisplaySlug
         };
     }
 
     public Person CreateWithSuffix(Person parsed, DateTime birthDate, string? suffix)
     {
-        string idSuffix = suffix == string.Empty
-            ? $"{birthDate.Year}"
-            : $"{birthDate.Year}_{suffix}";
-
+        string idSuffix = suffix == string.Empty ? $"{birthDate.Year}" : $"{birthDate.Year}_{suffix}";
         return Create(parsed, idSuffix);
     }
 
@@ -105,13 +93,9 @@ public class PersonFactory(Func<string, string> normalizeHref, IPersonNameResolv
     {
         string name = HtmlEntity.DeEntitize(personLink.InnerText).Trim();
         string description = ExtractDescription(rawText);
-
         string href = personLink.GetAttributeValue("href", "");
         string normalized = _normalizeHref(href);
-
-        string wikiUrl = normalized.StartsWith("http", StringComparison.OrdinalIgnoreCase)
-            ? normalized
-            : Urls.Domain + normalized;
+        string wikiUrl = normalized.StartsWith("http", StringComparison.OrdinalIgnoreCase) ? normalized : Urls.Domain + normalized;
 
         return Create(
             name,
@@ -124,17 +108,6 @@ public class PersonFactory(Func<string, string> normalizeHref, IPersonNameResolv
             sourceSlug
         );
     }
-
-
-
-    private static string? BuildWikiSourceUrl(string? slug)
-    {
-        if (string.IsNullOrWhiteSpace(slug))
-            return null;
-
-        return $"{Urls.ArticleBase}/{slug}#Births";
-    }
-
 
 
     private static string ExtractDescription(string rawText)

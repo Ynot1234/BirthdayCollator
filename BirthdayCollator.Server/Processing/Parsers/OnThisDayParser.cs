@@ -2,6 +2,7 @@
 using BirthdayCollator.Server.Models;
 using HtmlAgilityPack;
 using System.Globalization;
+using BirthdayCollator.Server.Helpers;
 
 namespace BirthdayCollator.Server.Processing.Parsers;
 
@@ -74,21 +75,22 @@ public sealed class OnThisDayParser
 
     private static bool TryExtractNameAndDescription(string raw, int year, out string name, out string description)
     {
-        name = string.Empty;
-        description = string.Empty;
-
         string trimmed = raw.StartsWith(year.ToString())
             ? raw[year.ToString().Length..].Trim()
             : raw;
 
-        int commaIndex = trimmed.IndexOf(',');
+        var (n, d) = StringNormalization.SplitNameAndDescription(trimmed);
 
-        if (commaIndex < 0)
+        if (d is null)
+        {
+            name = "";
+            description = "";
             return false;
+        }
 
-        name = trimmed[..commaIndex].Trim();
-        description = trimmed[(commaIndex + 1)..].Trim();
-
+        name = n;
+        description = d;
         return true;
     }
+
 }

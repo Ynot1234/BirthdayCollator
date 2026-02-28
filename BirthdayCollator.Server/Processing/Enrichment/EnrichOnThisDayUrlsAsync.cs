@@ -10,7 +10,7 @@ public sealed class PersonWikiEnricher(IHttpClientFactory httpFactory)
 
     public async Task<List<Person>> EnrichOnThisDayUrlsAsync(List<Person> people)
     {
-        foreach (var p in people)
+        foreach (Person p in people)
         {
             if (!string.Equals(p.SourceSlug, "OnThisDay", StringComparison.OrdinalIgnoreCase))
                 continue;
@@ -103,7 +103,7 @@ public sealed class PersonWikiEnricher(IHttpClientFactory httpFactory)
         if (string.IsNullOrWhiteSpace(description))
             return string.Empty;
 
-        var words = description.Split(' ', StringSplitOptions.RemoveEmptyEntries);
+        string[] words = description.Split(' ', StringSplitOptions.RemoveEmptyEntries);
 
         if (words.Length >= 2)
             return $"{words[0]} {words[1]}";

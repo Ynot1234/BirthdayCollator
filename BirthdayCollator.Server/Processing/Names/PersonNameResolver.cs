@@ -1,4 +1,5 @@
 ﻿using BirthdayCollator.Server.Models;
+using BirthdayCollator.Server.Helpers;
 
 namespace BirthdayCollator.Server.Processing.Names;
 
@@ -10,16 +11,12 @@ public interface IPersonNameResolver
 
 public sealed class PersonNameResolver : IPersonNameResolver
 {
+   
     public string ExtractName(string text)
     {
-        if (string.IsNullOrWhiteSpace(text))
-            return string.Empty;
-
-        int idx = text.IndexOf('(');
-        if (idx > 0)
-            text = text[..idx];
-
-        return text.Trim().TrimEnd(',');
+        if (string.IsNullOrWhiteSpace(text)) return string.Empty;
+        string formatted = StringNormalization.RemoveParenthetical(text);
+        return StringNormalization.CleanName(formatted);
     }
 
     public void FixSwappedName(Person person)

@@ -12,7 +12,6 @@ public interface ILinkResolver
     HtmlNode? FindPersonLink(HtmlNode li, string entry);
     bool IsDateHref(string href);
     bool HrefMatchesName(string href, string name);
-
     bool TryApplyHrefOverride(Person person, string? href);
 }
 
@@ -27,29 +26,32 @@ public sealed class LinkResolver : ILinkResolver
         string personName = ExtractPersonName(entry);
         string normalizedPerson = HtmlEntity.DeEntitize(personName).Trim();
 
-        List<HtmlNode> nonDateLinks = [.. links.Where(a => !IsDateHref(a.GetAttributeValue("href", "")))];
+        List<HtmlNode> nonDateLinks =
+            [.. links.Where(a => !IsDateHref(a.GetAttributeValue("href", "")))];
 
         if (nonDateLinks.Count == 0)
             return null;
 
-        foreach (var a in nonDateLinks)
+        HtmlNode? fuzzyMatch = null;
+
+        foreach (HtmlNode a in nonDateLinks)
         {
             string linkText = HtmlEntity.DeEntitize(a.InnerText).Trim();
+
             if (string.Equals(linkText, normalizedPerson, StringComparison.OrdinalIgnoreCase))
                 return a;
+
+            if (fuzzyMatch is null)
+            {
+                bool personContainsLink = normalizedPerson.Contains(linkText, StringComparison.OrdinalIgnoreCase);
+                bool linkContainsPerson = linkText.Contains(normalizedPerson, StringComparison.OrdinalIgnoreCase);
+
+                if (personContainsLink || linkContainsPerson)
+                    fuzzyMatch = a;
+            }
         }
 
-        foreach (var a in nonDateLinks)
-        {
-            string linkText = HtmlEntity.DeEntitize(a.InnerText).Trim();
-            bool personContainsLink = normalizedPerson.Contains(linkText, StringComparison.OrdinalIgnoreCase);
-            bool linkContainsPerson = linkText.Contains(normalizedPerson, StringComparison.OrdinalIgnoreCase);
-
-            if (personContainsLink || linkContainsPerson)
-                return a;
-        }
-
-        return nonDateLinks.FirstOrDefault();
+        return fuzzyMatch ?? nonDateLinks.FirstOrDefault();
     }
 
     public bool IsDateHref(string href)
@@ -103,7 +105,7 @@ public sealed class LinkResolver : ILinkResolver
         if (string.IsNullOrWhiteSpace(text))
             return string.Empty;
 
-        var idx = text.IndexOf('(');
+        int idx = text.IndexOf('(');
         if (idx > 0)
             text = text[..idx];
 
@@ -114,8 +116,8 @@ public sealed class LinkResolver : ILinkResolver
     {
         s = s.ToLowerInvariant().Replace("_", " ");
         s = s.Normalize(NormalizationForm.FormD);
-        var chars = s.Where(c => CharUnicodeInfo.GetUnicodeCategory(c) != UnicodeCategory.NonSpacingMark);
-        return new string(chars.ToArray());
+        IEnumerable<char> chars = s.Where(c => CharUnicodeInfo.GetUnicodeCategory(c) != UnicodeCategory.NonSpacingMark);
+        return new string([.. chars]);
     }
 
     private static List<string> Tokenize(string s)

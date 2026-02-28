@@ -13,20 +13,22 @@ public sealed partial class DatePageParser(BirthEntryValidator validator, Person
 
     public List<Person> Parse(string html, int month, int day)
     {
-        var htmlDoc = new HtmlDocument();
+        HtmlDocument htmlDoc = new();
+        
         htmlDoc.LoadHtml(html);
         
-        var liNodes = ExtractBirthLiNodes(htmlDoc);
+        List<HtmlNode> liNodes = ExtractBirthLiNodes(htmlDoc);
+    
         if (liNodes.Count == 0)
             return [];
 
-        var results = new List<Person>();
+        List<Person> results = [];
 
-        foreach (var li in liNodes)
+        foreach (HtmlNode li in liNodes)
         {
             string rawText = NormalizeRawText(HtmlEntity.DeEntitize(li.InnerText));
 
-            if (!ContainsDashSeparator(rawText))
+            if (!rawText.Contains('–'))
                 continue;
 
             if (!TryExtractBirthYearFromDatePage(rawText, out int birthYear))
@@ -40,9 +42,9 @@ public sealed partial class DatePageParser(BirthEntryValidator validator, Person
             if (personLink == null)
                 continue;
 
-            string monthName = CultureInfo.InvariantCulture.DateTimeFormat.GetMonthName(month);
             DateTime birthDate = new(birthYear, month, day);
             Person parsed = personFactory.BuildPerson(rawText, birthDate, personLink);
+            string monthName = CultureInfo.InvariantCulture.DateTimeFormat.GetMonthName(month);
             Person person = personFactory.Create(parsed, $"{monthName} {day}");
             results.Add(person);
         }
@@ -50,12 +52,12 @@ public sealed partial class DatePageParser(BirthEntryValidator validator, Person
         return results;
     }
 
+    public static string Normalize(string? input) => string.IsNullOrWhiteSpace(input) ? string.Empty : input;
+
 
     private static string NormalizeRawText(string input)
     {
-        if (string.IsNullOrWhiteSpace(input))
-            return string.Empty;
-
+        input = Normalize(HtmlEntity.DeEntitize(input));
         string cleaned = input.Trim();
         cleaned = cleaned.Replace('—', '–').Replace('-', '–');
         cleaned = RegexPatterns.WhitespaceCollapseRegex().Replace(cleaned, " ");
@@ -63,23 +65,14 @@ public sealed partial class DatePageParser(BirthEntryValidator validator, Person
         return cleaned;
     }
 
-
-    private static bool ContainsDashSeparator(string text)
-    {
-        if (string.IsNullOrWhiteSpace(text))
-            return false;
-
-        return text.Contains('–');
-    }
-
-
     private static List<HtmlNode> ExtractBirthLiNodes(HtmlDocument htmlDoc)
     {
-        var birthsHeader = htmlDoc.DocumentNode.SelectSingleNode(XPathSelectors.YearBirthsHeader);
+        HtmlNode birthsHeader = htmlDoc.DocumentNode.SelectSingleNode(XPathSelectors.YearBirthsHeader);
+
         if (birthsHeader == null)
             return [];
 
-        var sections = new List<HtmlNode>();
+        List<HtmlNode> sections = [];
 
         for (HtmlNode node = birthsHeader.NextSibling;
              node != null;
@@ -92,7 +85,15 @@ public sealed partial class DatePageParser(BirthEntryValidator validator, Person
                 sections.Add(node);
         }
 
-        return [.. sections.SelectMany(s => s.SelectNodes(".//li") ?? Enumerable.Empty<HtmlNode>())];
+        List<HtmlNode> allListItems = [.. sections
+                                       .SelectMany(section =>
+                                       {
+                                           HtmlNodeCollection items = section.SelectNodes(".//li");
+                                           return items ?? Enumerable.Empty<HtmlNode>();
+                                       })];     
+
+        return allListItems;
+
     }
 
     private static bool IsYearLink(string href)
@@ -103,7 +104,7 @@ public sealed partial class DatePageParser(BirthEntryValidator validator, Person
 
     private static bool IsMonthDayLink(string href)
     {
-        var parts = href.Split('_');
+        string[] parts = href.Split('_');
         if (parts.Length != 2)
             return false;
 
@@ -116,10 +117,11 @@ public sealed partial class DatePageParser(BirthEntryValidator validator, Person
     private static HtmlNode? TryFindPersonLink(HtmlNode liNode)
     {
         HtmlNodeCollection links = liNode.SelectNodes(XPathSelectors.DescendantAnchorHref);
+
         if (links == null || links.Count == 0)
             return null;
 
-        foreach (var link in links)
+        foreach (HtmlNode link in links)
         {
             string href = link.GetAttributeValue("href", "");
 

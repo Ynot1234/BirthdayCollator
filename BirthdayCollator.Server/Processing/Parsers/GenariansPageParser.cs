@@ -1,11 +1,11 @@
 ﻿using System.Globalization;
 using HtmlAgilityPack;
+using BirthdayCollator.Server.Helpers;
 
 namespace BirthdayCollator.Server.Processing.Parsers;
 
 public sealed class GenariansPageParser()
 {
-
     public sealed record ParsedGenarian(string Name,
                                         string Description,
                                         string WikipediaUrl,
@@ -15,8 +15,8 @@ public sealed class GenariansPageParser()
 
     public bool TryParseRow(
         HtmlNode row,
-        string? targetMonthName,
-        int? targetDay,
+        string targetMonthName,
+        int targetDay,
         string sourceUrl,
         out ParsedGenarian parsed)
     {
@@ -27,13 +27,10 @@ public sealed class GenariansPageParser()
         if (cells == null || cells.Count < 3)
             return false;
 
-        string wikiUrl = ExtractWikipediaUrl(cells[0]);
+        HtmlNodeCollection spans = cells[2].SelectNodes(".//span");
 
-        HtmlNodeCollection? spans = GetSpans(cells[2]);
         if (spans == null || spans.Count < 2)
             return false;
-
-        string name = ExtractName(spans);
 
         var (description, dateString) = ExtractDescriptionAndDate(spans);
 
@@ -45,23 +42,22 @@ public sealed class GenariansPageParser()
 
         DateTime birthDate = new(parsedDate.Year, parsedDate.Month, parsedDate.Day);
 
+        string sourceslug = Path.GetFileNameWithoutExtension(sourceUrl);
+
+        string wikiUrl = ExtractWikipediaUrl(cells[0]);
+
+        string name = ExtractName(spans);
+
+        
         parsed = new ParsedGenarian(  Name: name,
                                       Description: description,
                                       WikipediaUrl: wikiUrl,
                                       BirthDate: birthDate,
                                       GenariansPageUrl: sourceUrl,
-                                      SourceSlug: ExtractGenarianSlug(sourceUrl));
+                                      SourceSlug: sourceslug);
         return true;
     }
 
-
-
-
-    private static string ExtractGenarianSlug(string url)
-    {
-        string file = Path.GetFileNameWithoutExtension(url);
-        return file;
-    }
 
     private static List<string> SplitLines(HtmlNode span)
     {
@@ -82,20 +78,14 @@ public sealed class GenariansPageParser()
     {
         string noHtml = StripHtml(raw);
         int commaIndex = noHtml.IndexOf(',');
-
-        return commaIndex > 0
-            ? noHtml[..commaIndex].Trim()
-            : noHtml;
+        return commaIndex > 0 ? noHtml[..commaIndex].Trim()  : noHtml;
     }
 
 
     private static bool MatchesTargetDate(  DateTime parsed,
-                                            string? targetMonthName,
-                                            int? targetDay)
+                                            string targetMonthName,
+                                            int targetDay)
     {
-        if (targetMonthName is null || targetDay is null)
-            return true;
-
         return parsed.ToString("MMMM", CultureInfo.InvariantCulture)
                      .Equals(targetMonthName, StringComparison.OrdinalIgnoreCase)
             && parsed.Day == targetDay;
@@ -104,51 +94,29 @@ public sealed class GenariansPageParser()
 
     private static bool TryParseGenarianDate(string date, out DateTime parsed)
     {
-        return DateTime.TryParseExact(
-            date,
-            "MM/dd/yyyy",
-            CultureInfo.InvariantCulture,
-            DateTimeStyles.None,
-            out parsed);
+        return DateTime.TryParseExact(date, "MM/dd/yyyy", CultureInfo.InvariantCulture, DateTimeStyles.None, out parsed);
     }
 
 
     private static (string Description, string Date) ExtractDescriptionAndDate(HtmlNodeCollection spans)
     {
         HtmlNode lastSpan = spans.Last();
-
         List<string> lines = SplitLines(lastSpan);
-
-        string description = lines.Count > 0
-            ? ExtractPrimaryDescription(lines[0])
-            : "";
-
-        string date = lines.Count > 1
-            ? lines[1]
-            : "";
-
+        string description = lines.Count > 0 ? ExtractPrimaryDescription(lines[0]) : "";
+        string date = lines.Count > 1 ? lines[1] : "";
         return (description, date);
     }
 
     private static string ExtractName(HtmlNodeCollection spans)
     {
         string first = spans[0].InnerText.Trim();
-
-        int index = IsNewCentenarian(first) ? 1 : 0;
-
-        return spans[index].InnerText.Trim();
+        int index = first.Contains("NEW CENTENARIAN", StringComparison.InvariantCultureIgnoreCase) ? 1 : 0;
+        return StringNormalization.CleanName(spans[index].InnerText);
     }
-
-    private static HtmlNodeCollection? GetSpans(HtmlNode infoCell) => infoCell.SelectNodes(".//span");
-
-    private static bool IsNewCentenarian(string text) => text.Contains("NEW CENTENARIAN", StringComparison.InvariantCultureIgnoreCase);
-
 
     private static string ExtractWikipediaUrl(HtmlNode cell)
     {
-        string url = cell.SelectSingleNode(".//a[contains(@href,'wikipedia.org')]")
-                         ?.GetAttributeValue("href", "") ?? "";
-
+        string url = cell.SelectSingleNode(".//a[contains(@href,'wikipedia.org')]") ?.GetAttributeValue("href", "") ?? "";
         return Uri.UnescapeDataString(url).Replace(" ", "_");
     }
 }

@@ -13,8 +13,8 @@ public sealed class Genarians(
 {
     public async Task<List<Person>> ScrapeGenariansPageAsync(
         string url,
-        string? targetMonthName,
-        int? targetDay,
+        string  targetMonthName,
+        int targetDay,
         CancellationToken token)
     {
         token.ThrowIfCancellationRequested();
@@ -47,7 +47,7 @@ public sealed class Genarians(
         return $"{Urls.GenarianBase}/{year}.html";
     }
 
-    public async Task<List<Person>> ScrapeAllGenariansAsync(string? targetMonthName, int? targetDay, CancellationToken token)
+    public async Task<List<Person>> ScrapeAllGenariansAsync(string targetMonthName, int targetDay, CancellationToken token)
     {
         token.ThrowIfCancellationRequested();
 
