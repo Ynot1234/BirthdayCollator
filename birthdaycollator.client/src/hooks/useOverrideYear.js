@@ -14,14 +14,20 @@ export function useOverrideYear() {
 
     async function applyOverride() {
         if (!overrideInput) return;
-        await fetch(`${base}/api/birthdays/override?value=${overrideInput}`, { method: "POST" });
-        setOverrideInput("");
-        await loadOverride();
+
+        await fetch(`${base}/api/birthdays/override?value=${overrideInput}`, {
+            method: "POST"
+        });
+
+        await loadOverride();  
+        // setOverrideInput(""); 
     }
+
 
     async function clearOverride() {
         await fetch(`${base}/api/birthdays/override?value=`, { method: "POST" });
         await loadOverride();
+        setOverrideInput(""); 
     }
 
     return {

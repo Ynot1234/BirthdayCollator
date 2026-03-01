@@ -40,6 +40,14 @@ public class BirthdaysController(BirthdayFetcher fetcher, IMemoryCache cache) : 
     }
 
 
+    [HttpGet("years")]
+    public ActionResult<IReadOnlyList<string>> GetYears([FromServices] IYearRangeProvider provider)
+    {
+        return Ok(provider.GetYears());
+    }
+
+
+
     // PULL MODEL #1
     [HttpGet("current")]
     public async Task<List<Person>> GetCurrent(CancellationToken token)

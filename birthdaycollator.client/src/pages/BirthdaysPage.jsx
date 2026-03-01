@@ -7,6 +7,9 @@ import { useSummaries } from "../hooks/useSummaries";
 import { daysInMonth, incrementDay, decrementDay } from "../utils/dateUtils";
 import styles from "./BirthdaysPage.module.css";
 import ToolsDropdown from "../components/ToolsDropdown";
+import { fetchYears } from "../api/birthdays";
+
+
 
 
 
@@ -61,6 +64,23 @@ export default function BirthdaysPage() {
     (fetchedMonth !== month || fetchedDay !== day);
 
   const activeYear = overrideYear || new Date().getFullYear();
+
+
+  const [years, setYears] = useState([]);
+
+    useEffect(() => {
+        const controller = new AbortController();
+
+        fetchYears(controller.signal)
+            .then(setYears)
+            .catch(err =>
+            {
+                if (err.name !== "AbortError") console.error(err);
+            });
+
+        return () => controller.abort();
+    }, []);
+
 
   // ---------------------------------------------------------
   // Auto-correct invalid days when month changes
@@ -159,7 +179,7 @@ export default function BirthdaysPage() {
                     setOverrideInput={setOverrideInput}
                     applyOverride={applyOverride}
                     clearOverride={clearOverride}
-                />
+                    years={years} />  
 
                 <h1 className={styles.title}>Birthdays</h1>
 
