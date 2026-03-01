@@ -5,6 +5,8 @@ public interface IYearRangeProvider
     IReadOnlyList<string> GetYears();
     IReadOnlySet<string> GetYearSet();
 
+    IReadOnlyList<string> GetLeapYears();
+
     // Existing multi-year override
     void ForceYears(params string[] years);
     void ResetToDefault();

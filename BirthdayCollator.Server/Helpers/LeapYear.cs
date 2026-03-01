@@ -2,9 +2,10 @@
 
 public static class LeapYear
 {
-    public static bool IsLeapFeb28(int month, int day)
+    public static bool IsNonLeapFeb28(int month, int day)
     {
-       return (DateTime.IsLeapYear(DateTime.Now.Year)) && (month == 2 && day == 28);
+        return month == 2 && day == 28 && !DateTime.IsLeapYear(DateTime.Now.Year);
     }
+
 
 }

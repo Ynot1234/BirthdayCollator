@@ -1,4 +1,5 @@
-﻿using BirthdayCollator.Server.Models;
+﻿using BirthdayCollator.Server.Helpers;
+using BirthdayCollator.Server.Models;
 using BirthdayCollator.Server.Processing.Builders;
 using BirthdayCollator.Server.Processing.Fetching;
 using BirthdayCollator.Server.Processing.Parsers;
@@ -17,24 +18,20 @@ public sealed class OnThisDaySource(
     public async Task<List<Person>> GetPeopleAsync(DateTime actualDate, CancellationToken token)
     {
         token.ThrowIfCancellationRequested();
+        List<Person> people = [];
+        string html = await fetcher.FetchAsync(actualDate.Month, actualDate.Day, token);
+        var parsed = parser.Parse(html, actualDate.Month, actualDate.Day);
+        people.AddRange(parsed);
 
-        string html;
-
-        try
+        if (LeapYear.IsNonLeapFeb28(actualDate.Month, actualDate.Day))
         {
-            html = await fetcher.FetchAsync(actualDate.Month, actualDate.Day, token);
+            html = await fetcher.FetchAsync(actualDate.Month, actualDate.Day + 1, token);
+            parsed = parser.Parse(html, actualDate.Month, actualDate.Day + 1);
+            people.AddRange(parsed);
         }
-        catch
-        {
-            return [];
-        }
-
-        List<Person> people = parser.Parse(html, actualDate.Month, actualDate.Day);
 
         IReadOnlySet<string> allowedYears = _yearRangeProvider.GetYearSet();
 
-        List<Person> filtered = [.. people.Where(p => allowedYears.Contains(p.BirthYear.ToString()))];
-
-        return filtered;
+        return [.. people.Where(p => allowedYears.Contains(p.BirthYear.ToString()))];
     }
 }

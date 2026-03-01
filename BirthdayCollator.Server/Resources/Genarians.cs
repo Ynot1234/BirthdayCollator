@@ -1,8 +1,10 @@
 ﻿using BirthdayCollator.Server.Constants;
+using BirthdayCollator.Server.Helpers;
 using BirthdayCollator.Server.Models;
 using BirthdayCollator.Server.Processing.Builders;
 using BirthdayCollator.Server.Processing.Parsers;
 using HtmlAgilityPack;
+using System.Globalization;
 
 namespace BirthdayCollator.Server.Resources;
 
@@ -47,12 +49,40 @@ public sealed class Genarians(
         return $"{Urls.GenarianBase}/{year}.html";
     }
 
-    public async Task<List<Person>> ScrapeAllGenariansAsync(string targetMonthName, int targetDay, CancellationToken token)
+    public async Task<List<Person>> ScrapeAllGenariansAsync(
+        string targetMonthName,
+        int targetDay,
+        CancellationToken token)
     {
         token.ThrowIfCancellationRequested();
 
-        IReadOnlyList<string> years = yearRangeProvider.GetYears();
+        int month = DateTime.ParseExact(
+            targetMonthName,
+            "MMMM",
+            CultureInfo.InvariantCulture).Month;
 
+        List<Person> people = [];
+
+            IReadOnlyList<string> years = yearRangeProvider.GetYears();
+            var normal = await ScrapeYearSetAsync(years, targetMonthName, targetDay, token);
+            people.AddRange(normal);
+    
+        if (LeapYear.IsNonLeapFeb28(month, targetDay))
+        {
+            IReadOnlyList<string> leapYears = yearRangeProvider.GetLeapYears();
+            var feb29 = await ScrapeYearSetAsync(leapYears, targetMonthName, targetDay + 1, token);
+            people.AddRange(feb29);
+        }
+
+        return people;
+    }
+
+    private async Task<List<Person>> ScrapeYearSetAsync(
+    IReadOnlyList<string> years,
+    string targetMonthName,
+    int targetDay,
+    CancellationToken token)
+    {
         List<Task<List<Person>>> tasks = [];
 
         foreach (string yearStr in years)
@@ -69,11 +99,13 @@ public sealed class Genarians(
         List<Person>[] results = await Task.WhenAll(tasks);
 
         HashSet<int> allowedYears = [.. years
-            .Select(y => int.TryParse(y, out int yr) ? yr : -1)
-            .Where(yr => yr > 0)];
+        .Select(y => int.TryParse(y, out int yr) ? yr : -1)
+        .Where(yr => yr > 0)];
 
         return [.. results
-            .SelectMany(r => r)
-            .Where(p => allowedYears.Contains(p.BirthYear))];
+        .SelectMany(r => r)
+        .Where(p => allowedYears.Contains(p.BirthYear))];
     }
+
+
 }

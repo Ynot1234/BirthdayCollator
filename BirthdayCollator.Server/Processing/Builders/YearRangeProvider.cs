@@ -4,20 +4,19 @@ public sealed class YearRangeProvider : IYearRangeProvider
 {
     public string? CurrentOverrideYear { get; private set; }
 
-    private readonly List<string> _forcedYears = new();
+    private readonly List<string> _forcedYears = [];
     public IReadOnlyList<string> ForcedYears => _forcedYears;
 
     public string CurrentOverrideSuffix { get; private set; } = string.Empty;
 
+    private readonly YearRangeBuilder _builder;
     private readonly List<string> _defaultYears;
-
 
     public YearRangeProvider()
     {
-        var builder = new YearRangeBuilder();
-        _defaultYears = builder.BuildYearRange();
+        _builder = new YearRangeBuilder();
+        _defaultYears = _builder.BuildYearRange();
     }
-
 
     public void ForceYear(int year)
     {
@@ -43,7 +42,6 @@ public sealed class YearRangeProvider : IYearRangeProvider
         CurrentOverrideYear = null;
     }
 
-
     public void ForceSuffix(string suffix)
     {
         CurrentOverrideSuffix = suffix;
@@ -53,7 +51,6 @@ public sealed class YearRangeProvider : IYearRangeProvider
     {
         CurrentOverrideSuffix = string.Empty;
     }
-
 
     public IReadOnlyList<string> GetYears()
     {
@@ -69,5 +66,28 @@ public sealed class YearRangeProvider : IYearRangeProvider
     public IReadOnlySet<string> GetYearSet()
     {
         return GetYears().ToHashSet();
+    }
+
+    public IReadOnlyList<string> GetLeapYears()
+    {
+        // If a single override year is set, respect it.
+        if (CurrentOverrideYear is not null)
+        {
+            return DateTime.IsLeapYear(int.Parse(CurrentOverrideYear))
+                ? [CurrentOverrideYear]
+                : [];
+        }
+
+        // If forced years exist, filter them.
+        if (_forcedYears.Count > 0)
+        {
+            return [.. _forcedYears
+                .Select(int.Parse)
+                .Where(DateTime.IsLeapYear)
+                .Select(y => y.ToString())];
+        }
+
+        // Otherwise, use the builder's leap-year range.
+        return _builder.BuildLeapYearRange();
     }
 }

@@ -1,4 +1,5 @@
 ﻿using BirthdayCollator.Server.Constants;
+using BirthdayCollator.Server.Helpers;
 using BirthdayCollator.Server.Models;
 using BirthdayCollator.Server.Processing.Builders;
 using BirthdayCollator.Server.Processing.Fetching;
@@ -20,7 +21,7 @@ public sealed class CategoryBirthSource(
 
     public void ResetSuffixes() => _debugSuffixes = null;
 
-    public Task<List<Person>> GetPeopleAsync(
+    public async Task<List<Person>> GetPeopleAsync(
         DateTime actualDate,
         CancellationToken token)
     {
@@ -28,10 +29,11 @@ public sealed class CategoryBirthSource(
             _debugSuffixes ??
             config.GetSection("CategorySuffixes").Get<string[]>() ?? [];
 
-        IReadOnlyList<string> years = yearRangeProvider.GetYears();
+        List<Person> people = [];
 
-        return engine.RunAsync(
-            years: years,
+        // Always fetch the normal year pages
+        var normal = await engine.RunAsync(
+            years: yearRangeProvider.GetYears(),
             suffixes: suffixes,
             slugBuilder: (year, suffix) => $"{year}_{suffix}",
             xpath: XPathSelectors.CategoryBirthsHeader,
@@ -43,7 +45,32 @@ public sealed class CategoryBirthSource(
             },
             fetcher: fetcher,
             actualDate: actualDate,
-            token: token
-        );
+            token: token);
+
+        people.AddRange(normal);
+
+        if (LeapYear.IsNonLeapFeb28(actualDate.Month, actualDate.Day))
+        {
+            var feb29 = await engine.RunAsync(
+                years: yearRangeProvider.GetLeapYears(),
+                suffixes: suffixes,
+                slugBuilder: (year, suffix) => $"{year}_{suffix}",
+                xpath: XPathSelectors.CategoryBirthsHeader,
+                useThrottle: true,
+                logError: (slug, ex) =>
+                {
+                    logger.LogError(ex, "Failed to fetch or parse slug '{Slug}'", slug);
+                    return Task.CompletedTask;
+                },
+                fetcher: fetcher,
+                actualDate: new DateTime(actualDate.Year, actualDate.Month, actualDate.Day + 1),
+                token: token);
+
+            people.AddRange(feb29);
+        }
+
+        return people;
     }
+
+
 }

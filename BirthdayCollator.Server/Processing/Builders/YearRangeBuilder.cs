@@ -21,4 +21,15 @@ public class YearRangeBuilder()
         return [.. years.OrderByDescending(y => y)
                         .Select(y => y.ToString())];
     }
+
+
+    public List<string> BuildLeapYearRange()
+    {
+        return [.. BuildYearRange()
+            .Select(int.Parse)
+            .Where(DateTime.IsLeapYear)
+            .Select(y => y.ToString())];
+    }
+
+
 }
