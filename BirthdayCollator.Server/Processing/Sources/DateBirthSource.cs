@@ -9,34 +9,46 @@ using BirthdayCollator.Server.Helpers;
 
 namespace BirthdayCollator.Server.Processing.Sources;
 
-public sealed class DateBirthSource(WikiHtmlFetcher fetcher, 
-                                    IYearRangeProvider yearRangeProvider, 
-                                    IPersonNameResolver nameResolver) : IBirthSource
+public sealed class DateBirthSource(
+    WikiHtmlFetcher fetcher,
+    IYearRangeProvider yearRangeProvider,
+    IPersonNameResolver nameResolver
+) : IBirthSource
 {
     private readonly IYearRangeProvider _yearRangeProvider = yearRangeProvider;
 
     public async Task<List<Person>> GetPeopleAsync(DateTime actualDate, CancellationToken token)
     {
-        List<Person> people = [];
-
-        {
+            var people = new List<Person>();
             var yearSet = _yearRangeProvider.GetYearSet();
             var validator = new BirthEntryValidator([.. yearSet], RegexPatterns.ExcludeDiedRegex());
             var factory = new PersonFactory(WikiUrlBuilder.NormalizeWikiHref, nameResolver);
             var parser = new DatePageParser(validator, factory);
-
-            string pageName = $"{actualDate:MMMM}_{actualDate.Day}";
-            people.AddRange(await FetchAndParse(pageName, actualDate.Month, actualDate.Day, parser, token));
-        }
+            var pageName = $"{actualDate:MMMM}_{actualDate.Day}";
+           
+            people.AddRange(await FetchAndParse(
+                pageName,
+                actualDate.Month,
+                actualDate.Day,
+                parser,
+                token
+            ));
+        
 
         if (LeapYear.IsNonLeapFeb28(actualDate.Month, actualDate.Day))
         {
-            var leapYearSet = _yearRangeProvider.GetLeapYears().ToHashSet();
-            var leapValidator = new BirthEntryValidator([.. leapYearSet], RegexPatterns.ExcludeDiedRegex());
+            var leapYears = _yearRangeProvider.GetLeapYears().ToHashSet();
+            var leapValidator = new BirthEntryValidator([.. leapYears], RegexPatterns.ExcludeDiedRegex());
             var leapFactory = new PersonFactory(WikiUrlBuilder.NormalizeWikiHref, nameResolver);
             var leapParser = new DatePageParser(leapValidator, leapFactory);
 
-            people.AddRange(await FetchAndParse("February_29", actualDate.Month, actualDate.Day + 1, leapParser, token));
+            people.AddRange(await FetchAndParse(
+                "February_29",
+                actualDate.Month,
+                actualDate.Day + 1,
+                leapParser,
+                token
+            ));
         }
 
         return people;
@@ -47,7 +59,8 @@ public sealed class DateBirthSource(WikiHtmlFetcher fetcher,
         int logicalMonth,
         int logicalDay,
         DatePageParser parser,
-        CancellationToken token)
+        CancellationToken token
+    )
     {
         try
         {
@@ -66,7 +79,4 @@ public sealed class DateBirthSource(WikiHtmlFetcher fetcher,
             return [];
         }
     }
-
-
-
 }
