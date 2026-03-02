@@ -35,6 +35,22 @@ export default function BirthdaysPage() {
 
   const { summaries, setSummaries, summarizePerson } = useSummaries();
 
+    const [page, setPage] = useState(1);
+    const pageSize = 10;
+
+    const totalPages = Math.ceil(results.length / pageSize);
+
+    const currentPageItems = results.slice(
+        (page - 1) * pageSize,
+        page * pageSize
+    );
+
+    useEffect(() => {
+        setPage(1);
+    }, [results]);
+
+
+
   const base = import.meta.env.VITE_API_BASE_URL;
 
 
@@ -230,17 +246,6 @@ export default function BirthdaysPage() {
                                 {loading ? "Loading…" : "Run"}
                             </button>
                         )}
-
-                        {/*{isCached && (*/}
-                        {/*    <button*/}
-                        {/*        className={styles.toolbarButton}*/}
-                        {/*        onClick={() => clearBirthdayCache(month, day)}*/}
-                        {/*        disabled={loading}*/}
-                        {/*    >*/}
-                        {/*        Clear Cache*/}
-                        {/*    </button>*/}
-                        {/*)}*/}
-
                     </div>
                 </div>
 
@@ -280,12 +285,8 @@ export default function BirthdaysPage() {
                         </div>
 
                         <ul className={styles.list}>
-                            {results.map((p, i) => (
-                                <li
-                                    key={i}
-                                    className={`${styles.item} ${p.age === 90 || p.age === 100 ? styles.milestone : ""
-                                        }`}
-                                >
+                            {currentPageItems.map((p, i) => (
+                                <li key={i} className={`${styles.item} ${p.age === 90 || p.age === 100 ? styles.milestone : ""}`}>
                                     <div className={styles.inlineRow}>
                                         <span className={styles.ageBadge}>{p.age}</span>
 
@@ -303,18 +304,13 @@ export default function BirthdaysPage() {
                                                 {p.month}/{p.day}/{p.birthYear}
                                             </span>
                                         )}
-
                                     </div>
 
                                     <div className={styles.summaryRow}>
                                         <button
                                             className={styles.summaryChip}
                                             disabled={!hasOpenAIKey}
-                                            title={
-                                                !hasOpenAIKey
-                                                    ? "Add an OpenAI API key to enable summaries"
-                                                    : ""
-                                            }
+                                            title={!hasOpenAIKey ? "Add an OpenAI API key to enable summaries" : ""}
                                             onClick={() => {
                                                 if (summaries[p.name]) {
                                                     const copy = { ...summaries };
@@ -338,8 +334,24 @@ export default function BirthdaysPage() {
                             ))}
                         </ul>
 
+
+                    </div>)}
+
+                {results.length > pageSize && (
+                    <div className={styles.pagination}>
+                        <button disabled={page === 1} onClick={() => setPage(page - 1)}>
+                            Prev
+                        </button>
+
+                        <span>{page} / {totalPages}</span>
+
+                        <button disabled={page === totalPages} onClick={() => setPage(page + 1)}>
+                            Next
+                        </button>
                     </div>
                 )}
+
+
             </div>
         </div>
     );
