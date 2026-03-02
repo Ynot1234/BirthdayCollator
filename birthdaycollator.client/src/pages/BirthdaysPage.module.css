@@ -249,3 +249,7 @@ select {
     margin-left: 0.5rem;
     opacity: 0.85;
 }
+.spacerSmall {
+    height: 6px;
+    width: 100%;
+}

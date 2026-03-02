@@ -1,13 +1,23 @@
 import { useState, useEffect } from "react";
+
 import { fetchBirthdays, clearBirthdayCache } from "../api/birthdays";
+import { fetchYears } from "../api/birthdays";
+
 import { useBackendHealth } from "../hooks/useBackendHealth";
 import { useOverrideYear } from "../hooks/useOverrideYear";
 import { useOpenAIKey } from "../hooks/useOpenAIKey";
 import { useSummaries } from "../hooks/useSummaries";
-import { daysInMonth, incrementDay, decrementDay } from "../utils/dateUtils";
-import styles from "./BirthdaysPage.module.css";
+
+import { Toolbar } from "../components/Toolbar";
+import { DateSelectors } from "../components/DateSelectors";
+import { ResultsList } from "../components/ResultsList";
+import { Pagination } from "../components/Pagination";
+import { ResultItem } from "../components/ResultItem";
 import ToolsDropdown from "../components/ToolsDropdown";
-import { fetchYears } from "../api/birthdays";
+
+import { daysInMonth, incrementDay, decrementDay } from "../utils/dateUtils";
+
+import styles from "./BirthdaysPage.module.css";
 
 
 
@@ -100,9 +110,6 @@ export default function BirthdaysPage() {
     }, []);
 
 
-  // ---------------------------------------------------------
-  // Auto-correct invalid days when month changes
-  // ---------------------------------------------------------
   useEffect(() => {
     const max = daysInMonth(activeYear, month);
     if (day > max) {
@@ -111,10 +118,7 @@ export default function BirthdaysPage() {
   }, [month, activeYear]);
 
 
- // ---------------------------------------------------------
-  // Fetch birthdays
-  // ---------------------------------------------------------
-    async function run() {
+   async function run() {
         const controller = new AbortController();
         setRunController(controller);
         setIsRunning(true);
@@ -127,7 +131,6 @@ export default function BirthdaysPage() {
             setFetchedMonth(month);
             setFetchedDay(day);
 
-          //  await checkExists();
 
         } catch (err) {
             if (err.name === "AbortError") {
@@ -160,9 +163,6 @@ export default function BirthdaysPage() {
   }
 
   
-  // ---------------------------------------------------------
-  // Backend offline UI
-  // ---------------------------------------------------------
   if (backendOnline === false) {
     return (
       <div className={styles.page}>
@@ -197,164 +197,67 @@ export default function BirthdaysPage() {
                     setOverrideInput={setOverrideInput}
                     applyOverride={applyOverride}
                     clearOverride={clearOverride}
-                    years={years} />  
+                    years={years}
+                />
 
                 <h1 className={styles.title}>Birthdays</h1>
 
                 <div className={styles.toolbar}>
-                    <button className={styles.toolbarButton} onClick={setToToday}>
-                        Today
-                    </button>
-
-                    <div className={styles.toolbarGroup}>
-                        <button
-                            className={styles.toolbarButton}
-                            onClick={() => {
-                                const next = incrementDay(activeYear, month, day);
-                                setMonth(next.month);
-                                setDay(next.day);
-                            }}
-                        >
-                            +
-                        </button>
-
-                        <button
-                            className={styles.toolbarButton}
-                            onClick={() => {
-                                const next = decrementDay(activeYear, month, day);
-                                setMonth(next.month);
-                                setDay(next.day);
-                            }}
-                        >
-                            -
-                        </button>
-
-                        {isRunning ? (
-                            <button
-                                className={`${styles.toolbarButton} ${styles.cancelButton}`}
-                                onClick={() => runController?.abort()}
-                                disabled={!runController}
-                            >
-                                Cancel
-                            </button>
-                        ) : (
-                            <button
-                                className={`${styles.toolbarButton} ${styles.runButton}`}
-                                onClick={run}
-                                disabled={loading}
-                            >
-                                {loading ? "Loading…" : "Run"}
-                            </button>
-                        )}
-                    </div>
+                    <Toolbar
+                        onToday={setToToday}
+                        onNextDay={() => {
+                            const next = incrementDay(activeYear, month, day);
+                            setMonth(next.month);
+                            setDay(next.day);
+                        }}
+                        onPrevDay={() => {
+                            const next = decrementDay(activeYear, month, day);
+                            setMonth(next.month);
+                            setDay(next.day);
+                        }}
+                        onRun={run}
+                        onCancel={() => runController?.abort()}
+                        isRunning={isRunning}
+                        loading={loading}
+                        hasRunController={!!runController}
+                    />
                 </div>
 
-                <div style={{ height: "6px", width: "100%" }} />
-
-                <div className={styles.dateSelectors}>
-                    <select value={month} onChange={e => setMonth(Number(e.target.value))}>
-                        {monthNames.map((name, index) => (
-                            <option key={index + 1} value={index + 1}>
-                                {name}
-                            </option>
-                        ))}
-                    </select>
-
-                    <select value={day} onChange={e => setDay(Number(e.target.value))}>
-                        {Array.from({ length: daysInMonth(activeYear, month) }, (_, i) => i + 1).map(d => (
-                            <option key={d} value={d}>{d}</option>
-                        ))}
-                    </select>
-
-                    {overrideYear && (
-                        <span className={styles.overridePill}>
-                            {overrideYear}
-                        </span>
-                    )}
-                </div>
+                <div className={styles.spacerSmall} />
+                 <DateSelectors
+                    month={month}
+                    day={day}
+                    setMonth={setMonth}
+                    setDay={setDay}
+                    monthNames={monthNames}
+                    activeYear={activeYear}
+                    overrideYear={overrideYear}
+                    daysInMonth={daysInMonth}
+                />
 
                 {error && <div className={styles.error}>{error}</div>}
 
                 {results.length > 0 && (
                     <div className={styles.results}>
-                        <div className={styles.resultsHeader}>
-                            {results.length} {results.length === 1 ? "result" : "results"}
-                            {isStale && (
-                                <span className={styles.staleNotice}> (stale — press Run)</span>
-                            )}
-                        </div>
-
-                        <ul className={styles.list}>
-                            {currentPageItems.map((p, i) => (
-                                <li key={i} className={`${styles.item} ${p.age === 90 || p.age === 100 ? styles.milestone : ""}`}>
-                                    <div className={styles.inlineRow}>
-                                        <span className={styles.ageBadge}>{p.age}</span>
-
-                                        <a
-                                            href={p.url}
-                                            target="_blank"
-                                            rel="noopener noreferrer"
-                                            className={styles.nameLink}
-                                        >
-                                            {p.name} — {p.description}
-                                        </a>
-
-                                        {includeAll && (
-                                            <span className={styles.dateBadge}>
-                                                {p.month}/{p.day}/{p.birthYear}
-                                            </span>
-                                        )}
-                                    </div>
-
-                                    <div className={styles.summaryRow}>
-                                        <button
-                                            className={styles.summaryChip}
-                                            disabled={!hasOpenAIKey}
-                                            title={!hasOpenAIKey ? "Add an OpenAI API key to enable summaries" : ""}
-                                            onClick={() => {
-                                                if (summaries[p.name]) {
-                                                    const copy = { ...summaries };
-                                                    delete copy[p.name];
-                                                    setSummaries(copy);
-                                                } else {
-                                                    summarizePerson(p);
-                                                }
-                                            }}
-                                        >
-                                            {summaries[p.name] ? "Clear" : "Summarize"}
-                                        </button>
-
-                                        {summaries[p.name] && (
-                                            <div className={styles.summaryBox}>
-                                                {summaries[p.name]}
-                                            </div>
-                                        )}
-                                    </div>
-                                </li>
-                            ))}
-                        </ul>
-
-
-                    </div>)}
-
-                {results.length > pageSize && (
-                    <div className={styles.pagination}>
-                        <button disabled={page === 1} onClick={() => setPage(page - 1)}>
-                            Prev
-                        </button>
-
-                        <span>{page} / {totalPages}</span>
-
-                        <button disabled={page === totalPages} onClick={() => setPage(page + 1)}>
-                            Next
-                        </button>
+                        <ResultsList
+                            results={results}
+                            currentPageItems={currentPageItems}
+                            isStale={isStale}
+                            includeAll={includeAll}
+                            summaries={summaries}
+                            setSummaries={setSummaries}
+                            summarizePerson={summarizePerson}
+                            hasOpenAIKey={hasOpenAIKey}
+                        />
                     </div>
                 )}
 
-
+                <Pagination
+                    page={page}
+                    totalPages={totalPages}
+                    setPage={setPage}
+                />
             </div>
         </div>
     );
-
-
 }

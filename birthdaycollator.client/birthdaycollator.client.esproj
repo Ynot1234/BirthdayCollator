@@ -10,5 +10,6 @@
   </PropertyGroup>
   <ItemGroup>
     <Folder Include="src\constants\" />
+    <Folder Include="src\NewFolder\" />
   </ItemGroup>
 </Project>

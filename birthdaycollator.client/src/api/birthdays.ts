@@ -1,9 +1,21 @@
+import { cleanText } from "../utils/cleanText";
+
+export interface BirthdayPerson {
+    name: string;
+    description: string;
+    age: number;
+    month: number;
+    day: number;
+    birthYear: number;
+    url: string;
+}
+
 export async function fetchBirthdays(
     month: number | string,
     day: number | string,
     includeAll: boolean,
     signal?: AbortSignal
-) {
+): Promise<BirthdayPerson[]> {
     const base = import.meta.env.VITE_API_BASE_URL;
 
     try {
@@ -17,21 +29,27 @@ export async function fetchBirthdays(
         }
 
         try {
-            return await response.json();
+            const data = (await response.json()) as BirthdayPerson[];
+
+            const cleaned = data.map((p) => ({
+                ...p,
+                name: cleanText(p.name),
+                description: cleanText(p.description)
+            }));
+
+            return cleaned;
         } catch {
             throw new Error("Received invalid JSON from server.");
         }
-
     } catch (err) {
         if (err instanceof DOMException && err.name === "AbortError") {
             throw err;
         }
 
-        let message = "Unexpected error occurred.";
-
-        if (err instanceof Error) {
-            message = err.message;
-        }
+        const message =
+            err instanceof Error
+                ? err.message
+                : "Unexpected error occurred.";
 
         if (
             message.includes("Failed to fetch") ||
@@ -48,10 +66,9 @@ export async function fetchBirthdays(
 export async function clearBirthdayCache(
     month: number | string | { value: number },
     day: number | string | { value: number }
-) {
+): Promise<void> {
     const base = import.meta.env.VITE_API_BASE_URL;
 
-    // Normalize values coming from dropdowns, dates, or raw numbers
     const monthValue =
         typeof month === "object" && month !== null ? month.value : month;
 
@@ -63,40 +80,35 @@ export async function clearBirthdayCache(
         { method: "DELETE" }
     );
 
-
     if (!response.ok) {
         throw new Error(`Failed to clear cache: HTTP ${response.status}`);
     }
 }
 
-
-export async function fetchYears(signal?: AbortSignal) {
+export async function fetchYears(signal?: AbortSignal): Promise<number[]> {
     const base = import.meta.env.VITE_API_BASE_URL;
 
     try {
         const response = await fetch(`${base}/api/birthdays/years`, { signal });
-
 
         if (!response.ok) {
             throw new Error(`Server returned HTTP ${response.status}`);
         }
 
         try {
-            return await response.json(); 
+            return (await response.json()) as number[];
         } catch {
             throw new Error("Received invalid JSON from server.");
         }
-
     } catch (err) {
         if (err instanceof DOMException && err.name === "AbortError") {
             throw err;
         }
 
-        let message = "Unexpected error occurred.";
-
-        if (err instanceof Error) {
-            message = err.message;
-        }
+        const message =
+            err instanceof Error
+                ? err.message
+                : "Unexpected error occurred.";
 
         if (
             message.includes("Failed to fetch") ||
