@@ -44,6 +44,8 @@ export default function BirthdaysPage() {
         overrideYear,
         overrideInput,
         setOverrideInput,
+        includeAll,
+        setIncludeAll, 
         loadOverride,
         applyOverride,
         clearOverride
@@ -104,7 +106,7 @@ export default function BirthdaysPage() {
         setError("");
 
         try {
-            const data = await fetchBirthdays(month, day, controller.signal);
+            const data = await fetchBirthdays(month, day, includeAll, controller.signal);
             setResults(data);
             setFetchedMonth(month);
             setFetchedDay(day);
@@ -295,6 +297,13 @@ export default function BirthdaysPage() {
                                         >
                                             {p.name} — {p.description}
                                         </a>
+
+                                        {includeAll && (
+                                            <span className={styles.dateBadge}>
+                                                {p.month}/{p.day}/{p.birthYear}
+                                            </span>
+                                        )}
+
                                     </div>
 
                                     <div className={styles.summaryRow}>
@@ -328,6 +337,7 @@ export default function BirthdaysPage() {
                                 </li>
                             ))}
                         </ul>
+
                     </div>
                 )}
             </div>

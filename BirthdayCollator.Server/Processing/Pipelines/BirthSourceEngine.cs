@@ -31,6 +31,7 @@ public sealed class BirthSourceEngine(
         Func<string, Exception, Task>? logError,
         WikiHtmlFetcher fetcher,
         DateTime actualDate,
+        bool IncludeAll,
         CancellationToken token)
     {
         BirthEntryValidator validator = new([.. years], RegexPatterns.ExcludeDiedRegex());
@@ -57,6 +58,7 @@ public sealed class BirthSourceEngine(
                 logError,
                 fetcher,
                 parser,
+                IncludeAll,
                 token);
         }
 
@@ -86,6 +88,7 @@ public sealed class BirthSourceEngine(
         Func<string, Exception, Task>? logError,
         WikiHtmlFetcher fetcher,
         Parser parser,
+        bool IncludeAll,
         CancellationToken token)
     {
         if (useThrottle)
@@ -96,7 +99,7 @@ public sealed class BirthSourceEngine(
             token.ThrowIfCancellationRequested();
             string html = await fetcher.FetchHtmlAsync(slug, token);
             token.ThrowIfCancellationRequested();
-            return parser.Parse(html, adjustedDate, suffix, xpath);
+            return parser.Parse(html, adjustedDate, suffix, xpath, IncludeAll);
         }
         catch (OperationCanceledException)
         {

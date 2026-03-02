@@ -16,6 +16,9 @@ public sealed class YearBirthSource(
     public async Task<List<Person>> GetPeopleAsync(DateTime actualDate, CancellationToken token)
     {
         List<Person> people = [];
+        bool includeAll = yearRangeProvider.IncludeAll;
+
+
 
         // Always fetch the normal year pages
         var normal = await engine.RunAsync(
@@ -27,6 +30,7 @@ public sealed class YearBirthSource(
             logError: null,
             fetcher: fetcher,
             actualDate: actualDate,
+            includeAll,
             token: token);
 
         people.AddRange(normal);
@@ -42,6 +46,7 @@ public sealed class YearBirthSource(
                 logError: null,
                 fetcher: fetcher,
                 actualDate: new DateTime(actualDate.Year, actualDate.Month, actualDate.Day + 1),
+                includeAll,
                 token: token);
 
             people.AddRange(feb29);

@@ -2,29 +2,41 @@
 using BirthdayCollator.Server.Processing.Builders;
 using BirthdayCollator.Server.Services;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.Extensions.Caching.Memory; 
+using Microsoft.Extensions.Caching.Memory;
 
 namespace BirthdayCollator.Server.Controllers;
 
 [ApiController]
 [Route("api/[controller]")]
-public class BirthdaysController(BirthdayFetcher fetcher, IMemoryCache cache) : ControllerBase
+public class BirthdaysController : ControllerBase
 {
-    [HttpGet]
-    public async Task<List<Person>> Get(int month, int day, CancellationToken token)
+    private readonly BirthdayFetcher fetcher;
+    private readonly IMemoryCache cache;
+    private readonly IYearRangeProvider yearRangeProvider;
+
+    public BirthdaysController(
+        BirthdayFetcher fetcher,
+        IMemoryCache cache,
+        IYearRangeProvider yearRangeProvider)
     {
-
-        return await fetcher.GetBirthdays(month, day, token);
-
-        //string cacheKey = $"birthdays:{month}:{day}";
-
-        //return await cache.GetOrCreateAsync(cacheKey, async entry =>
-        //{
-        //    entry.Priority = CacheItemPriority.NeverRemove;
-        //    return await fetcher.GetBirthdays(month, day, token);
-        //}) ?? [];
+        this.fetcher = fetcher;
+        this.cache = cache;
+        this.yearRangeProvider = yearRangeProvider;
     }
 
+    // ---------------------------------------------------------
+    // GET birthdays
+    // ---------------------------------------------------------
+    [HttpGet]
+    public async Task<List<Person>> Get(int month, int day, bool? includeAll, CancellationToken token)
+    {
+        yearRangeProvider.SetIncludeAll(includeAll ?? false);
+        return await fetcher.GetBirthdays(month, day, token);
+    }
+
+    // ---------------------------------------------------------
+    // Clear cache
+    // ---------------------------------------------------------
     [HttpDelete("{month:int}/{day:int}")]
     public void Clear(int month, int day)
     {
@@ -32,6 +44,9 @@ public class BirthdaysController(BirthdayFetcher fetcher, IMemoryCache cache) : 
         cache.Remove(cacheKey);
     }
 
+    // ---------------------------------------------------------
+    // Cache exists?
+    // ---------------------------------------------------------
     [HttpGet("exists/{month:int}/{day:int}")]
     public bool Exists(int month, int day)
     {
@@ -39,46 +54,63 @@ public class BirthdaysController(BirthdayFetcher fetcher, IMemoryCache cache) : 
         return cache.TryGetValue(cacheKey, out _);
     }
 
-
+    // ---------------------------------------------------------
+    // ALWAYS return full year list (ignore overrides)
+    // ---------------------------------------------------------
     [HttpGet("years")]
-    public ActionResult<IReadOnlyList<string>> GetYears([FromServices] IYearRangeProvider provider)
+    public ActionResult<IReadOnlyList<string>> GetYears()
     {
-        return Ok(provider.GetYears());
+        return Ok(yearRangeProvider.GetDefaultYears());
     }
 
-
-
-    // PULL MODEL #1
+    // ---------------------------------------------------------
+    // Today's birthdays
+    // ---------------------------------------------------------
     [HttpGet("current")]
     public async Task<List<Person>> GetCurrent(CancellationToken token)
     {
         var today = DateTime.Today;
-        return await Get(today.Month, today.Day, token);
+        return await Get(today.Month, today.Day, false, token);
     }
 
-    // PULL MODEL #2
+    // ---------------------------------------------------------
+    // Get override state
+    // ---------------------------------------------------------
     [HttpGet("override")]
-    public IActionResult GetOverride([FromServices] IYearRangeProvider provider)
+    public IActionResult GetOverride()
     {
-        return Ok(new { overrideYear = provider.CurrentOverrideYear });
+        return Ok(new
+        {
+            overrideYear = yearRangeProvider.CurrentOverrideYear,
+            includeAll = yearRangeProvider.IncludeAll
+        });
     }
 
-    // PULL MODEL #3
+    // ---------------------------------------------------------
+    // Set override state
+    // ---------------------------------------------------------
     [HttpPost("override")]
-    public IActionResult SetOverride([FromQuery] string? value, [FromServices] IYearRangeProvider provider)
+    public IActionResult SetOverride([FromBody] OverrideRequest request)
     {
-        if (string.IsNullOrWhiteSpace(value))
+        if (string.IsNullOrWhiteSpace(request.Year))
         {
-            provider.ClearYear();
-            return Ok(new { overrideYear = (string?)null });
+            yearRangeProvider.ClearYear();
+            yearRangeProvider.SetIncludeAll(false);
+
+            return Ok(new
+            {
+                overrideYear = (string?)null,
+                includeAll = false
+            });
         }
 
-        if (int.TryParse(value, out int year))
-        {
-            provider.ForceYear(year);
-            return Ok(new { overrideYear = year.ToString() });
-        }
+        yearRangeProvider.ForceYear(int.Parse(request.Year));
+        yearRangeProvider.SetIncludeAll(request.IncludeAll);
 
-        return BadRequest("Invalid year");
+        return Ok(new
+        {
+            overrideYear = request.Year,
+            includeAll = request.IncludeAll
+        });
     }
 }

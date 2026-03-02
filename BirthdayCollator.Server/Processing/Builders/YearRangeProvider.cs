@@ -68,6 +68,18 @@ public sealed class YearRangeProvider : IYearRangeProvider
         return GetYears().ToHashSet();
     }
 
+    public bool IncludeAll { get; private set; } = true;
+
+
+    public void SetIncludeAll(bool value)
+    {
+        IncludeAll = value;
+    }
+
+
+    public IReadOnlyList<string> GetDefaultYears() => _defaultYears;
+
+
     public IReadOnlyList<string> GetLeapYears()
     {
         // If a single override year is set, respect it.

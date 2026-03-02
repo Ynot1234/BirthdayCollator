@@ -1,16 +1,22 @@
 ﻿using BirthdayCollator.Server.Models;
+using BirthdayCollator.Server.Processing.Builders;
 
 namespace BirthdayCollator.Server.Processing.Sorting;
 
-public class PersonSorter()
+public sealed class PersonSorter(IYearRangeProvider yearRangeProvider)
 {
     public List<Person> SortPersons(List<Person> people)
     {
-        List<Person> sorted =
-        [
-            .. people.OrderBy(p => p.BirthYear)
-        ];
+        if (yearRangeProvider.IncludeAll)
+        {
+            return [.. people
+                .OrderBy(p => p.Month)
+                .ThenBy(p => p.Day)
+                .ThenBy(p => p.Name)];
+        }
 
-        return sorted;
+        return [.. people
+            .OrderBy(p => p.BirthYear)
+            .ThenBy(p => p.Name)];
     }
 }

@@ -233,10 +233,19 @@ select {
     background: #fff5f5;
 }
 .cancelButton {
-    background-color: #c62828; /* red */
+    background-color: #c62828; 
     color: white;
 }
 .clearButton {
     background-color: #c62828;
     color: white;
+}
+.dateBadge {
+    background: #eef2f7;
+    color: #445;
+    padding: 2px 6px;
+    border-radius: 6px;
+    font-size: 0.75rem;
+    margin-left: 0.5rem;
+    opacity: 0.85;
 }

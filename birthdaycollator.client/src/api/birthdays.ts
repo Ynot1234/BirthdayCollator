@@ -1,13 +1,14 @@
 export async function fetchBirthdays(
     month: number | string,
     day: number | string,
+    includeAll: boolean,
     signal?: AbortSignal
 ) {
     const base = import.meta.env.VITE_API_BASE_URL;
 
     try {
         const response = await fetch(
-            `${base}/api/birthdays?month=${month}&day=${day}`,
+            `${base}/api/birthdays?month=${month}&day=${day}&includeAll=${includeAll}`,
             { signal }
         );
 
@@ -22,9 +23,8 @@ export async function fetchBirthdays(
         }
 
     } catch (err) {
-        // Clean cancellation handling
         if (err instanceof DOMException && err.name === "AbortError") {
-            throw err; 
+            throw err;
         }
 
         let message = "Unexpected error occurred.";

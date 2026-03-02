@@ -31,6 +31,8 @@ public sealed class CategoryBirthSource(
 
         List<Person> people = [];
 
+        bool includeAll = yearRangeProvider.IncludeAll;
+
         // Always fetch the normal year pages
         var normal = await engine.RunAsync(
             years: yearRangeProvider.GetYears(),
@@ -45,6 +47,7 @@ public sealed class CategoryBirthSource(
             },
             fetcher: fetcher,
             actualDate: actualDate,
+            includeAll,
             token: token);
 
         people.AddRange(normal);
@@ -64,6 +67,7 @@ public sealed class CategoryBirthSource(
                 },
                 fetcher: fetcher,
                 actualDate: new DateTime(actualDate.Year, actualDate.Month, actualDate.Day + 1),
+                includeAll,
                 token: token);
 
             people.AddRange(feb29);

@@ -17,9 +17,8 @@ public sealed partial class Parser(
     IEntrySplitter entrySplitter,
     ILinkResolver linkResolver)
 {
-    private const bool AllForYear = false;
-
-    public List<Person> Parse(string html, DateTime actualDate, string? suffix, string xpath)
+    
+    public List<Person> Parse(string html, DateTime actualDate, string? suffix, string xpath, bool AllForYear)
     {
         var liNodes = htmlExtractor.ExtractLiNodes(html, xpath);
         if (liNodes.Count == 0)
@@ -45,6 +44,9 @@ public sealed partial class Parser(
 
             string? href = htmlExtractor.ExtractPersonHref(li.InnerHtml);
             var ctx = new EntryContext(raw, href, entrySplitter.IsMulti(raw), parentDate);
+
+            if (AllForYear && ctx.Date < actualDate)
+                continue;
 
             foreach (var (Text, Date) in entrySplitter.SplitEntries(ctx))
             {

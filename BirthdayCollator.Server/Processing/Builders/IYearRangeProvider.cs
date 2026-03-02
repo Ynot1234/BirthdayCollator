@@ -20,6 +20,11 @@ public interface IYearRangeProvider
 
     string CurrentOverrideSuffix { get; }
 
+    bool IncludeAll { get; }
+    void SetIncludeAll(bool value);
+
     void ForceSuffix(string suffix);
     void ClearSuffix();
+
+    IReadOnlyList<string> GetDefaultYears();
 }

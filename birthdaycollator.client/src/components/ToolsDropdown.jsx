@@ -10,8 +10,18 @@ export default function ToolsDropdown({
     years
 }) {
     const [open, setOpen] = useState(false);
+    const [includeAll, setIncludeAll] = useState(false);
 
     const safeYears = Array.isArray(years) ? years : [];
+
+
+    function applyWith(includeAllValue) {
+        applyOverride({
+            year: overrideInput,
+            includeAll: includeAllValue
+        });
+    }
+
 
     return (
         <div className={styles.dropdown}>
@@ -28,24 +38,52 @@ export default function ToolsDropdown({
                         <strong>Year:</strong> {overrideYear ?? ""}
                     </div>
 
-                    <select
-                        className={styles.input}
-                        value={overrideInput}
-                        onChange={e => setOverrideInput(e.target.value)}
-                    >
-                        <option value="">Entire Range</option>
-                        {safeYears.map(y => (
-                            <option key={y} value={y}>
-                                {y}
-                            </option>
-                        ))}
-                    </select>
+                    <div className={styles.row}>
+                        <select
+                            className={styles.input}
+                            value={overrideInput}
+                            onChange={e => setOverrideInput(e.target.value)}>
+                            <option value="">Entire Range</option>
+                            {safeYears.map(y => (
+                                <option key={y} value={y}>
+                                    {y}
+                                </option>
+                            ))}
+                        </select>
+
+                        <label style={{ opacity: !overrideInput ? 0.5 : 1 }}>
+                            <input
+                                type="checkbox"
+                                checked={includeAll}
+                                disabled={!overrideInput}
+                                onChange={e => {
+                                    const val = e.target.checked;
+                                    setIncludeAll(val);
+                                    applyOverride({ year: overrideInput, includeAll: val });
+                                }}
+                            />
+
+                            Show all
+                        </label>
+                    </div>
 
                     <div className={styles.buttonRow}>
-                        <button className={styles.smallButton} onClick={applyOverride}>
+                        <button
+                            className={styles.smallButton}
+                            onClick={() =>
+                                applyOverride({
+                                    year: overrideInput,
+                                    includeAll
+                                })
+                            }
+                        >
                             Apply
                         </button>
-                        <button className={styles.smallButton} onClick={clearOverride}>
+
+                        <button
+                            className={styles.smallButton}
+                            onClick={clearOverride}
+                        >
                             Clear
                         </button>
                     </div>
@@ -53,4 +91,5 @@ export default function ToolsDropdown({
             )}
         </div>
     );
+
 }
