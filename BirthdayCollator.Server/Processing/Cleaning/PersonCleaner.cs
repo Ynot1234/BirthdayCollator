@@ -14,9 +14,9 @@ public sealed class PersonCleaner
         {
             string cleanedName = CleanField(p.Name);
             string cleanedDescription = CleanField(p.Description);
-            string finalDescription = RemoveDuplicateLeadingName(cleanedName, cleanedDescription);
+         //   string finalDescription = RemoveDuplicateLeadingName(cleanedName, cleanedDescription);
 
-            if (string.IsNullOrWhiteSpace(finalDescription))
+            if (string.IsNullOrWhiteSpace(cleanedDescription))
                 continue;
 
             Person cleanedPerson = new()
@@ -25,7 +25,7 @@ public sealed class PersonCleaner
                 Month = p.Month,
                 Day = p.Day,
                 Name = cleanedName,
-                Description = finalDescription,
+                Description = cleanedDescription,
                 Url = p.Url,
                 Section = p.Section,
                 SourceUrl = p.SourceUrl,
