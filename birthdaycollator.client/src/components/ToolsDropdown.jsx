@@ -34,16 +34,16 @@ export default function ToolsDropdown({
 
             {open && (
                 <div className={styles.panel}>
-                    <div className={styles.row}>
-                        <strong>Year:</strong> {overrideYear ?? ""}
-                    </div>
+                    {/*<div className={styles.row}>*/}
+                    {/*    <strong>Year</strong>*/}
+                    {/*</div>*/}
 
                     <div className={styles.row}>
                         <select
                             className={styles.input}
                             value={overrideInput}
                             onChange={e => setOverrideInput(e.target.value)}>
-                            <option value="">Entire Range</option>
+                            <option value="">Year</option>
                             {safeYears.map(y => (
                                 <option key={y} value={y}>
                                     {y}

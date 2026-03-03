@@ -33,12 +33,12 @@ export function ResultItem({
                     rel="noopener noreferrer"
                     className={styles.nameLink}
                 >
-                    {person.name} — {person.description}
+                    {person.name} — {person.description} 
                 </a>
 
                 {includeAll && (
                     <span className={styles.dateBadge}>
-                        {person.month}/{person.day}/{person.birthYear}
+                       {person.month}/{person.day}
                     </span>
                 )}
             </div>

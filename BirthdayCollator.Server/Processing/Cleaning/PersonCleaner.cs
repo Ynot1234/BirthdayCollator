@@ -43,7 +43,8 @@ public sealed class PersonCleaner
     {
         string noBrackets = RemoveBracketedContent(input);
         string noCitations = RemoveCitationMarkers(noBrackets);
-        return noCitations;
+        string noName = RemoveLeadingCommaSection(noCitations);
+        return noName;
     }
 
     private static string RemoveCitationMarkers(string input)
@@ -54,6 +55,20 @@ public sealed class PersonCleaner
         string cleaned = RegexPatterns.Citation().Replace(input, "");
         return cleaned.Trim();
     }
+
+    public static string RemoveLeadingCommaSection(string text)
+    {
+        if (string.IsNullOrWhiteSpace(text))
+            return string.Empty;
+
+        int index = text.IndexOf(',');
+
+        if (index < 0)
+            return text.Trim();
+
+        return text.Substring(index + 1).Trim();
+    }
+
 
     private static string RemoveBracketedContent(string input)
     {

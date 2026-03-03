@@ -9,11 +9,15 @@ export function DateSelectors({
     monthNames,
     activeYear,
     overrideYear,
-    daysInMonth
+    daysInMonth,
+    includeAll
 }) {
     return (
         <div className={styles.dateSelectors}>
-            <select value={month} onChange={e => setMonth(Number(e.target.value))}>
+            <select
+                value={month}
+                onChange={e => setMonth(Number(e.target.value))}
+                disabled={includeAll}>
                 {monthNames.map((name, index) => (
                     <option key={index + 1} value={index + 1}>
                         {name}
@@ -21,11 +25,15 @@ export function DateSelectors({
                 ))}
             </select>
 
-            <select value={day} onChange={e => setDay(Number(e.target.value))}>
+            <select
+                value={day}
+                onChange={e => setDay(Number(e.target.value))}
+                disabled={includeAll}>
                 {Array.from({ length: daysInMonth(activeYear, month) }, (_, i) => i + 1).map(d => (
                     <option key={d} value={d}>{d}</option>
                 ))}
             </select>
+
 
             {overrideYear && (
                 <span className={styles.overridePill}>

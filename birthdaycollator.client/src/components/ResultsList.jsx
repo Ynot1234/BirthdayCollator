@@ -19,7 +19,7 @@ export function ResultsList({
             <div className={styles.resultsHeader}>
                 {results.length} {results.length === 1 ? "result" : "results"}
                 {isStale && (
-                    <span className={styles.staleNotice}> (stale — press Run)</span>
+                    <span className={styles.staleNotice}> (stale - press Run)</span>
                 )}
             </div>
 
@@ -44,7 +44,7 @@ export function ResultsList({
 
                             {includeAll && (
                                 <span className={styles.dateBadge}>
-                                    {p.month}/{p.day}/{p.birthYear}
+                                    {p.month}/{p.day}   
                                 </span>
                             )}
                         </div>

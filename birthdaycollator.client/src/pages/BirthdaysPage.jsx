@@ -233,6 +233,7 @@ export default function BirthdaysPage() {
                     activeYear={activeYear}
                     overrideYear={overrideYear}
                     daysInMonth={daysInMonth}
+                    includeAll={includeAll}
                 />
 
                 {error && <div className={styles.error}>{error}</div>}
