@@ -5,11 +5,15 @@
 *.user
 *.suo
 
-# Build output
+# Build output (global)
 bin/
 obj/
 
-# Publish output
+# Server-specific build output
+BirthdayCollator.Server/bin/
+BirthdayCollator.Server/obj/
+
+# Publish output (never commit)
 **/publish/
 **/Release/
 **/Debug/
@@ -22,9 +26,11 @@ dist/
 dist-ssr/
 *.local
 
-ClientApp/node_modules/
-ClientApp/.vite/
-ClientApp/.turbo/
+# Client-specific ignores
+BirthdayCollator.Client/node_modules/
+BirthdayCollator.Client/dist/
+BirthdayCollator.Client/.vite/
+BirthdayCollator.Client/.turbo/
 
 # =========================
 # Logs
@@ -58,5 +64,12 @@ lerna-debug.log*
 # Secrets (never commit)
 # =========================
 appsettings.Development.json
+
+# Ignore ALL env files
 .env
-/BirthdayCollator.Server/Configuration/BirthSourceOptions.cs
+.env.*
+.env.local
+.env.*.local
+
+# If this file contains secrets, keep ignoring it
+BirthdayCollator.Server/Configuration/BirthSourceOptions.cs
