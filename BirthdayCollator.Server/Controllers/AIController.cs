@@ -12,16 +12,8 @@ public sealed class SummarizeRequest
 
 [ApiController]
 [Route("api/ai")]
-public class AIController : ControllerBase
+public class AIController(IPersonEnrichmentService enrichmentService, IConfiguration config) : ControllerBase
 {
-    private readonly IPersonEnrichmentService enrichmentService;
-    private readonly IConfiguration config;
-
-    public AIController(IPersonEnrichmentService enrichmentService, IConfiguration config)
-    {
-        this.enrichmentService = enrichmentService;
-        this.config = config;
-    }
 
     // Reports whether a server-side key exists (dev only)
     [HttpGet("has-key")]
@@ -32,7 +24,6 @@ public class AIController : ControllerBase
         return Ok(new { hasKey });
     }
 
-    // Summarize using a user-supplied key (prod) or fallback to User Secrets (dev)
     [HttpPost("summarize")]
     public async Task<IActionResult> Summarize([FromBody] SummarizeRequest request)
     {
@@ -42,13 +33,26 @@ public class AIController : ControllerBase
             return BadRequest("Name and description are required.");
         }
 
-        // Pass the key along (may be null → dev fallback)
+        var serverKey = config["OpenAI:ApiKey"];
+
+        var userKey = Request.Headers["X-OpenAI-Key"].FirstOrDefault();
+
+        var apiKey = !string.IsNullOrWhiteSpace(serverKey)
+            ? serverKey               
+            : userKey;               
+
+        if (string.IsNullOrWhiteSpace(apiKey))
+        {
+            return BadRequest("No OpenAI API key is available.");
+        }
+
         string result = await enrichmentService.GetSummaryAsync(
             request.Name,
             request.Description,
-            request.ApiKey
+            apiKey
         );
 
         return Ok(result);
     }
+
 }

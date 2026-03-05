@@ -5,9 +5,14 @@ export function useSummaries() {
 
     async function summarizePerson(p) {
         try {
+            const apiKey = localStorage.getItem("openai_api_key") ?? "";
+
             const res = await fetch("/api/ai/summarize", {
                 method: "POST",
-                headers: { "Content-Type": "application/json" },
+                headers: {
+                    "Content-Type": "application/json",
+                    "X-OpenAI-Key": apiKey   
+                },
                 body: JSON.stringify({
                     name: p.name,
                     description: p.description

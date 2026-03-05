@@ -1,7 +1,6 @@
 import { useState, useEffect, useRef } from "react";
 
-import { fetchBirthdays, clearBirthdayCache } from "../api/birthdays";
-import { fetchYears } from "../api/birthdays";
+import { fetchBirthdays, clearBirthdayCache, fetchYears } from "../api/birthdays";
 
 import { useBackendHealth } from "../hooks/useBackendHealth";
 import { useOverrideYear } from "../hooks/useOverrideYear";
@@ -13,6 +12,8 @@ import { DateSelectors } from "../components/DateSelectors";
 import { ResultsList } from "../components/ResultsList";
 import { Pagination } from "../components/Pagination";
 import ToolsDropdown from "../components/ToolsDropdown";
+import { FiSettings } from "react-icons/fi";
+import SettingsModal from "../components/SettingsModal";
 
 import { daysInMonth, incrementDay, decrementDay } from "../utils/dateUtils";
 
@@ -40,7 +41,9 @@ export default function BirthdaysPage() {
     const { summaries, setSummaries, summarizePerson } = useSummaries();
 
     const [page, setPage] = useState(1);
-    const pageSize = 10;
+    const pageSize = 20;
+
+    const [settingsOpen, setSettingsOpen] = useState(false);
 
     const totalPages = Math.ceil(results.length / pageSize);
 
@@ -49,21 +52,17 @@ export default function BirthdaysPage() {
         page * pageSize
     );
 
-    // Reset page when new results arrive
     useEffect(() => {
         setPage(1);
     }, [results]);
 
-    // --- Derived values (must be ABOVE JSX) ---
     const isStale =
         fetchedMonth !== null &&
         fetchedDay !== null &&
         (fetchedMonth !== month || fetchedDay !== day);
 
-    // Scroll anchor
     const topRef = useRef(null);
 
-    // Scroll to top when page changes
     useEffect(() => {
         topRef.current?.scrollIntoView({ behavior: "smooth" });
     }, [page]);
@@ -154,8 +153,9 @@ export default function BirthdaysPage() {
     if (backendOnline === false) {
         return (
             <div className={styles.page}>
+                <h1 className={styles.pageTitle}>Birthdays</h1>
                 <div className={styles.card}>
-                    <h1 className={styles.title}>Birthdays</h1>
+                    <h1 className={styles.headerTitle}>Birthdays</h1>
                     <div className={styles.offlineBox}>
                         Backend offline — start the server to enable features.
                     </div>
@@ -167,8 +167,9 @@ export default function BirthdaysPage() {
     if (backendOnline === null) {
         return (
             <div className={styles.page}>
+                <h1 className={styles.pageTitle}>Birthdays</h1>
                 <div className={styles.card}>
-                    <h1 className={styles.title}>Birthdays</h1>
+                    <h1 className={styles.headerTitle}>Birthdays</h1>
                     <div className={styles.loadingText}>Checking backend status…</div>
                 </div>
             </div>
@@ -179,16 +180,28 @@ export default function BirthdaysPage() {
         <div className={styles.page}>
             <div className={styles.card}>
 
-                <ToolsDropdown
-                    overrideYear={overrideYear}
-                    overrideInput={overrideInput}
-                    setOverrideInput={setOverrideInput}
-                    applyOverride={applyOverride}
-                    clearOverride={clearOverride}
-                    years={years}
-                />
+                {/* Tools + Gear at the very top */}
+                <div className={styles.topRow}>
+                    <ToolsDropdown
+                        overrideYear={overrideYear}
+                        overrideInput={overrideInput}
+                        setOverrideInput={setOverrideInput}
+                        applyOverride={applyOverride}
+                        clearOverride={clearOverride}
+                        years={years}
+                    />
 
-                <h1 className={styles.title}>Birthdays</h1>
+                    <button
+                        className={styles.settingsButton}
+                        onClick={() => setSettingsOpen(true)}
+                        aria-label="Settings"
+                    >
+                        <FiSettings size={20} />
+                    </button>
+                </div>
+
+                {/* Optional: move the title inside the card */}
+                <h1 className={styles.pageTitle}>Birthdays</h1>
 
                 <div className={styles.toolbar}>
                     <Toolbar
@@ -210,8 +223,6 @@ export default function BirthdaysPage() {
                         hasRunController={!!runController}
                     />
                 </div>
-
-                <div className={styles.spacerSmall} />
 
                 <DateSelectors
                     month={month}
@@ -250,6 +261,13 @@ export default function BirthdaysPage() {
                     setPage={setPage}
                 />
             </div>
+
+            <SettingsModal
+                isOpen={settingsOpen}
+                onClose={() => setSettingsOpen(false)}
+            />
         </div>
     );
+
+
 }

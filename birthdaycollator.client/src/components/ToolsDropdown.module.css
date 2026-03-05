@@ -3,11 +3,12 @@
    (Left-aligned inside the card)
 --------------------------------------------------------- */
 .dropdown {
-    margin-bottom: 16px;
+    margin-top: 0;
+    margin-bottom: 4px; 
     width: 100%;
     display: flex;
-    justify-content: flex-start; /* left aligned */
-    position: relative; /* anchor for the panel */
+    justify-content: flex-start;
+    position: relative;
 }
 
 /* ---------------------------------------------------------
