@@ -7,8 +7,11 @@ builder.Services
     .AddWikiHttpClients()
     .AddBirthdayCore()
     .AddBirthdayPipelines()
-    .AddBirthdayAi(builder.Configuration);
+    .AddBirthdayAi(builder.Configuration)
+    .AddAiHttpClients();
 
+
+builder.Services.AddVectorStore(builder.Configuration);
 builder.Services.AddControllers();
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
@@ -23,23 +26,20 @@ if (app.Environment.IsDevelopment())
     app.UseDeveloperExceptionPage();
     app.UseSwagger();
     app.UseSwaggerUI();
-    app.UseHttpsRedirection(); // dev only
+    app.UseHttpsRedirection(); 
 }
 else
 {
     app.UseExceptionHandler("/Error");
 }
 
-// Serve index.html automatically at "/" and enable SPA fallback
 app.UseDefaultFiles();
 app.UseStaticFiles();
 
-// Allow frontend to call backend
 app.UseCors("AllowFrontend");
 
 app.MapControllers();
 
-// SPA fallback for React router
 app.MapFallbackToFile("index.html");
 
 app.Logger.LogInformation("Environment: " + app.Environment.EnvironmentName);

@@ -21,4 +21,6 @@ public static class Urls
 
     public const string APISearchStub = "w/api.php?action=query&list=search&srsearch=";
 
+    public const string OpenAIEmbeddings = "https://api.openai.com/v1/embeddings";
+
 }
