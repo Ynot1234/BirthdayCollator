@@ -12,7 +12,7 @@ public interface IPersonEnrichmentService
 }
 
 public class PersonEnrichmentService(
-    IBioService ai, // Swapped to your custom interface
+    IBioService ai, 
     IMemoryCache cache,
     IConfiguration config) : IPersonEnrichmentService
 {

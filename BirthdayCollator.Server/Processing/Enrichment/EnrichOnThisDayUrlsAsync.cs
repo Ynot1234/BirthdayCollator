@@ -25,27 +25,36 @@ public sealed class PersonWikiEnricher(IHttpClientFactory httpFactory, ILinkReso
                     p.Url = url!;
             });
 
+        foreach (var p in people)
+        {
+            if (string.IsNullOrWhiteSpace(p.Url) ||
+                p.Url.Equals("null", StringComparison.OrdinalIgnoreCase) ||
+                p.Url.Equals("undefined", StringComparison.OrdinalIgnoreCase))
+            {
+                p.Url = $"{Urls.DDGSearchBase}/?q={Uri.EscapeDataString(p.Name)}";
+            }
+            else if (!p.Url.StartsWith("http://") && !p.Url.StartsWith("https://"))
+            {
+                p.Url = "https://" + p.Url;
+            }
+        }
+
         return people;
     }
 
     private async Task<(string? Title, string? Url)> LookupWikiTitleAndUrlAsync(string name, string description, CancellationToken ct)
     {
-        try
-        {
             string query = $"{name} {WikiTextUtility.GetFirstTwoWords(description)}".Trim();
             string api = $"{Urls.Domain}{Urls.APISearchStub}{Uri.EscapeDataString(query)}&format=json";
 
             var response = await _http.GetFromJsonAsync<WikiSearchResponse>(api, ct);
             var first = response?.Query?.Search?.FirstOrDefault();
 
-            return first == null
-                ? (null, null)
-                : (first.Title, $"{Urls.ArticleBase}/{first.Title.Replace(' ', '_')}");
-        }
-        catch
-        {
+        if (first is null)
             return (null, null);
-        }
+
+        string title = first.Title;
+        return (title, $"{Urls.ArticleBase}/{title.Replace(' ', '_')}");
     }
 
     private record WikiSearchResponse(WikiQuery Query);

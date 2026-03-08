@@ -22,7 +22,6 @@ public static class BirthdayServicesExtensions
         services.AddScoped<PersonDedupe>();
         services.AddScoped<PersonAIEnricher>();
         services.AddScoped<PersonWikiEnricher>();
-
         services.AddScoped<PersonFactory>();
         services.AddScoped<OnThisDayParser>();
       

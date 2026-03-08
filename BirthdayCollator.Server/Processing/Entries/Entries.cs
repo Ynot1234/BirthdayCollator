@@ -1,49 +1,41 @@
-﻿namespace BirthdayCollator.Server.Processing.Entries;
+﻿using BirthdayCollator.Helpers;
+
+namespace BirthdayCollator.Server.Processing.Entries;
 
 public interface IEntrySplitter
 {
-    bool IsMulti(string rawText);
-    IReadOnlyList<string> Split(string rawText);
-    bool IsDeathEntry(string entry);
+    bool IsMulti(string text);
+    IReadOnlyList<string> Split(string text);
+    bool IsDeathEntry(string text);
     IEnumerable<(string Text, DateTime Date)> SplitEntries(EntryContext ctx);
 }
 
 public sealed class EntrySplitter : IEntrySplitter
 {
-    public bool IsMulti(string rawText)
-    {
-        if (string.IsNullOrWhiteSpace(rawText))
-            return false;
+    public bool IsMulti(string text) =>
+        !string.IsNullOrWhiteSpace(text) && text.Contains('\n');
 
-        return rawText
-            .Split('\n', StringSplitOptions.RemoveEmptyEntries)
-            .Length > 1;
-    }
-
-    public IReadOnlyList<string> Split(string rawText)
+    public IReadOnlyList<string> Split(string text)
     {
-        if (string.IsNullOrWhiteSpace(rawText))
+        if (string.IsNullOrWhiteSpace(text))
             return [];
 
-        return [.. rawText
+        var lines = text
             .Split('\n', StringSplitOptions.RemoveEmptyEntries)
-            .Skip(1)
             .Select(l => l.Trim())
-            .Where(l => l.Length > 0)];
+            .Where(l => l.Length > 0)
+            .ToArray();
+
+        return lines.Length > 1
+            ? lines[1..]  
+            : lines;      
     }
 
-    public bool IsDeathEntry(string entry)
-    {
-        return entry.Contains("(d.", StringComparison.OrdinalIgnoreCase)
-            || entry.Contains("(died", StringComparison.OrdinalIgnoreCase);
-    }
+    public bool IsDeathEntry(string entry) =>
+        RegexPatterns.ExcludeDiedRegex().IsMatch(entry);
 
     public IEnumerable<(string Text, DateTime Date)> SplitEntries(EntryContext ctx)
     {
-        if (!ctx.IsMulti)
-            return [(ctx.RawText, ctx.Date)];
-
-        return Split(ctx.RawText)
-            .Select(t => (t, ctx.Date));
+        return Split(ctx.RawText).Select(t => (t, ctx.Date));
     }
 }

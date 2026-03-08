@@ -60,6 +60,7 @@
   </ItemGroup>
 
   <ItemGroup>
+    <Compile Remove="Processing\Html\WikiTextUtility.cs" />
     <Compile Remove="WikiBirthdayFetcher.cs" />
   </ItemGroup>
 

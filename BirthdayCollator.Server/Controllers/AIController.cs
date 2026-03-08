@@ -16,8 +16,15 @@ public class AIController(IPersonEnrichmentService enrichment, IConfiguration co
         if (string.IsNullOrWhiteSpace(req.Name) || string.IsNullOrWhiteSpace(req.Description))
             return BadRequest("Name and description are required.");
 
+        var serverKey = config["OpenAI:ApiKey"]; // from User Secrets
         var userKey = Request.Headers["X-OpenAI-Key"].FirstOrDefault();
-        string result = await enrichment.GetSummaryAsync(req.Name, req.Description, userKey);
+
+        string? keyToUse = !string.IsNullOrWhiteSpace(serverKey)
+            ? serverKey
+            : userKey;
+
+        string result = await enrichment.GetSummaryAsync(req.Name, req.Description, keyToUse);
+
         return result.Contains("No API key") ? BadRequest(result) : Ok(result);
     }
 }

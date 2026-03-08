@@ -11,16 +11,24 @@ public sealed class PersonFilter(WikiHtmlFetcher fetcher)
     {
         var livingPeople = new System.Collections.Concurrent.ConcurrentBag<Person>();
 
-        await Parallel.ForEachAsync(people, new ParallelOptions { MaxDegreeOfParallelism = 5, CancellationToken = ct },
-            async (p, token) =>
-            {
-                if (RegexPatterns.ExcludeDiedRegex().IsMatch(p.Description)) return;
+       await Parallel.ForEachAsync(people, new ParallelOptions { MaxDegreeOfParallelism = 5, CancellationToken = ct },
+       async (p, token) =>
+       {
+           if (RegexPatterns.ExcludeDiedRegex().IsMatch(p.Description))
+               return;
 
-                if (!await IsLikelyDeadAsync(p, token))
-                {
-                    livingPeople.Add(p);
-                }
-            });
+           if (string.IsNullOrWhiteSpace(p.Url))
+           {
+               livingPeople.Add(p);
+               return;
+           }
+
+           if (!await IsLikelyDeadAsync(p, token))
+           {
+               livingPeople.Add(p);
+           }
+       });
+
 
 
         return [.. livingPeople.OrderByDescending(p => p.BirthYear)];
@@ -28,21 +36,30 @@ public sealed class PersonFilter(WikiHtmlFetcher fetcher)
 
     private async Task<bool> IsLikelyDeadAsync(Person p, CancellationToken ct)
     {
-        if (RegexPatterns.ExcludeDiedRegex().IsMatch(p.Description)) return true;
-       
+        if (RegexPatterns.ExcludeDiedRegex().IsMatch(p.Description))
+            return true;
+
+        if (p.Url is null ||
+            !p.Url.Contains("wikipedia.org", StringComparison.OrdinalIgnoreCase))
+        {
+            return false;
+        }
+
         string slug = WikiUrlBuilder.ExtractSlug(p.Url);
         string html = await fetcher.FetchHtmlAsync(slug, ct);
-        string? bioText = WikipediaDomNavigator.GetFirstBioParagraph(html);
+        string? bioText = WikiTextUtility.GetFirstBioParagraph(html);
         string? paren = WikiTextUtility.ExtractBioParenthetical(bioText ?? "");
-        
-        if (string.IsNullOrEmpty(paren)) return false;
 
-        if (paren.Contains('–') && !paren.Contains("present", StringComparison.OrdinalIgnoreCase))
+        if (string.IsNullOrEmpty(paren))
+            return false;
+
+        if (paren.Contains('–') &&
+            !paren.Contains("present", StringComparison.OrdinalIgnoreCase))
             return true;
 
         return IsDateMismatch(paren, p.BirthDate);
-        
     }
+
 
     private static bool IsDateMismatch(string text, DateTime birthDate)
     {

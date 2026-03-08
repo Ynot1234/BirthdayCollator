@@ -5,6 +5,7 @@ using BirthdayCollator.Server.Processing.Validation;
 using BirthdayCollator.Server.Models;
 using BirthdayCollator.Server.Processing.Html;
 using BirthdayCollator.Server.Constants;
+using BirthdayCollator.Server.Processing.Links;
 
 namespace BirthdayCollator.Server.Processing.Parsers;
 
@@ -33,7 +34,7 @@ public sealed partial class DatePageParser(BirthEntryValidator validator, Person
             if (!validator.IsValidBirthEntry(rawText, birthYear, li))
                 continue;
 
-            HtmlNode? personLink = WikipediaDomNavigator.TryFindPersonLink(li);
+            HtmlNode? personLink = LinkResolver.TryFindPersonLink(li);
             
             if (personLink == null)
                 continue;

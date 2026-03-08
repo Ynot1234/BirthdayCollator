@@ -1,8 +1,7 @@
 ﻿using BirthdayCollator.Helpers;
 using BirthdayCollator.Server.Constants;
-using BirthdayCollator.Server.Processing.Dates;
 
-namespace BirthdayCollator.Server.Processing.Parsers;
+namespace BirthdayCollator.Server.Processing.Dates;
 
 public sealed class BirthDateParser : IBirthDateParser
 {

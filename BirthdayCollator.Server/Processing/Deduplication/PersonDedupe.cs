@@ -13,16 +13,21 @@ public sealed class PersonDedupe
         foreach (var group in groups)
         {
             var candidates = group.ToList();
+
             while (candidates.Count > 0)
             {
                 var current = candidates[0];
                 candidates.RemoveAt(0);
+
                 var duplicate = candidates.FirstOrDefault(other =>
-                    WikiTextUtility.HasKeywordOverlap(current.Description, other.Description));
+                    AreLikelySamePerson(current, other));
 
                 if (duplicate != null)
                 {
-                    var best = GetScore(current) >= GetScore(duplicate) ? current : duplicate;
+                    var best = GetScore(current) >= GetScore(duplicate)
+                        ? current
+                        : duplicate;
+
                     final.Add(best);
                     candidates.Remove(duplicate);
                 }
@@ -32,7 +37,13 @@ public sealed class PersonDedupe
                 }
             }
         }
+
         return final;
+    }
+
+    private static bool AreLikelySamePerson(Person a, Person b)
+    {
+        return WikiTextUtility.HasKeywordOverlap(a.Description, b.Description);
     }
 
     private static int GetScore(Person p) => p.SourceSlug switch

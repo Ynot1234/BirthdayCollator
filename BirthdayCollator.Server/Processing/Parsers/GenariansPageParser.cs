@@ -1,6 +1,6 @@
 ﻿using BirthdayCollator.Server.Models;
-using BirthdayCollator.Server.Processing.Builders;
 using BirthdayCollator.Server.Processing.Html;
+using BirthdayCollator.Server.Processing.Links;
 using HtmlAgilityPack;
 using System.Globalization;
 
@@ -14,20 +14,16 @@ public sealed class GenariansPageParser
 
         if (cells is not { Count: >= 3 }) return false;
 
-        // Use the middle cell for name/bio/date logic
         var spans = cells[2].SelectNodes(".//span");
         if (spans is not { Count: >= 2 }) return false;
 
-        // Skip the badge if it exists
         var nameNode = spans[0].InnerText.Contains("NEW CENTENARIAN") ? spans[1] : spans[0];
         string name = WikiTextUtility.Normalize(nameNode.InnerText);
 
-        // Extract lines and parse date
         var lines = CleanBrLines(spans.Last());
         if (lines.Count < 2 || !DateTime.TryParseExact(lines.Last(), "MM/dd/yyyy", CultureInfo.InvariantCulture, default, out var bDay))
             return false;
 
-        // Date Filter
         if (bDay.Day != targetDay || !bDay.ToString("MMMM", CultureInfo.InvariantCulture).Equals(targetMonth, StringComparison.OrdinalIgnoreCase))
             return false;
 
@@ -35,7 +31,7 @@ public sealed class GenariansPageParser
         {
             Name = name,
             Description = lines[0].Split(',')[0].Trim(),
-            Url = WikipediaDomNavigator.ExtractWikipediaHref(cells[0]) ?? string.Empty,
+            Url = LinkResolver.ExtractWikipediaHref(cells[0]) ?? string.Empty,
             BirthYear = bDay.Year,
             Month = bDay.Month,
             Day = bDay.Day,
