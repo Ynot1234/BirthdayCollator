@@ -14,7 +14,6 @@ public sealed class SummarizeRequest
 public class AIController(IPersonEnrichmentService enrichmentService, IConfiguration config) : ControllerBase
 {
 
-    // Reports whether a server-side key exists (dev only)
     [HttpGet("has-key")]
     public IActionResult HasKey()
     {

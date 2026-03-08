@@ -7,7 +7,7 @@ builder.Services
     .AddWikiHttpClients()
     .AddBirthdayCore()
     .AddBirthdayPipelines()
-    .AddBirthdayAi(builder.Configuration)
+    .AddBirthdayAi()
     .AddAiHttpClients();
 
 
