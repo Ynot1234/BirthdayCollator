@@ -1,5 +1,6 @@
 using BirthdayCollator.Server.Extensions;
 
+
 var builder = WebApplication.CreateBuilder(args);
 
 builder.Services
@@ -9,6 +10,9 @@ builder.Services
     .AddBirthdayPipelines()
     .AddBirthdayAi()
     .AddAiHttpClients();
+
+
+builder.Services.ConfigureHttpClientDefaults(http => http.AddStandardResilienceHandler());
 
 
 //builder.Services.AddVectorStore(builder.Configuration);

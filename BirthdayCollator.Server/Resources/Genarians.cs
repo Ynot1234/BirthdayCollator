@@ -34,12 +34,12 @@ public sealed class Genarians(
         {
             token.ThrowIfCancellationRequested();
 
-            if (parser.TryParseRow(row, targetMonthName, targetDay, url, out var parsed))
+            if (parser.TryParseRow(row, targetMonthName, targetDay, url, out var person))
             {
-                Person person = personFactory.CreateFromParsedGenarian(parsed);
-                results.Add(person);
+                results.Add(personFactory.Finalize(person!));
             }
         }
+
 
         return results;
     }

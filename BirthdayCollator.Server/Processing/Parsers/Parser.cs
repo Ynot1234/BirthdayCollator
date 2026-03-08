@@ -59,17 +59,15 @@ public sealed partial class Parser(
     }
 
     private void ProcessEntry(
-        List<Person> results,
-        HtmlNode li,
-        string entry,
-        EntryContext ctx,
-        DateTime birthDate,
-        string? suffix)
+     List<Person> results,
+     HtmlNode li,
+     string entry,
+     EntryContext ctx,
+     DateTime birthDate,
+     string? suffix)
     {
-        if (entrySplitter.IsDeathEntry(entry))
-            return;
-
-        if (!validator.IsValidBirthEntry(entry, birthDate.Year, li))
+        if (entrySplitter.IsDeathEntry(entry) ||
+            !validator.IsValidBirthEntry(entry, birthDate.Year, li))
             return;
 
         var personLink = linkResolver.FindPersonLink(li, entry);
@@ -77,7 +75,11 @@ public sealed partial class Parser(
             return;
 
         Person person = personFactory.BuildPerson(entry, birthDate, personLink);
-        person = personFactory.CreateWithSuffix(person, birthDate, suffix);
+
+        person.SourceSlug = string.IsNullOrEmpty(suffix)
+            ? $"{birthDate.Year}"
+            : $"{birthDate.Year}_{suffix}";
+
         person = personFactory.Finalize(person);
 
         if (!linkResolver.TryApplyHrefOverride(person, ctx.Href))
@@ -85,4 +87,5 @@ public sealed partial class Parser(
 
         results.Add(person);
     }
+
 }

@@ -4,15 +4,16 @@ public class QdrantInitializer(QdrantClient client) : IHostedService
 {
     public async Task StartAsync(CancellationToken cancellationToken)
     {
-        // 1. Start creation
-        await client.EnsureCollectionAsync(1536);
+        // 1. Pass the record, not the int
+        await client.EnsureCollectionAsync(new VectorConfig(1536));
 
-        // 2. Wait for it to be globally visible and "Green"
-        await client.WaitUntilCollectionExistsAsync();
+        // 2. Pass the cancellationToken to the first parameter
+        await client.WaitUntilCollectionExistsAsync(cancellationToken);
 
-        // 3. Create the index using the corrected PUT method
+        // 3. This will now be recognized
         await client.EnsurePersonIdIndexAsync();
     }
+
 
 
     public Task StopAsync(CancellationToken cancellationToken) => Task.CompletedTask;

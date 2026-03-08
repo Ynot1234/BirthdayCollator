@@ -1,122 +1,54 @@
-﻿using System.Globalization;
+﻿using BirthdayCollator.Server.Helpers;
+using BirthdayCollator.Server.Models;
 using HtmlAgilityPack;
-using BirthdayCollator.Server.Helpers;
+using System.Globalization;
 
 namespace BirthdayCollator.Server.Processing.Parsers;
-
-public sealed class GenariansPageParser()
+public sealed class GenariansPageParser
 {
-    public sealed record ParsedGenarian(string Name,
-                                        string Description,
-                                        string WikipediaUrl,
-                                        DateTime BirthDate,
-                                        string GenariansPageUrl,
-                                        string SourceSlug);
-
-    public bool TryParseRow(
-        HtmlNode row,
-        string targetMonthName,
-        int targetDay,
-        string sourceUrl,
-        out ParsedGenarian parsed)
+    public bool TryParseRow(HtmlNode row, string targetMonth, int targetDay, string sourceUrl, out Person? person)
     {
-        parsed = null!;
+        person = null;
 
-        HtmlNodeCollection cells = row.SelectNodes("./th");
+        if (row.SelectNodes("./th") is not { Count: >= 3 } cells) return false;
+        if (cells[2].SelectNodes(".//span") is not { Count: >= 2 } spans) return false;
 
-        if (cells == null || cells.Count < 3)
+        var nameNode = spans[0].InnerText.Contains("NEW CENTENARIAN", StringComparison.Ordinal) ? spans[1] : spans[0];
+        string name = StringNormalization.CleanName(HtmlEntity.DeEntitize(nameNode.InnerText).Trim());
+
+        var lines = CleanBrLines(spans.Last());
+        if (lines.Count < 2 || !DateTime.TryParseExact(lines[1], "MM/dd/yyyy", CultureInfo.InvariantCulture, default, out var bDay))
             return false;
 
-        HtmlNodeCollection spans = cells[2].SelectNodes(".//span");
-
-        if (spans == null || spans.Count < 2)
+         if (bDay.Day != targetDay || !bDay.ToString("MMMM", CultureInfo.InvariantCulture).Equals(targetMonth, StringComparison.OrdinalIgnoreCase))
             return false;
 
-        var (description, dateString) = ExtractDescriptionAndDate(spans);
+        person = new Person
+        {
+            Name = name,
+            Description = lines[0].Split(',')[0].Trim(),
+            Url = ExtractWikiUrl(cells[0]),
+            BirthYear = bDay.Year,
+            Month = bDay.Month,
+            Day = bDay.Day,
+            SourceSlug = Path.GetFileNameWithoutExtension(sourceUrl),
+            SourceUrl = sourceUrl,
+            DisplaySlug = "Genarians",
+            Section = "Births"
+        };
 
-        if (!TryParseGenarianDate(dateString, out var parsedDate))
-            return false;
-
-        if (!MatchesTargetDate(parsedDate, targetMonthName, targetDay))
-            return false;
-
-        DateTime birthDate = new(parsedDate.Year, parsedDate.Month, parsedDate.Day);
-
-        string sourceslug = Path.GetFileNameWithoutExtension(sourceUrl);
-
-        string wikiUrl = ExtractWikipediaUrl(cells[0]);
-
-        string name = ExtractName(spans);
-
-        
-        parsed = new ParsedGenarian(  Name: name,
-                                      Description: description,
-                                      WikipediaUrl: wikiUrl,
-                                      BirthDate: birthDate,
-                                      GenariansPageUrl: sourceUrl,
-                                      SourceSlug: sourceslug);
         return true;
     }
 
+    private static List<string> CleanBrLines(HtmlNode node) =>
+        [.. node.InnerHtml.Split("<br", StringSplitOptions.RemoveEmptyEntries)
+            .Select(s => HtmlEntity.DeEntitize(HtmlNode.CreateNode($"<span>{s}</span>").InnerText)
+            .Trim(' ', '\n', '\r', '>', '\t'))];
 
-    private static List<string> SplitLines(HtmlNode span)
+    private static string ExtractWikiUrl(HtmlNode cell)
     {
-        List<string> lines = [.. span.InnerHtml
-                    .Split("<br>", StringSplitOptions.RemoveEmptyEntries)
-                    .Select(s => HtmlEntity.DeEntitize(s.Trim()))];
-
-        return lines;
+        var url = cell.SelectSingleNode(".//a[contains(@href,'wikipedia.org')]")?.GetAttributeValue("href", "") ?? "";
+        return string.IsNullOrEmpty(url) ? "" : Uri.UnescapeDataString(url).Replace(" ", "_");
     }
 
-    private static string StripHtml(string input)
-    {
-        string node = HtmlNode.CreateNode($"<span>{input}</span>").InnerText;
-        return HtmlEntity.DeEntitize(node).Trim();
-    }
-
-    private static string ExtractPrimaryDescription(string raw)
-    {
-        string noHtml = StripHtml(raw);
-        int commaIndex = noHtml.IndexOf(',');
-        return commaIndex > 0 ? noHtml[..commaIndex].Trim()  : noHtml;
-    }
-
-
-    private static bool MatchesTargetDate(  DateTime parsed,
-                                            string targetMonthName,
-                                            int targetDay)
-    {
-        return parsed.ToString("MMMM", CultureInfo.InvariantCulture)
-                     .Equals(targetMonthName, StringComparison.OrdinalIgnoreCase)
-            && parsed.Day == targetDay;
-    }
-
-
-    private static bool TryParseGenarianDate(string date, out DateTime parsed)
-    {
-        return DateTime.TryParseExact(date, "MM/dd/yyyy", CultureInfo.InvariantCulture, DateTimeStyles.None, out parsed);
-    }
-
-
-    private static (string Description, string Date) ExtractDescriptionAndDate(HtmlNodeCollection spans)
-    {
-        HtmlNode lastSpan = spans.Last();
-        List<string> lines = SplitLines(lastSpan);
-        string description = lines.Count > 0 ? ExtractPrimaryDescription(lines[0]) : "";
-        string date = lines.Count > 1 ? lines[1] : "";
-        return (description, date);
-    }
-
-    private static string ExtractName(HtmlNodeCollection spans)
-    {
-        string first = spans[0].InnerText.Trim();
-        int index = first.Contains("NEW CENTENARIAN", StringComparison.InvariantCultureIgnoreCase) ? 1 : 0;
-        return StringNormalization.CleanName(spans[index].InnerText);
-    }
-
-    private static string ExtractWikipediaUrl(HtmlNode cell)
-    {
-        string url = cell.SelectSingleNode(".//a[contains(@href,'wikipedia.org')]") ?.GetAttributeValue("href", "") ?? "";
-        return Uri.UnescapeDataString(url).Replace(" ", "_");
-    }
 }

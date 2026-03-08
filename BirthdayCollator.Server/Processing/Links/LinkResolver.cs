@@ -1,9 +1,8 @@
 ﻿using BirthdayCollator.Server.Constants;
 using BirthdayCollator.Server.Models;
 using BirthdayCollator.Server.Processing.Builders;
+using BirthdayCollator.Server.Processing.Html;
 using HtmlAgilityPack;
-using System.Globalization;
-using System.Text;
 
 namespace BirthdayCollator.Server.Processing.Links;
 
@@ -23,7 +22,7 @@ public sealed class LinkResolver : ILinkResolver
         if (links is null || links.Count == 0)
             return null;
 
-        string personName = ExtractPersonName(entry);
+        string personName = WikiTextUtility.ExtractPersonName(entry);
         string normalizedPerson = HtmlEntity.DeEntitize(personName).Trim();
 
         List<HtmlNode> nonDateLinks =
@@ -81,11 +80,11 @@ public sealed class LinkResolver : ILinkResolver
         if (string.IsNullOrWhiteSpace(href) || string.IsNullOrWhiteSpace(name))
             return false;
 
-        href = Normalize(href);
-        name = Normalize(name);
+        href = WikiTextUtility.ToComparableSlug(href);
+        name = WikiTextUtility.ToComparableSlug(name);
 
-        List<string> hrefTokens = Tokenize(href);
-        List<string> nameTokens = Tokenize(name);
+        List<string> hrefTokens = WikiTextUtility.Tokenize(href);
+        List<string> nameTokens = WikiTextUtility.Tokenize(name);
 
         hrefTokens = hrefTokens.Except(NameParsing.Stopwords).Except(NameParsing.Titles).ToList();
         nameTokens = nameTokens.Except(NameParsing.Stopwords).Except(NameParsing.Titles).ToList();
@@ -100,34 +99,7 @@ public sealed class LinkResolver : ILinkResolver
         return true;
     }
 
-    private static string ExtractPersonName(string text)
-    {
-        if (string.IsNullOrWhiteSpace(text))
-            return string.Empty;
-
-        int idx = text.IndexOf('(');
-        if (idx > 0)
-            text = text[..idx];
-
-        return text.Trim().TrimEnd(',');
-    }
-
-    private static string Normalize(string s)
-    {
-        s = s.ToLowerInvariant().Replace("_", " ");
-        s = s.Normalize(NormalizationForm.FormD);
-        IEnumerable<char> chars = s.Where(c => CharUnicodeInfo.GetUnicodeCategory(c) != UnicodeCategory.NonSpacingMark);
-        return new string([.. chars]);
-    }
-
-    private static List<string> Tokenize(string s)
-    {
-        return [.. s
-            .Split([' ', ',', '.', '/', '-', '(', ')', '\''], StringSplitOptions.RemoveEmptyEntries)
-            .Select(t => t.Trim())
-            .Where(t => t.Length > 0)];
-    }
-
+    
     public bool TryApplyHrefOverride(Person person, string? href)
     {
         if (string.IsNullOrWhiteSpace(href))

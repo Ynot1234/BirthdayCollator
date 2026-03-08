@@ -1,152 +1,56 @@
-﻿using System.Net;
-using static System.Net.WebRequestMethods;
+﻿using System.Text.Json.Nodes;
 
 namespace BirthdayCollator.Server.AI.Semantic.VectorDb;
 
-public class QdrantClient(HttpClient http)
+public record VectorConfig(int Size, string Distance = "Cosine");
+public record ScoredPoint(string Id, float Score, Dictionary<string, object> Payload);
+
+public class QdrantClient(HttpClient http, string collectionName)
 {
-    private const string CollectionName = "birthdaycollator";
+    private readonly string _path = $"/collections/{collectionName}";
 
-    public async Task EnsureCollectionAsync(int vectorSize)
-    {
-        var body = new
-        {
-            vectors = new
-            {
-                size = vectorSize,
-                distance = "Cosine"
-            },
-            on_disk_payload = true
-        };
-
-        await http.PutAsJsonAsync($"/collections/{CollectionName}", body);
-    }
+    public async Task EnsureCollectionAsync(VectorConfig config) =>
+        await http.PutAsJsonAsync(_path, new { vectors = new { config.Size, config.Distance }, on_disk_payload = true });
 
     public async Task EnsurePersonIdIndexAsync()
     {
-        var body = new
-        {
-            field_name = "personId",
-            field_schema = "keyword"
-        };
+        var res = await http.PutAsJsonAsync($"{_path}/index?wait=true", new { field_name = "personId", field_schema = "keyword" });
+        if (!res.IsSuccessStatusCode) throw new Exception($"Index Failed: {await res.Content.ReadAsStringAsync()}");
+    }
 
-        // FIX: Must use PUT for this endpoint
-        var response = await http.PutAsJsonAsync(
-            $"/collections/{CollectionName}/index?wait=true",
-            body
-        );
-
-        if (!response.IsSuccessStatusCode)
+    public async Task WaitUntilCollectionExistsAsync(CancellationToken ct = default, int delay = 1000)
+    {
+        while (!ct.IsCancellationRequested)
         {
-            var error = await response.Content.ReadAsStringAsync();
-            throw new Exception($"Index Creation Failed: {error}");
+            var res = await http.GetAsync(_path, ct);
+            if (res.IsSuccessStatusCode)
+            {
+                var node = await res.Content.ReadFromJsonAsync<JsonObject>(ct);
+                if (node?["result"]?["status"]?.ToString() == "green") return;
+            }
+            await Task.Delay(delay, ct);
         }
     }
 
-    public async Task WaitUntilCollectionExistsAsync()
-    {
-        while (true)
-        {
-            try
-            {
-                // Specifically check for the 'status' property in the response
-                var response = await http.GetFromJsonAsync<System.Text.Json.Nodes.JsonObject>($"/collections/{CollectionName}");
-                var status = response?["result"]?["status"]?.ToString();
+    public async Task UpsertAsync(string id, float[] vector, object payload) =>
+        await http.PutAsJsonAsync($"{_path}/points?wait=true", new { points = new[] { new { id, vector, payload } } });
 
-                if (status == "green")
-                {
-                    Console.WriteLine("Collection is GREEN and ready.");
-                    return;
-                }
-            }
-            catch (HttpRequestException ex) when (ex.StatusCode == System.Net.HttpStatusCode.NotFound)
-            {
-                // This is expected while the cloud cluster is synchronizing
-                Console.WriteLine("Collection not found yet by this node...");
-            }
-
-            await Task.Delay(1000);
-        }
-    }
-
-
-    public async Task UpsertAsync(string id, float[] vector, object payload)
-    {
-        // Qdrant requires UUID or integer IDs
-        var pointId = Guid.TryParse(id, out var parsed)
-            ? id
-            : Guid.NewGuid().ToString();
-
-        var body = new
-        {
-            ids = new[] { pointId },
-            vectors = new[] { vector },
-            payloads = new[] { payload }
-        };
-
-        var response = await http.PostAsJsonAsync(
-            $"/collections/{CollectionName}/points",
-            body
-        );
-
-        var error = await response.Content.ReadAsStringAsync();
-        Console.WriteLine("UPSERT RESPONSE:");
-        Console.WriteLine(error);
-
-        response.EnsureSuccessStatusCode();
-    }
-
-
-    public async Task<List<(string Text, float Score)>> SearchAsync(
-    string personId,
-    float[] vector,
-    int topK)
+    public async Task<List<ScoredPoint>> SearchAsync(string personId, float[] vector, int topK)
     {
         var body = new
         {
             vector,
             limit = topK,
-            with_payload = true, // Ensure the payload is actually returned
-            filter = new
-            {
-                must = new[]
-                {
-                new { key = "personId", match = new { value = personId } }
-            }
-            }
+            with_payload = true,
+            filter = new { must = new[] { new { key = "personId", match = new { value = personId } } } }
         };
 
-        var response = await http.PostAsJsonAsync($"/collections/{CollectionName}/points/search", body);
-        response.EnsureSuccessStatusCode();
+        var res = await http.PostAsJsonAsync($"{_path}/points/search", body);
+        var wrap = await res.EnsureSuccessStatusCode().Content.ReadFromJsonAsync<QdrantResponse<List<SearchResult>>>();
 
-        var wrapper = await response.Content.ReadFromJsonAsync<QdrantResponse<List<SearchResult>>>();
-
-        if (wrapper?.Result == null) return [];
-
-        var list = new List<(string Text, float Score)>();
-
-        foreach (var item in wrapper.Result)
-        {
-            string textValue = "N/A";
-
-            if (item.Payload != null && item.Payload.TryGetValue("text", out var val))
-            {
-                textValue = val?.ToString() ?? "N/A";
-            }
-
-            list.Add((textValue, item.Score));
-        }
-
-        return list;
-
+        return [.. (wrap?.Result ?? []).Select(r => new ScoredPoint(r.Id?.ToString() ?? "", r.Score, r.Payload ?? []))];
     }
 
-
-}
-public class SearchResult
-{
-    public float Score { get; set; }
-    // Qdrant returns 'id' as well, which is often useful
-    public object Id { get; set; } = default!;
-    public Dictionary<string, object> Payload { get; set; } = default!;
+    private class SearchResult { public float Score { get; set; } public object? Id { get; set; } public Dictionary<string, object>? Payload { get; set; } }
+    private class QdrantResponse<T> { public T? Result { get; set; } }
 }
