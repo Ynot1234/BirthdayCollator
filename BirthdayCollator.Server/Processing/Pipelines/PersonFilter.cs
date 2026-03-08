@@ -1,117 +1,61 @@
 ﻿using BirthdayCollator.Helpers;
-using HtmlAgilityPack;
-using BirthdayCollator.Server.Constants;
 using BirthdayCollator.Server.Models;
-using BirthdayCollator.Server.Processing.Entries;
-
-
+using BirthdayCollator.Server.Processing.Fetching;
+using BirthdayCollator.Server.Processing.Html;
 
 namespace BirthdayCollator.Server.Processing.Pipelines;
 
-public partial class PersonFilter(IHttpClientFactory factory, IEntrySplitter entrySplitter)
+public sealed class PersonFilter(WikiHtmlFetcher fetcher)
 {
-    private readonly HttpClient _http = factory.CreateClient("WikiClient");
-    private readonly IEntrySplitter _entrySplitter = entrySplitter;
-
-    public List<Person> FilterLivingPeople(List<Person> people)
+    public async Task<List<Person>> FilterLivingAsync(List<Person> people, CancellationToken ct)
     {
-        List<Person> living = [];
+        var results = new bool[people.Count];
 
-        foreach (Person p in people)
-        {
-            if (p.Description.Contains("died", StringComparison.OrdinalIgnoreCase))
-                continue;
+        await Parallel.ForEachAsync(people.Select((p, i) => (p, i)),
+            new ParallelOptions { MaxDegreeOfParallelism = 5, CancellationToken = ct },
+            async (item, token) =>
+            {
+                results[item.i] = await IsLikelyDeadAsync(item.p, token);
+            });
 
-            if (!IsPersonDead(p.Url, p.BirthDate))
-                living.Add(p);
-        }
-
-
-        return living;
+        return [.. people.Where((_, i) => !results[i])];
     }
 
-    private bool IsPersonDead(string url, DateTime birthdate)
+    private async Task<bool> IsLikelyDeadAsync(Person p, CancellationToken ct)
     {
-        string html;
+        if (p.Description.Contains("died", StringComparison.OrdinalIgnoreCase))
+            return true;
 
         try
         {
-            html = _http.GetStringAsync(url).Result;
+            string html = await fetcher.FetchHtmlAsync(p.Url, ct);
+            string? bioText = WikipediaDomNavigator.GetFirstBioParagraph(html);
+
+            if (string.IsNullOrWhiteSpace(bioText))
+                return false;
+
+            string? paren = WikiTextUtility.ExtractBioParenthetical(bioText);
+
+            if (string.IsNullOrEmpty(paren))
+                return false;
+
+            if (paren.Contains('–'))
+                return true;
+
+            return IsDateMismatch(paren, p.BirthDate);
         }
         catch
         {
             return false;
         }
-
-
-        string? paren = ExtractParen(html);
-
-        if (paren == null)
-            return false; 
-
-        if (paren.Contains('–'))
-            return true;
-
-        bool matches = FirstParenDateMatches(paren, birthdate);
-
-        return !matches;
     }
 
-
-    private static bool FirstParenDateMatches(string paren, DateTime birthdate)
+    private static bool IsDateMismatch(string text, DateTime birthDate)
     {
-        var match = RegexPatterns.LongFormDateRegex().Match(paren);
-       
-        if (!match.Success)
+        var match = RegexPatterns.LongFormDateRegex().Match(text);
+        if (!match.Success || !DateTime.TryParse(match.Value, out var parsed))
             return false;
 
-        string dateText = match.Value;
-
-        if (!DateTime.TryParse(dateText, out DateTime parsed))
-            return false;
-
-        return (parsed.Month == birthdate.Month && parsed.Day == birthdate.Day);
-    }
-
-
-
-    private string? ExtractParen(string html)
-    {
-        HtmlDocument doc = new();
-        doc.LoadHtml(html);
-
-        var pNodes = doc.DocumentNode.SelectNodes("//p");
-        
-        if (pNodes == null)
-            return null;
-
-        foreach (HtmlNode p in pNodes)
-        {
-            string text = p.InnerText;
-
-            int start = 0;
-
-            while ((start = text.IndexOf('(', start)) >= 0)
-            {
-                int end = text.IndexOf(')', start + 1);
-
-                if (end < 0)
-                    break;
-
-                string paren = text.Substring(start, end - start + 1);
-
-                if (ContainsMonth(paren) || _entrySplitter.IsDeathEntry(paren)) 
-                  return paren;
-
-                start = end + 1;
-            }
-        }
-
-        return null;
-    }
-
-    private static bool ContainsMonth(string s)
-    {
-        return MonthNames.All.Any(m => s.Contains(m, StringComparison.OrdinalIgnoreCase));
+        return parsed.Month != birthDate.Month || parsed.Day != birthDate.Day;
     }
 }

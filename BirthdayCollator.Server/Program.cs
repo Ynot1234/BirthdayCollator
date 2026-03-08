@@ -12,7 +12,7 @@ builder.Services
     .AddAiHttpClients();
 
 
-builder.Services.ConfigureHttpClientDefaults(http => http.AddStandardResilienceHandler());
+//builder.Services.ConfigureHttpClientDefaults(http => http.AddStandardResilienceHandler());
 
 
 //builder.Services.AddVectorStore(builder.Configuration);
@@ -20,6 +20,9 @@ builder.Services.AddControllers();
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
 builder.Services.AddHealthChecks();
+
+
+
 
 var app = builder.Build();
 
@@ -30,7 +33,7 @@ if (app.Environment.IsDevelopment())
     app.UseDeveloperExceptionPage();
     app.UseSwagger();
     app.UseSwaggerUI();
-    app.UseHttpsRedirection(); 
+ //   app.UseHttpsRedirection(); 
 }
 else
 {

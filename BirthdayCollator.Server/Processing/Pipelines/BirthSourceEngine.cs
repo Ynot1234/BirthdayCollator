@@ -1,121 +1,63 @@
 ﻿using BirthdayCollator.Server.Infrastructure.Throttling;
 using BirthdayCollator.Server.Models;
-using BirthdayCollator.Server.Processing.Builders;
-using BirthdayCollator.Server.Processing.Dates;
-using BirthdayCollator.Server.Processing.Entries;
 using BirthdayCollator.Server.Processing.Fetching;
-using BirthdayCollator.Server.Processing.Html;
-using BirthdayCollator.Server.Processing.Links;
-using BirthdayCollator.Server.Processing.Names;
-using BirthdayCollator.Server.Processing.Parsers;
-using BirthdayCollator.Server.Processing.Validation;
-using BirthdayCollator.Helpers;
-
 
 namespace BirthdayCollator.Server.Processing.Pipelines;
 
-public sealed class BirthSourceEngine(
-    IHtmlBirthSectionExtractor htmlExtractor,
-    IBirthDateParser dateParser,
-    IEntrySplitter entrySplitter,
-    ILinkResolver linkResolver,
-    IPersonNameResolver nameResolver
-)
+public sealed class BirthSourceEngine(IWikiParser parser) 
 {
+
+    public record PipelineOptions(
+    IReadOnlyList<string> Years,
+    IReadOnlyList<string> Suffixes,
+    Func<string, string, string> SlugBuilder,
+    string XPath,
+    bool UseThrottle,
+    Func<string, Exception, Task>? LogError,
+    WikiHtmlFetcher Fetcher,
+    DateTime ActualDate,
+    bool IncludeAll
+);
+
+
     public async Task<List<Person>> RunAsync(
-        IReadOnlyList<string> years,
-        IReadOnlyList<string> suffixes,
-        Func<string, string, string> slugBuilder,
-        string xpath,
-        bool useThrottle,
-        Func<string, Exception, Task>? logError,
-        WikiHtmlFetcher fetcher,
-        DateTime actualDate,
-        bool IncludeAll,
+        PipelineOptions options, // Group those 10 params into a record
         CancellationToken token)
     {
-        BirthEntryValidator validator = new([.. years], RegexPatterns.ExcludeDiedRegex());
-        PersonFactory factory = new(WikiUrlBuilder.NormalizeWikiHref, nameResolver);
+        var tasks = options.Years.SelectMany(year =>
+            options.Suffixes.Select(suffix => {
+                var date = new DateTime(int.Parse(year), options.ActualDate.Month, options.ActualDate.Day);
+                return ProcessAsync(options, year, suffix, date, token);
+            })
+        );
 
-        Parser parser = new(
-            validator,
-            factory,
-            htmlExtractor,
-            dateParser,
-            entrySplitter,
-            linkResolver);
-
-        List<Task<List<Person>>> tasks = [];
-
-        Task<List<Person>> Enqueue(string year, string suffix, DateTime adjustedDate)
-        {
-            return ProcessAsync(
-                slugBuilder(year, suffix),
-                adjustedDate,
-                suffix,
-                xpath,
-                useThrottle,
-                logError,
-                fetcher,
-                parser,
-                IncludeAll,
-                token);
-        }
-
-        foreach (string year in years)
-        {
-            token.ThrowIfCancellationRequested();
-
-            DateTime adjustedDate = new(int.Parse(year), actualDate.Month, actualDate.Day);
-
-            foreach (string suffix in suffixes)
-            {
-                token.ThrowIfCancellationRequested();
-                tasks.Add(Enqueue(year, suffix, adjustedDate));
-            }
-        }
-
-        List<Person>[] results = await Task.WhenAll(tasks);
+        var results = await Task.WhenAll(tasks);
         return [.. results.SelectMany(x => x)];
     }
 
-    private static async Task<List<Person>> ProcessAsync(
-        string slug,
-        DateTime adjustedDate,
-        string? suffix,
-        string xpath,
-        bool useThrottle,
-        Func<string, Exception, Task>? logError,
-        WikiHtmlFetcher fetcher,
-        Parser parser,
-        bool IncludeAll,
-        CancellationToken token)
+    private async Task<List<Person>> ProcessAsync(
+        PipelineOptions opt, string year, string suffix, DateTime date, CancellationToken ct)
     {
-        if (useThrottle)
-            await Throttle.Category.WaitAsync();
+        async Task<List<Person>> Execute()
+        {
+            ct.ThrowIfCancellationRequested();
+            var slug = opt.SlugBuilder(year, suffix);
+            var html = await opt.Fetcher.FetchHtmlAsync(slug, ct);
+            return parser.Parse(html, date, suffix, opt.XPath, opt.IncludeAll);
+        }
 
         try
         {
-            token.ThrowIfCancellationRequested();
-            string html = await fetcher.FetchHtmlAsync(slug, token);
-            token.ThrowIfCancellationRequested();
-            return parser.Parse(html, adjustedDate, suffix, xpath, IncludeAll);
+            return opt.UseThrottle
+                ? await Throttle.Category.RunAsync(Execute)
+                : await Execute();
         }
-        catch (OperationCanceledException)
+        catch (Exception ex) when (ex is not OperationCanceledException)
         {
-            throw;
-        }
-        catch (Exception ex)
-        {
-            if (logError is not null)
-                await logError(slug, ex);
-
+            if (opt.LogError is not null)
+                await opt.LogError($"{year} {suffix}".Trim(), ex);
             return [];
         }
-        finally
-        {
-            if (useThrottle)
-                Throttle.Category.Release();
-        }
     }
+
 }

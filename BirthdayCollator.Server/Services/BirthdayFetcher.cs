@@ -11,8 +11,7 @@ public sealed class BirthdayFetcher(
     {
         DateTime date = new(DateTime.Now.Year, month, day);
         var rawPeople = await fetchPipeline.FetchAllAsync(date, token);
-        var processed = await personPipeline.Process(rawPeople);
-        
+        var processed = await personPipeline.Process(rawPeople, token);
         return processed;
     }
 }

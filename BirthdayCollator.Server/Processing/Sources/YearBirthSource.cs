@@ -4,6 +4,7 @@ using BirthdayCollator.Server.Models;
 using BirthdayCollator.Server.Processing.Builders;
 using BirthdayCollator.Server.Processing.Fetching;
 using BirthdayCollator.Server.Processing.Pipelines;
+using static BirthdayCollator.Server.Processing.Pipelines.BirthSourceEngine;
 
 namespace BirthdayCollator.Server.Processing.Sources;
 
@@ -18,36 +19,36 @@ public sealed class YearBirthSource(
         List<Person> people = [];
         bool includeAll = yearRangeProvider.IncludeAll;
 
+        var normal = await engine.RunAsync(new PipelineOptions(
+        Years: yearRangeProvider.GetYears(),
+        Suffixes: [""],
+        SlugBuilder: (year, _) => year,
+        XPath: XPathSelectors.YearBirthsHeader,
+        UseThrottle: false,
+        LogError: null,
+        Fetcher: fetcher,
+        ActualDate: actualDate,
+        IncludeAll: includeAll
+    ), token);
 
-
-        // Always fetch the normal year pages
-        var normal = await engine.RunAsync(
-            years: yearRangeProvider.GetYears(),
-            suffixes: [""],
-            slugBuilder: (year, _) => year,
-            xpath: XPathSelectors.YearBirthsHeader,
-            useThrottle: false,
-            logError: null,
-            fetcher: fetcher,
-            actualDate: actualDate,
-            includeAll,
-            token: token);
 
         people.AddRange(normal);
 
         if (LeapYear.IsNonLeapFeb28(actualDate.Month, actualDate.Day))
         {
-            var feb29 = await engine.RunAsync(
-                years: yearRangeProvider.GetLeapYears(),
-                suffixes: [""],
-                slugBuilder: (year, _) => year,
-                xpath: XPathSelectors.YearBirthsHeader,
-                useThrottle: false,
-                logError: null,
-                fetcher: fetcher,
-                actualDate: new DateTime(actualDate.Year, actualDate.Month, actualDate.Day + 1),
-                includeAll,
-                token: token);
+            var feb29 = 
+                await engine.RunAsync(new PipelineOptions(
+                                    Years: yearRangeProvider.GetLeapYears(),
+                                    Suffixes: [""],
+                                    SlugBuilder: (year, _) => year,
+                                    XPath: XPathSelectors.YearBirthsHeader,
+                                    UseThrottle: false,
+                                    LogError: null,
+                                    Fetcher: fetcher,
+                                    ActualDate: new DateTime(actualDate.Year, actualDate.Month, actualDate.Day + 1),
+                                    IncludeAll: includeAll
+                                ), token);
+
 
             people.AddRange(feb29);
         }

@@ -6,8 +6,6 @@ using BirthdayCollator.Server.Processing.Sorting;
 
 
 namespace BirthdayCollator.Server.Processing.Pipelines;
-
-
 public sealed class PersonPipeline(
     PersonDeduper deduper,
     PersonCleaner cleaner,
@@ -17,20 +15,20 @@ public sealed class PersonPipeline(
     DeduplicateByURL urlDeduper,
     PersonDedupe descriptionDupes,
     PersonWikiEnricher enricher
-    //PersonAIEnricher aiEnricher
-    ) : IPersonPipeline
+   // PersonAIEnricher aiEnricher
+) : IPersonPipeline
 {
-    public async Task<List<Person>> Process(List<Person> people)
+    public async Task<List<Person>> Process(List<Person> people, CancellationToken token)
     {
         people = await enricher.EnrichOnThisDayUrlsAsync(people);
         people = deduper.DeduplicateByNameAndYear(people);
         people = cleaner.CleanPersons(people);
-        people = filter.FilterLivingPeople(people);
+        people = await filter.FilterLivingAsync(people, token);
         people = sorter.SortPersons(people);
         people = nearDupes.RemoveNearDuplicates(people);
         people = urlDeduper.DeduplicateByUrl(people);
         people = descriptionDupes.DedupePeople(people);
-      //  people = await aiEnricher.EnrichPeopleAsync(people);
+      //  people = await aiEnricher.EnrichPeopleAsync(people, token);
         return people;
     }
 }

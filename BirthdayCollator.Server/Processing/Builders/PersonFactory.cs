@@ -4,8 +4,6 @@ using BirthdayCollator.Server.Processing.Html;
 using BirthdayCollator.Server.Processing.Names;
 using HtmlAgilityPack;
 
-using static BirthdayCollator.Server.Processing.Parsers.GenariansPageParser;
-
 namespace BirthdayCollator.Server.Processing.Builders;
 
 public class PersonFactory(Func<string, string> normalizeHref, IPersonNameResolver nameResolver)

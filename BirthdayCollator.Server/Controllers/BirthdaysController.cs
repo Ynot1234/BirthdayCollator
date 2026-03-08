@@ -8,109 +8,61 @@ namespace BirthdayCollator.Server.Controllers;
 
 [ApiController]
 [Route("api/[controller]")]
-public class BirthdaysController : ControllerBase
+public class BirthdaysController(
+    BirthdayFetcher fetcher,
+    IMemoryCache cache,
+    IYearRangeProvider years) : ControllerBase
 {
-    private readonly BirthdayFetcher fetcher;
-    private readonly IMemoryCache cache;
-    private readonly IYearRangeProvider yearRangeProvider;
+    private static string GetCacheKey(int m, int d) => $"birthdays:{m}:{d}";
 
-    public BirthdaysController(
-        BirthdayFetcher fetcher,
-        IMemoryCache cache,
-        IYearRangeProvider yearRangeProvider)
-    {
-        this.fetcher = fetcher;
-        this.cache = cache;
-        this.yearRangeProvider = yearRangeProvider;
-    }
-
-    // ---------------------------------------------------------
-    // GET birthdays
-    // ---------------------------------------------------------
     [HttpGet]
-    public async Task<List<Person>> Get(int month, int day, bool? includeAll, CancellationToken token)
+    public async Task<List<Person>> Get(int month, int day, bool includeAll, CancellationToken ct)
     {
-        yearRangeProvider.SetIncludeAll(includeAll ?? false);
-        return await fetcher.GetBirthdays(month, day, token);
+        years.SetIncludeAll(includeAll);
+        return await fetcher.GetBirthdays(month, day, ct);
     }
 
-    // ---------------------------------------------------------
-    // Clear cache
-    // ---------------------------------------------------------
     [HttpDelete("{month:int}/{day:int}")]
-    public void Clear(int month, int day)
+    public IActionResult Clear(int month, int day)
     {
-        string cacheKey = $"birthdays:{month}:{day}";
-        cache.Remove(cacheKey);
+        cache.Remove(GetCacheKey(month, day));
+        return NoContent();
     }
 
-    // ---------------------------------------------------------
-    // Cache exists?
-    // ---------------------------------------------------------
     [HttpGet("exists/{month:int}/{day:int}")]
-    public bool Exists(int month, int day)
-    {
-        string cacheKey = $"birthdays:{month}:{day}";
-        return cache.TryGetValue(cacheKey, out _);
-    }
+    public bool Exists(int month, int day) =>
+        cache.TryGetValue(GetCacheKey(month, day), out _);
 
-    // ---------------------------------------------------------
-    // ALWAYS return full year list (ignore overrides)
-    // ---------------------------------------------------------
     [HttpGet("years")]
-    public ActionResult<IReadOnlyList<string>> GetYears()
-    {
-        return Ok(yearRangeProvider.GetDefaultYears());
-    }
+    public ActionResult<IReadOnlyList<string>> GetYears() =>
+        Ok(years.GetDefaultYears());
 
-    // ---------------------------------------------------------
-    // Today's birthdays
-    // ---------------------------------------------------------
     [HttpGet("current")]
-    public async Task<List<Person>> GetCurrent(CancellationToken token)
-    {
-        var today = DateTime.Today;
-        return await Get(today.Month, today.Day, false, token);
-    }
+    public Task<List<Person>> GetCurrent(CancellationToken ct) =>
+        Get(DateTime.Today.Month, DateTime.Today.Day, false, ct);
 
-    // ---------------------------------------------------------
-    // Get override state
-    // ---------------------------------------------------------
     [HttpGet("override")]
-    public IActionResult GetOverride()
-    {
-        return Ok(new
-        {
-            overrideYear = yearRangeProvider.CurrentOverrideYear,
-            includeAll = yearRangeProvider.IncludeAll
-        });
-    }
+    public IActionResult GetOverride() =>
+        Ok(new { overrideYear = years.CurrentOverrideYear, includeAll = years.IncludeAll });
 
-    // ---------------------------------------------------------
-    // Set override state
-    // ---------------------------------------------------------
     [HttpPost("override")]
-    public IActionResult SetOverride([FromBody] OverrideRequest request)
+    public IActionResult SetOverride([FromBody] OverrideRequest req)
     {
-        if (string.IsNullOrWhiteSpace(request.Year))
+        if (string.IsNullOrWhiteSpace(req.Year))
         {
-            yearRangeProvider.ClearYear();
-            yearRangeProvider.SetIncludeAll(false);
-
-            return Ok(new
-            {
-                overrideYear = (string?)null,
-                includeAll = false
-            });
+            years.ClearYear();
+            years.SetIncludeAll(false);
+        }
+        else if (int.TryParse(req.Year, out var parsed))
+        {
+            years.ForceYear(parsed);
+            years.SetIncludeAll(req.IncludeAll);
+        }
+        else
+        {
+            return BadRequest("Invalid year format.");
         }
 
-        yearRangeProvider.ForceYear(int.Parse(request.Year));
-        yearRangeProvider.SetIncludeAll(request.IncludeAll);
-
-        return Ok(new
-        {
-            overrideYear = request.Year,
-            includeAll = request.IncludeAll
-        });
+        return Ok(new { overrideYear = years.CurrentOverrideYear, includeAll = years.IncludeAll });
     }
 }

@@ -34,20 +34,18 @@ public sealed partial class DatePageParser(BirthEntryValidator validator, Person
                 continue;
 
             HtmlNode? personLink = WikipediaDomNavigator.TryFindPersonLink(li);
+            
             if (personLink == null)
                 continue;
 
             DateTime birthDate = new(birthYear, month, day);
 
-            // Build the base person
             Person person = personFactory.BuildPerson(rawText, birthDate, personLink);
 
-            // Apply page-specific context
             person.SourceSlug = sourceSlug;
             person.SourceUrl = $"{Urls.ArticleBase}/{sourceSlug}#Births";
-
-            // Run name fixes and add to results
-            results.Add(personFactory.Finalize(person));
+            person = personFactory.Finalize(person);
+            results.Add(person);
         }
 
         return results;

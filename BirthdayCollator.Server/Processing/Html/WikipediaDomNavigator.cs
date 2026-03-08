@@ -26,6 +26,18 @@ public static class WikipediaDomNavigator
         return [.. sections.SelectMany(s => s.SelectNodes(".//li") ?? Enumerable.Empty<HtmlNode>())];
     }
 
+    public static string? GetFirstBioParagraph(string html)
+    {
+        if (string.IsNullOrWhiteSpace(html)) return null;
+        HtmlDocument doc = new();
+        doc.LoadHtml(html);
+
+        return doc.DocumentNode
+            .SelectSingleNode("//div[@class='mw-parser-output']/p[not(@class='mw-empty-elt')]")
+            ?.InnerText;
+    }
+
+
     /// <summary>
     /// Filters through links in a list item to find the specific person's wiki link.
     /// </summary>
