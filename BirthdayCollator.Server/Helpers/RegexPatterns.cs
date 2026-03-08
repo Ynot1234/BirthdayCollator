@@ -93,5 +93,13 @@ namespace BirthdayCollator.Helpers
 
         private const string Months = "(January|February|March|April|May|June|July|August|September|October|November|December)";
 
+
+
+        [GeneratedRegex(@"\([^)]*\)")]
+        public static partial Regex Parentheses();
+
+        [GeneratedRegex(@"\s+")]
+        public static partial Regex NormalizeWhitespace();
+
     }
 }

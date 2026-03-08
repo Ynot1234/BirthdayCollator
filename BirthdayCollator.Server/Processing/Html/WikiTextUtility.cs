@@ -1,14 +1,8 @@
 ﻿using BirthdayCollator.Helpers;
 using BirthdayCollator.Server.Constants;
-using BirthdayCollator.Server.Processing.Pipelines;
 using HtmlAgilityPack;
-using Microsoft.VisualBasic;
-using System;
 using System.Globalization;
-using System.Runtime.Intrinsics.X86;
 using System.Text;
-using System.Threading.Tasks;
-using static System.Net.Mime.MediaTypeNames;
 
 namespace BirthdayCollator.Server.Processing.Html;
 
@@ -106,5 +100,26 @@ public static class WikiTextUtility
         return rawText.Trim();
     }
 
+    public static string SanitizeWikiText(string input)
+    {
+        if (string.IsNullOrWhiteSpace(input)) 
+            return string.Empty;
+ 
+        string text = RegexPatterns.Citation().Replace(input, "");
+        text = RegexPatterns.Parentheses().Replace(text, "");
+        return ExtractDescription(text).Replace("  ", " ");
+    }
+    public static string GetFirstTwoWords(string text)
+    {
+        if (string.IsNullOrWhiteSpace(text))
+            return string.Empty;
+
+        string[] words = text.Split(' ', StringSplitOptions.RemoveEmptyEntries);
+
+        if (words.Length >= 2)
+            return $"{words[0]} {words[1]}";
+
+        return words.Length > 0 ? words[0] : string.Empty;
+    }
 
 }

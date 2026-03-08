@@ -39,5 +39,7 @@
         // Optional convenience
         public DateTime BirthDate => new(BirthYear, Month, Day);
 
+        public Person Clone() => (Person)this.MemberwiseClone();
+
     }
 }

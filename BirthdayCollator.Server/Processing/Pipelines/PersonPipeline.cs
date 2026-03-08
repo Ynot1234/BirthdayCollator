@@ -20,7 +20,7 @@ public sealed class PersonPipeline(
 {
     public async Task<List<Person>> Process(List<Person> people, CancellationToken token)
     {
-        people = await enricher.EnrichOnThisDayUrlsAsync(people);
+        people = await enricher.EnrichOnThisDayUrlsAsync(people, token);
         people = deduper.DeduplicateByNameAndYear(people);
         people = cleaner.CleanPersons(people);
         people = await filter.FilterLivingAsync(people, token);

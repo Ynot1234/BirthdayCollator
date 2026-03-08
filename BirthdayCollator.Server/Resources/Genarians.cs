@@ -23,7 +23,6 @@ public sealed class Genarians(
 
         HtmlWeb web = new();
         HtmlDocument doc = await web.LoadFromWebAsync(url, token);
-
         HtmlNodeCollection rows = doc.DocumentNode.SelectNodes("//tr[th]");
         List<Person> results = [];
 
@@ -39,7 +38,6 @@ public sealed class Genarians(
                 results.Add(personFactory.Finalize(person!));
             }
         }
-
 
         return results;
     }
@@ -62,10 +60,9 @@ public sealed class Genarians(
             CultureInfo.InvariantCulture).Month;
 
         List<Person> people = [];
-
-            IReadOnlyList<string> years = yearRangeProvider.GetYears();
-            var normal = await ScrapeYearSetAsync(years, targetMonthName, targetDay, token);
-            people.AddRange(normal);
+        IReadOnlyList<string> years = yearRangeProvider.GetYears();
+        var normal = await ScrapeYearSetAsync(years, targetMonthName, targetDay, token);
+        people.AddRange(normal);
     
         if (LeapYear.IsNonLeapFeb28(month, targetDay))
         {
@@ -106,6 +103,4 @@ public sealed class Genarians(
         .SelectMany(r => r)
         .Where(p => allowedYears.Contains(p.BirthYear))];
     }
-
-
 }
