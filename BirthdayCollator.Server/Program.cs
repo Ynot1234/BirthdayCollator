@@ -11,7 +11,7 @@ builder.Services
     .AddAiHttpClients();
 
 
-builder.Services.AddVectorStore(builder.Configuration);
+//builder.Services.AddVectorStore(builder.Configuration);
 builder.Services.AddControllers();
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
@@ -42,6 +42,6 @@ app.MapControllers();
 
 app.MapFallbackToFile("index.html");
 
-app.Logger.LogInformation("Environment: " + app.Environment.EnvironmentName);
+//app.Logger.LogInformation("Environment: " + app.Environment.EnvironmentName);
 
 app.Run();

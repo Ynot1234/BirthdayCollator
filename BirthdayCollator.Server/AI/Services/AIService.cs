@@ -16,21 +16,23 @@ public class AIService(IConfiguration config, IKernelFactory kernelFactory) : IA
     {
         var kernel = kernelFactory.Create(key);
 
-        var systemPrompt = """
-        You are a professional summarization assistant.
-        Your only job is to summarize the provided text.
-        Do not greet the user.
-        Do not introduce yourself.
-        Do not add emojis.
-        Only return the summary.
-        """;
+        string systemPrompt = """
+                                You are a professional biographical summarization assistant.
 
-        var chat = kernel.GetRequiredService<IChatCompletionService>();
+                                Your job is to produce a clear, well‑written summary of the person based on the provided text.
+                                The summary should be longer, more detailed, and include examples of their work, achievements, or contributions when such information is present in the input.
+
+                                Do not greet the user.
+                                Do not introduce yourself.
+                                Do not add emojis.
+                                Only return the summary text.
+                                """;
 
         ChatHistory messages = [];
         messages.AddSystemMessage(systemPrompt);
         messages.AddUserMessage(text);
 
+        var chat = kernel.GetRequiredService<IChatCompletionService>();
         var result = await chat.GetChatMessageContentAsync(messages);
         return result.ToString();
     }

@@ -7,7 +7,6 @@ public sealed class SummarizeRequest
 {
     public string Name { get; set; } = "";
     public string Description { get; set; } = "";
-    public string? ApiKey { get; set; } // optional for dev
 }
 
 [ApiController]
