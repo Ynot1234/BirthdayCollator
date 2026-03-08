@@ -9,46 +9,45 @@ using BirthdayCollator.Server.Processing.Links;
 
 namespace BirthdayCollator.Server.Processing.Parsers;
 
-public sealed partial class DatePageParser(BirthEntryValidator validator, PersonFactory personFactory) :IDatePageParser
+public sealed partial class DatePageParser(BirthEntryValidator validator, PersonFactory personFactory, ILinkResolver linkResolver) :IDatePageParser
 {
     public List<Person> Parse(string html, int month, int day)
     {
         HtmlDocument htmlDoc = new();
         htmlDoc.LoadHtml(html);
 
-        List<HtmlNode> liNodes = WikipediaDomNavigator.ExtractBirthLiNodes(htmlDoc);
+        var liNodes = WikipediaDomNavigator.ExtractBirthLiNodes(htmlDoc);
         if (liNodes.Count == 0) return [];
 
         List<Person> results = [];
-        string monthName = CultureInfo.InvariantCulture.DateTimeFormat.GetMonthName(month);
-        string sourceSlug = $"{monthName}_{day}";
+        string sourceSlug = $"{CultureInfo.InvariantCulture.DateTimeFormat.GetMonthName(month)}_{day}";
 
-        foreach (HtmlNode li in liNodes)
+        foreach (var li in liNodes)
         {
-            string rawText = WikiTextUtility.Normalize(li.InnerText);
+            string entry = WikiTextUtility.Normalize(li.InnerText);
 
-            if (!rawText.Contains('–') ||
-                !WikiTextUtility.TryExtractBirthYear(rawText, out int birthYear))
+            // 1. Validate Year and Entry
+            if (!entry.Contains('–') || !WikiTextUtility.TryExtractBirthYear(entry, out int birthYear))
                 continue;
 
-            if (!validator.IsValidBirthEntry(rawText, birthYear, li))
+            if (!validator.IsValidBirthEntry(entry, birthYear, li))
                 continue;
 
-            HtmlNode? personLink = LinkResolver.TryFindPersonLink(li);
-            
-            if (personLink == null)
-                continue;
+            // 2. Resolve Link (using the new smart signature)
+            var link = linkResolver.FindPersonLink(li, entry);
+            if (link == null) continue;
 
-            DateTime birthDate = new(birthYear, month, day);
-
-            Person person = personFactory.BuildPerson(rawText, birthDate, personLink);
+            // 3. Build and Finalize Person
+            var birthDate = new DateTime(birthYear, month, day);
+            var person = personFactory.BuildPerson(entry, birthDate, link);
 
             person.SourceSlug = sourceSlug;
             person.SourceUrl = $"{Urls.ArticleBase}/{sourceSlug}#Births";
-            person = personFactory.Finalize(person);
-            results.Add(person);
+
+            results.Add(personFactory.Finalize(person));
         }
 
         return results;
     }
+
 }

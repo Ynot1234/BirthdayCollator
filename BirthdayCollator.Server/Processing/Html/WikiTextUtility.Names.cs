@@ -55,23 +55,15 @@ public static partial class WikiTextUtility
 
     public static bool FuzzyNameMatch(string a, string b)
     {
-        List<string> aTokens =
-            [.. Tokenize(ToComparableSlug(a))
-            .Except(NameParsing.Stopwords)
-            .Except(NameParsing.Titles)];
+        var aT = GetCleanTokens(a);
+        var bT = GetCleanTokens(b);
 
-        List<string> bTokens =
-            [.. Tokenize(ToComparableSlug(b))
-            .Except(NameParsing.Stopwords)
-            .Except(NameParsing.Titles)];
-
-        return aTokens.Count > 0 &&
-               bTokens.Count > 0 &&
-               aTokens.Any(at =>
-                   bTokens.Any(bt =>
-                       bt.Contains(at, StringComparison.OrdinalIgnoreCase) ||
-                       at.Contains(bt, StringComparison.OrdinalIgnoreCase)));
+        return aT.Count > 0 && bT.Count > 0 &&
+               aT.Any(at => bT.Any(bt => bt.Contains(at, StringComparison.OrdinalIgnoreCase) ||
+                                         at.Contains(bt, StringComparison.OrdinalIgnoreCase)));
     }
 
+    private static List<string> GetCleanTokens(string s) =>
+        [.. Tokenize(ToComparableSlug(s)).Except(NameParsing.Stopwords).Except(NameParsing.Titles)];
 
 }

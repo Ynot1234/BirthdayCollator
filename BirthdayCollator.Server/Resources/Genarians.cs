@@ -50,13 +50,12 @@ public sealed class Genarians(
 
     private async Task<List<Person>> ScrapePageAsync(string url, string month, int day, CancellationToken ct)
     {
-        try
-        {
             string html = await _http.GetStringAsync(url, ct);
             HtmlDocument doc = new();
             doc.LoadHtml(html);
 
             var rows = doc.DocumentNode.SelectNodes("//tr[th]");
+
             if (rows is null)
                 return [];
 
@@ -66,10 +65,5 @@ public sealed class Genarians(
                     : null)
                 .Where(p => p is not null)
                 .ToList()!;
-        }
-        catch
-        {
-            return [];
-        }
     }
 }
