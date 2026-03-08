@@ -89,3 +89,4 @@ BirthdayCollator.Server/Configuration/BirthSourceOptions.cs
 /wwwroot/assets
 /wwwroot
 /run.ps1
+/Get-LargestFiles.ps1
