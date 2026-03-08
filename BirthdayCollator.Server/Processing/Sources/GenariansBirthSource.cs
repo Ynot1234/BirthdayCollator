@@ -1,5 +1,7 @@
-﻿using BirthdayCollator.Server.Models;
-using BirthdayCollator.Server.Resources;
+﻿using BirthdayCollator.Server.Configuration;
+using BirthdayCollator.Server.Models;
+using BirthdayCollator.Server.Processing.Builders;
+using System.Globalization;
 
 namespace BirthdayCollator.Server.Processing.Sources
 {
@@ -8,7 +10,21 @@ namespace BirthdayCollator.Server.Processing.Sources
         public async Task<List<Person>> GetPeopleAsync(DateTime actualDate, CancellationToken token)
         {
             token.ThrowIfCancellationRequested();
-            return await genarians.ScrapeAllGenariansAsync(actualDate.ToString("MMMM"), actualDate.Day, token);
+           
+            return await genarians.ScrapeAllAsync(
+                actualDate.ToString("MMMM", CultureInfo.InvariantCulture),
+                actualDate.Day,
+                token);
         }
+
+
+        public bool IsRelevant(BirthSourceOptions opt, IYearRangeProvider years, DateTime date)
+        {
+            if (!opt.EnableGenarianParser) return false;
+
+            int cutoff = date.Year - 90;
+            return years.GetYears().Any(y => int.TryParse(y, out int yr) && yr <= cutoff);
+        }
+
     }
 }

@@ -1,11 +1,12 @@
 ﻿using BirthdayCollator.Helpers;
+using BirthdayCollator.Server.Configuration;
+using BirthdayCollator.Server.Helpers;
 using BirthdayCollator.Server.Models;
 using BirthdayCollator.Server.Processing.Builders;
 using BirthdayCollator.Server.Processing.Fetching;
 using BirthdayCollator.Server.Processing.Names;
 using BirthdayCollator.Server.Processing.Parsers;
 using BirthdayCollator.Server.Processing.Validation;
-using BirthdayCollator.Server.Helpers;
 
 namespace BirthdayCollator.Server.Processing.Sources;
 
@@ -20,8 +21,9 @@ public sealed class DateBirthSource(
     public async Task<List<Person>> GetPeopleAsync(DateTime actualDate, CancellationToken token)
     {
             var people = new List<Person>();
-            var yearSet = _yearRangeProvider.GetYearSet();
-            var validator = new BirthEntryValidator([.. yearSet], RegexPatterns.ExcludeDiedRegex());
+            var years = _yearRangeProvider.GetYears();
+
+            var validator = new BirthEntryValidator([.. years], RegexPatterns.ExcludeDiedRegex());
             var factory = new PersonFactory(WikiUrlBuilder.NormalizeWikiHref, nameResolver);
             var parser = new DatePageParser(validator, factory);
             var pageName = $"{actualDate:MMMM}_{actualDate.Day}";
@@ -79,4 +81,6 @@ public sealed class DateBirthSource(
             return [];
         }
     }
+
+    public bool IsRelevant(BirthSourceOptions opt, IYearRangeProvider years, DateTime date) => opt.EnableDateParser;
 }

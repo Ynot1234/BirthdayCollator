@@ -3,28 +3,18 @@
 public interface IYearRangeProvider
 {
     IReadOnlyList<string> GetYears();
-    IReadOnlySet<string> GetYearSet();
-
     IReadOnlyList<string> GetLeapYears();
+    IReadOnlyList<string> GetDefaultYears();
 
-    // Existing multi-year override
     void ForceYears(params string[] years);
-    void ResetToDefault();
-
-    // single-year override (pull model)
     void ForceYear(int year);
     void ClearYear();
-
     string? CurrentOverrideYear { get; }
-    IReadOnlyList<string> ForcedYears { get; }
 
+    void ForceSuffix(string suffix);
+    void ClearSuffix();
     string CurrentOverrideSuffix { get; }
 
     bool IncludeAll { get; }
     void SetIncludeAll(bool value);
-
-    void ForceSuffix(string suffix);
-    void ClearSuffix();
-
-    IReadOnlyList<string> GetDefaultYears();
 }

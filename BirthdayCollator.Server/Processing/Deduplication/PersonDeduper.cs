@@ -83,7 +83,7 @@ namespace BirthdayCollator.Server.Processing.Deduplication
 
             normalized = sb.ToString();
             normalized = new string([.. normalized.Where(c => !char.IsPunctuation(c))]);
-            normalized = RegexPatterns.NormalizeWhitespace().Replace(normalized, " ");
+            normalized = RegexPatterns.WhitespaceCollapseRegex().Replace(normalized, " ");
             normalized = normalized.Replace(" ", "");
             return normalized.Trim().ToLowerInvariant();
         }

@@ -7,7 +7,6 @@ using BirthdayCollator.Server.Processing.Names;
 using BirthdayCollator.Server.Processing.Parsers;
 using BirthdayCollator.Server.Processing.Pipelines;
 using BirthdayCollator.Server.Processing.Sources;
-using BirthdayCollator.Server.Resources;
 using BirthdayCollator.Server.Services;
 
 namespace BirthdayCollator.Server.Extensions;

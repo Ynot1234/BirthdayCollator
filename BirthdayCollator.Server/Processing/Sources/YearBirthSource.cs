@@ -1,4 +1,5 @@
-﻿using BirthdayCollator.Server.Constants;
+﻿using BirthdayCollator.Server.Configuration;
+using BirthdayCollator.Server.Constants;
 using BirthdayCollator.Server.Helpers;
 using BirthdayCollator.Server.Models;
 using BirthdayCollator.Server.Processing.Builders;
@@ -56,4 +57,5 @@ public sealed class YearBirthSource(
         return people;
     }
 
+    public bool IsRelevant(BirthSourceOptions opt, IYearRangeProvider years, DateTime date) => opt.EnableYearParser;
 }

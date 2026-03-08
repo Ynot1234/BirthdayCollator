@@ -1,105 +1,32 @@
-﻿namespace BirthdayCollator.Server.Processing.Builders;
+﻿using BirthdayCollator.Server.Processing.Builders;
 
 public sealed class YearRangeProvider : IYearRangeProvider
 {
-    public string? CurrentOverrideYear { get; private set; }
+    private readonly List<string> _defaults;
+    private readonly List<string> _overrides = [];
 
-    private readonly List<string> _forcedYears = [];
-    public IReadOnlyList<string> ForcedYears => _forcedYears;
-
+    public string? CurrentOverrideYear => _overrides.Count == 1 ? _overrides[0] : null;
     public string CurrentOverrideSuffix { get; private set; } = string.Empty;
-
-    private readonly YearRangeBuilder _builder;
-    private readonly List<string> _defaultYears;
+    public bool IncludeAll { get; private set; } = true;
+    private static readonly int[] first = new[] { 60, 70, 80 };
 
     public YearRangeProvider()
     {
-        _builder = new YearRangeBuilder();
-        _defaultYears = _builder.BuildYearRange();
+        int cur = DateTime.Now.Year;
+        var ages = first.Concat(Enumerable.Range(85, 105 - 85 + 1));
+       _defaults = [.. ages.Select(age => (cur - age).ToString()).OrderByDescending(y => y)];
     }
 
-    public void ForceYear(int year)
-    {
-        CurrentOverrideYear = year.ToString();
-        _forcedYears.Clear();
-    }
+    public void ForceYear(int year) { _overrides.Clear(); _overrides.Add(year.ToString()); }
+    public void ForceYears(params string[] years) { _overrides.Clear(); _overrides.AddRange(years); }
+    public void ClearYear() => _overrides.Clear();
+    public void SetIncludeAll(bool value) => IncludeAll = value;
+    public void ForceSuffix(string s) => CurrentOverrideSuffix = s;
+    public void ClearSuffix() => CurrentOverrideSuffix = string.Empty;
 
-    public void ClearYear()
-    {
-        CurrentOverrideYear = null;
-    }
+    public IReadOnlyList<string> GetYears() => _overrides.Count > 0 ? _overrides : _defaults;
+    public IReadOnlyList<string> GetDefaultYears() => _defaults;
 
-    public void ForceYears(params string[] years)
-    {
-        _forcedYears.Clear();
-        _forcedYears.AddRange(years);
-        CurrentOverrideYear = null;
-    }
-
-    public void ResetToDefault()
-    {
-        _forcedYears.Clear();
-        CurrentOverrideYear = null;
-    }
-
-    public void ForceSuffix(string suffix)
-    {
-        CurrentOverrideSuffix = suffix;
-    }
-
-    public void ClearSuffix()
-    {
-        CurrentOverrideSuffix = string.Empty;
-    }
-
-    public IReadOnlyList<string> GetYears()
-    {
-        if (CurrentOverrideYear is not null)
-            return [CurrentOverrideYear];
-
-        if (_forcedYears.Count > 0)
-            return _forcedYears;
-
-        return _defaultYears;
-    }
-
-    public IReadOnlySet<string> GetYearSet()
-    {
-        return GetYears().ToHashSet();
-    }
-
-    public bool IncludeAll { get; private set; } = true;
-
-
-    public void SetIncludeAll(bool value)
-    {
-        IncludeAll = value;
-    }
-
-
-    public IReadOnlyList<string> GetDefaultYears() => _defaultYears;
-
-
-    public IReadOnlyList<string> GetLeapYears()
-    {
-        // If a single override year is set, respect it.
-        if (CurrentOverrideYear is not null)
-        {
-            return DateTime.IsLeapYear(int.Parse(CurrentOverrideYear))
-                ? [CurrentOverrideYear]
-                : [];
-        }
-
-        // If forced years exist, filter them.
-        if (_forcedYears.Count > 0)
-        {
-            return [.. _forcedYears
-                .Select(int.Parse)
-                .Where(DateTime.IsLeapYear)
-                .Select(y => y.ToString())];
-        }
-
-        // Otherwise, use the builder's leap-year range.
-        return _builder.BuildLeapYearRange();
-    }
+    public IReadOnlyList<string> GetLeapYears() =>
+        [.. GetYears().Where(y => DateTime.IsLeapYear(int.Parse(y)))];
 }

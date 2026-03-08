@@ -12,6 +12,7 @@ public interface ILinkResolver
     bool IsDateHref(string href);
     bool HrefMatchesName(string href, string name);
     bool TryApplyHrefOverride(Person person, string? href);
+    string? ResolvePrimaryHref(string? innerHtml);
 }
 
 public sealed class LinkResolver : ILinkResolver
@@ -19,34 +20,24 @@ public sealed class LinkResolver : ILinkResolver
     public HtmlNode? FindPersonLink(HtmlNode li, string entry)
     {
         var links = li.SelectNodes(".//a");
-        if (links is null || links.Count == 0)
-            return null;
+        if (links is null || links.Count == 0) return null;
 
-        string personName = WikiTextUtility.ExtractPersonName(entry);
-        string normalizedPerson = HtmlEntity.DeEntitize(personName).Trim();
+        string normalizedPerson = WikiTextUtility.ExtractPersonName(entry);
+        var nonDateLinks = links.Where(a => !IsDateHref(a.GetAttributeValue("href", ""))).ToList();
 
-        List<HtmlNode> nonDateLinks =
-            [.. links.Where(a => !IsDateHref(a.GetAttributeValue("href", "")))];
-
-        if (nonDateLinks.Count == 0)
-            return null;
+        if (nonDateLinks.Count == 0) return null;
 
         HtmlNode? fuzzyMatch = null;
-
-        foreach (HtmlNode a in nonDateLinks)
+        foreach (var a in nonDateLinks)
         {
             string linkText = HtmlEntity.DeEntitize(a.InnerText).Trim();
-
             if (string.Equals(linkText, normalizedPerson, StringComparison.OrdinalIgnoreCase))
                 return a;
 
-            if (fuzzyMatch is null)
+            if (fuzzyMatch is null && (normalizedPerson.Contains(linkText, StringComparison.OrdinalIgnoreCase) ||
+                                       linkText.Contains(normalizedPerson, StringComparison.OrdinalIgnoreCase)))
             {
-                bool personContainsLink = normalizedPerson.Contains(linkText, StringComparison.OrdinalIgnoreCase);
-                bool linkContainsPerson = linkText.Contains(normalizedPerson, StringComparison.OrdinalIgnoreCase);
-
-                if (personContainsLink || linkContainsPerson)
-                    fuzzyMatch = a;
+                fuzzyMatch = a;
             }
         }
 
@@ -55,59 +46,40 @@ public sealed class LinkResolver : ILinkResolver
 
     public bool IsDateHref(string href)
     {
-        if (string.IsNullOrWhiteSpace(href))
+        if (string.IsNullOrWhiteSpace(href) || !href.StartsWith("./", StringComparison.Ordinal))
             return false;
 
-        if (!href.StartsWith("./", StringComparison.Ordinal))
-            return false;
-
-        string rest = href[2..];
-        var parts = rest.Split('_', StringSplitOptions.RemoveEmptyEntries);
-        if (parts.Length != 2)
-            return false;
-
-        string month = parts[0];
-        string day = parts[1];
-
-        if (!DateTime.TryParse($"{month} 1", out _))
-            return false;
-
-        return int.TryParse(day, out _);
+        var parts = href[2..].Split('_', StringSplitOptions.RemoveEmptyEntries);
+        return parts.Length == 2 && DateTime.TryParse($"{parts[0]} 1", out _) && int.TryParse(parts[1], out _);
     }
 
     public bool HrefMatchesName(string href, string name)
     {
-        if (string.IsNullOrWhiteSpace(href) || string.IsNullOrWhiteSpace(name))
-            return false;
+        if (string.IsNullOrWhiteSpace(href) || string.IsNullOrWhiteSpace(name)) return false;
 
-        href = WikiTextUtility.ToComparableSlug(href);
-        name = WikiTextUtility.ToComparableSlug(name);
+        var hTokens = WikiTextUtility.Tokenize(WikiTextUtility.ToComparableSlug(href))
+            .Except(NameParsing.Stopwords).Except(NameParsing.Titles).ToList();
+        var nTokens = WikiTextUtility.Tokenize(WikiTextUtility.ToComparableSlug(name))
+            .Except(NameParsing.Stopwords).Except(NameParsing.Titles).ToList();
 
-        List<string> hrefTokens = WikiTextUtility.Tokenize(href);
-        List<string> nameTokens = WikiTextUtility.Tokenize(name);
-
-        hrefTokens = hrefTokens.Except(NameParsing.Stopwords).Except(NameParsing.Titles).ToList();
-        nameTokens = nameTokens.Except(NameParsing.Stopwords).Except(NameParsing.Titles).ToList();
-
-        foreach (string nt in nameTokens)
-        {
-            bool tokenMatches = hrefTokens.Any(ht => ht.Contains(nt) || nt.Contains(ht));
-            if (!tokenMatches)
-                return false;
-        }
-
-        return true;
+        return nTokens.All(nt => hTokens.Any(ht => ht.Contains(nt) || nt.Contains(ht)));
     }
 
-    
     public bool TryApplyHrefOverride(Person person, string? href)
     {
-        if (string.IsNullOrWhiteSpace(href))
-            return true;
+        if (string.IsNullOrWhiteSpace(href)) return true;
 
-        string slug = WikiUrlBuilder.NormalizeWikiHref(href);
-        person.Url = Urls.Domain + slug;
-
+        person.Url = Urls.Domain + WikiUrlBuilder.NormalizeWikiHref(href);
         return HrefMatchesName(href, person.Name);
+    }
+
+    public string? ResolvePrimaryHref(string? innerHtml)
+    {
+        if (string.IsNullOrWhiteSpace(innerHtml)) return null;
+
+        var href = HtmlNode.CreateNode($"<div>{innerHtml}</div>")
+            .SelectNodes(".//a")?.Skip(1).FirstOrDefault()?.GetAttributeValue("href", "");
+
+        return string.IsNullOrWhiteSpace(href) ? null : href;
     }
 }

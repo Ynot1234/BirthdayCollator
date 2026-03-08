@@ -4,103 +4,70 @@ using BirthdayCollator.Server.Models;
 using BirthdayCollator.Server.Processing.Builders;
 using BirthdayCollator.Server.Processing.Parsers;
 using HtmlAgilityPack;
+using System.Collections.Concurrent;
 using System.Globalization;
-
-namespace BirthdayCollator.Server.Resources;
 
 public sealed class Genarians(
     PersonFactory personFactory,
     GenariansPageParser parser,
-    IYearRangeProvider yearRangeProvider)
+    IYearRangeProvider yearRangeProvider,
+    IHttpClientFactory httpFactory)
 {
-    public async Task<List<Person>> ScrapeGenariansPageAsync(
-        string url,
-        string  targetMonthName,
-        int targetDay,
-        CancellationToken token)
+    private readonly HttpClient _http = httpFactory.CreateClient("WikiClient");
+
+    public async Task<List<Person>> ScrapeAllAsync(string monthName, int day, CancellationToken ct)
     {
-        token.ThrowIfCancellationRequested();
+        var people = await ScrapeYearSetAsync(yearRangeProvider.GetYears(), monthName, day, ct);
 
-        HtmlWeb web = new();
-        HtmlDocument doc = await web.LoadFromWebAsync(url, token);
-        HtmlNodeCollection rows = doc.DocumentNode.SelectNodes("//tr[th]");
-        List<Person> results = [];
+        int month = DateTime.ParseExact(monthName, "MMMM", CultureInfo.InvariantCulture).Month;
 
-        if (rows == null)
-            return results;
-
-        foreach (HtmlNode row in rows)
+        if (LeapYear.IsNonLeapFeb28(month, day))
         {
-            token.ThrowIfCancellationRequested();
-
-            if (parser.TryParseRow(row, targetMonthName, targetDay, url, out var person))
-            {
-                results.Add(personFactory.Finalize(person!));
-            }
-        }
-
-        return results;
-    }
-
-    private static string BuildGenarianUrl(int year)
-    {
-        return $"{Urls.GenarianBase}/{year}.html";
-    }
-
-    public async Task<List<Person>> ScrapeAllGenariansAsync(
-        string targetMonthName,
-        int targetDay,
-        CancellationToken token)
-    {
-        token.ThrowIfCancellationRequested();
-
-        int month = DateTime.ParseExact(
-            targetMonthName,
-            "MMMM",
-            CultureInfo.InvariantCulture).Month;
-
-        List<Person> people = [];
-        IReadOnlyList<string> years = yearRangeProvider.GetYears();
-        var normal = await ScrapeYearSetAsync(years, targetMonthName, targetDay, token);
-        people.AddRange(normal);
-    
-        if (LeapYear.IsNonLeapFeb28(month, targetDay))
-        {
-            IReadOnlyList<string> leapYears = yearRangeProvider.GetLeapYears();
-            var feb29 = await ScrapeYearSetAsync(leapYears, targetMonthName, targetDay + 1, token);
-            people.AddRange(feb29);
+            var leapPeople = await ScrapeYearSetAsync(yearRangeProvider.GetLeapYears(), monthName, day + 1, ct);
+            people.AddRange(leapPeople);
         }
 
         return people;
     }
 
-    private async Task<List<Person>> ScrapeYearSetAsync(
-    IReadOnlyList<string> years,
-    string targetMonthName,
-    int targetDay,
-    CancellationToken token)
+    private async Task<List<Person>> ScrapeYearSetAsync(IEnumerable<string> years, string month, int day, CancellationToken ct)
     {
-        List<Task<List<Person>>> tasks = [];
+        var results = new ConcurrentBag<List<Person>>();
 
-        foreach (string yearStr in years)
+        await Parallel.ForEachAsync(
+            years,
+            new ParallelOptions { MaxDegreeOfParallelism = 4, CancellationToken = ct },
+            async (year, token) =>
+            {
+                var pageResults = await ScrapePageAsync($"{Urls.GenarianBase}/{year}.html", month, day, token);
+                results.Add(pageResults);
+            });
+
+        return [.. results.SelectMany(r => r)];
+    }
+
+    private async Task<List<Person>> ScrapePageAsync(string url, string month, int day, CancellationToken ct)
+    {
+        try
         {
-            token.ThrowIfCancellationRequested();
+            string html = await _http.GetStringAsync(url, ct);
+            HtmlDocument doc = new();
+            doc.LoadHtml(html);
 
-            if (!int.TryParse(yearStr, out int year))
-                continue;
+            var rows = doc.DocumentNode.SelectNodes("//tr[th]");
+            if (rows is null)
+                return [];
 
-            string url = BuildGenarianUrl(year);
-            tasks.Add(ScrapeGenariansPageAsync(url, targetMonthName, targetDay, token));
+            return rows
+                .Select(row => parser.TryParseRow(row, month, day, url, out var p)
+                    ? personFactory.Finalize(p!)
+                    : null)
+                .Where(p => p is not null)
+                .ToList()!;
         }
-
-        List<Person>[] results = await Task.WhenAll(tasks);
-
-        HashSet<int> allowedYears = [.. years
-        .Select(y => int.TryParse(y, out int yr) ? yr : -1)
-        .Where(yr => yr > 0)];
-
-        return [.. results
-        .SelectMany(r => r)
-        .Where(p => allowedYears.Contains(p.BirthYear))];
+        catch
+        {
+            return [];
+        }
     }
 }

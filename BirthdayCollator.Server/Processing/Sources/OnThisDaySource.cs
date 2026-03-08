@@ -1,4 +1,5 @@
-﻿using BirthdayCollator.Server.Helpers;
+﻿using BirthdayCollator.Server.Configuration;
+using BirthdayCollator.Server.Helpers;
 using BirthdayCollator.Server.Models;
 using BirthdayCollator.Server.Processing.Builders;
 using BirthdayCollator.Server.Processing.Fetching;
@@ -30,8 +31,10 @@ public sealed class OnThisDaySource(
             people.AddRange(parsed);
         }
 
-        IReadOnlySet<string> allowedYears = _yearRangeProvider.GetYearSet();
-
+        var allowedYears = _yearRangeProvider.GetYears().ToHashSet();
         return [.. people.Where(p => allowedYears.Contains(p.BirthYear.ToString()))];
     }
+
+    public bool IsRelevant(BirthSourceOptions opt, IYearRangeProvider years, DateTime date)
+    => opt.EnableOnThisDayParser;
 }
