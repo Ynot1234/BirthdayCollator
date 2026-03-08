@@ -1,25 +1,21 @@
 ﻿using HtmlAgilityPack;
-using System.Text.RegularExpressions;
-using BirthdayCollator.Server.Constants;
+using BirthdayCollator.Server.Processing.Builders;
+using BirthdayCollator.Helpers;
 
 namespace BirthdayCollator.Server.Processing.Validation;
 
-public class BirthEntryValidator(HashSet<string> validYearSet, Regex excludeDiedRegex)
+public sealed class BirthEntryValidator(IYearRangeProvider yearProvider)
 {
     public bool IsValidBirthEntry(string rawText, int birthYear, HtmlNode liNode)
     {
-        if (!validYearSet.Contains(birthYear.ToString()))
+        var validYears = yearProvider.GetYears();
+        if (!validYears.Contains(birthYear.ToString()))
             return false;
 
-        if (excludeDiedRegex.IsMatch(rawText))
+        if (RegexPatterns.ExcludeDiedRegex().IsMatch(rawText))
             return false;
 
-
-        HtmlNodeCollection links = liNode.SelectNodes(XPathSelectors.DescendantAnchorHref);
-
-        if (links == null || links.Count == 0)
-            return false;
-
-        return true;
+        var links = liNode.SelectNodes(".//a[@href]");
+        return links != null && links.Count > 0;
     }
 }

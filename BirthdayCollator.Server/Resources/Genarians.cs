@@ -7,6 +7,8 @@ using HtmlAgilityPack;
 using System.Collections.Concurrent;
 using System.Globalization;
 
+namespace BirthdayCollator.Server.Resources;
+
 public sealed class Genarians(
     PersonFactory personFactory,
     GenariansPageParser parser,

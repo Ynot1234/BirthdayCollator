@@ -8,7 +8,7 @@ using BirthdayCollator.Server.Constants;
 
 namespace BirthdayCollator.Server.Processing.Parsers;
 
-public sealed partial class DatePageParser(BirthEntryValidator validator, PersonFactory personFactory)
+public sealed partial class DatePageParser(BirthEntryValidator validator, PersonFactory personFactory) :IDatePageParser
 {
     public List<Person> Parse(string html, int month, int day)
     {

@@ -3,6 +3,7 @@ using BirthdayCollator.Server.Models;
 using BirthdayCollator.Server.Processing.Html;
 using BirthdayCollator.Server.Processing.Links;
 
+namespace BirthdayCollator.Server.Processing.Enrichment;
 public sealed class PersonWikiEnricher(IHttpClientFactory httpFactory, ILinkResolver linkResolver)
 {
     private readonly HttpClient _http = httpFactory.CreateClient("WikiClient");

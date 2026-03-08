@@ -7,6 +7,8 @@ using BirthdayCollator.Server.Processing.Names;
 using BirthdayCollator.Server.Processing.Parsers;
 using BirthdayCollator.Server.Processing.Pipelines;
 using BirthdayCollator.Server.Processing.Sources;
+using BirthdayCollator.Server.Processing.Validation;
+using BirthdayCollator.Server.Resources;
 using BirthdayCollator.Server.Services;
 
 namespace BirthdayCollator.Server.Extensions;
@@ -35,18 +37,20 @@ public static class PipelineExtensions
 
         // Parser 
         services.AddScoped<IWikiParser, WikiParser>();
+        services.AddScoped<IDatePageParser, DatePageParser>();
 
         // Stateless helpers
-      
+
         services.AddSingleton<IEntrySplitter, EntrySplitter>();
         services.AddSingleton<ILinkResolver, LinkResolver>();
         services.AddSingleton<IPersonNameResolver, PersonNameResolver>();
         services.AddSingleton<IHtmlBirthSectionExtractor, HtmlBirthSectionExtractor>();
         services.AddSingleton<IBirthDateParser, BirthDateParser>();
+        services.AddScoped<BirthEntryValidator>();
+        services.AddScoped<PersonFactory>();
 
         services.AddSingleton<IYearRangeProvider, YearRangeProvider>();  //make stateless at some point
 
-        // URL normalizer
         services.AddSingleton<Func<string, string>>(sp => WikiUrlBuilder.NormalizeWikiHref);
 
         return services;

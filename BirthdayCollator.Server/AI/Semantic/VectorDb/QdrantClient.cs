@@ -14,11 +14,12 @@ public class QdrantClient(HttpClient http, string collectionName)
 
     public async Task EnsurePersonIdIndexAsync()
     {
-        var res = await http.PutAsJsonAsync($"{_path}/index?wait=true", new { field_name = "personId", field_schema = "keyword" });
+        var res = await http.PutAsJsonAsync($"{_path}/index?wait=true", 
+            new { field_name = "personId", field_schema = "keyword" });
         if (!res.IsSuccessStatusCode) throw new Exception($"Index Failed: {await res.Content.ReadAsStringAsync()}");
     }
 
-    public async Task WaitUntilCollectionExistsAsync(CancellationToken ct = default, int delay = 1000)
+    public async Task WaitUntilCollectionExistsAsync(int delay = 1000, CancellationToken ct = default)
     {
         while (!ct.IsCancellationRequested)
         {

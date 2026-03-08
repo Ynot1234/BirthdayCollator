@@ -71,11 +71,20 @@ public static class WikiTextUtility
 
     public static string ToComparableSlug(string s)
     {
+        if (string.IsNullOrWhiteSpace(s)) return string.Empty;
+       
         s = s.ToLowerInvariant().Replace("_", " ");
         s = s.Normalize(NormalizationForm.FormD);
-        IEnumerable<char> chars = s.Where(c => CharUnicodeInfo.GetUnicodeCategory(c) != UnicodeCategory.NonSpacingMark);
-        return new string([.. chars]);
+        var chars = s.Where(c =>
+            CharUnicodeInfo.GetUnicodeCategory(c) != UnicodeCategory.NonSpacingMark &&
+            !char.IsPunctuation(c) &&
+            !char.IsSymbol(c)
+        );
+
+        string result = new string([.. chars]);
+        return RegexPatterns.WhitespaceCollapseRegex().Replace(result, " ").Trim();
     }
+
 
     public static List<string> Tokenize(string s)
     {
@@ -120,6 +129,46 @@ public static class WikiTextUtility
             return $"{words[0]} {words[1]}";
 
         return words.Length > 0 ? words[0] : string.Empty;
+    }
+
+    public static string GetFirstName(string name) =>
+    string.IsNullOrWhiteSpace(name) ? "" : name.Split(' ')[0].ToLowerInvariant();
+
+    public static bool HasKeywordOverlap(string? a, string? b)
+    {
+        var wa = ExtractKeywords(a);
+        var wb = ExtractKeywords(b);
+        return wa.Intersect(wb).Count() >= 2;
+    }
+
+    private static HashSet<string> ExtractKeywords(string? text) =>
+        string.IsNullOrWhiteSpace(text) ? [] :
+        [.. text.ToLowerInvariant()
+            .Split(' ', StringSplitOptions.RemoveEmptyEntries)
+            .Select(w => w.Trim(',', '.', ';', ':', '!', '?', '(', ')', '[', ']'))
+            .Where(w => w.Length >= 3 && !NameParsing.Stopwords.Contains(w))];
+
+
+    public static string NormalizeDescription(string text)
+    {
+        // 1. General cleanup (Dashes, Entities, Whitespace)
+        text = Normalize(text);
+        if (string.IsNullOrWhiteSpace(text)) return text;
+
+        // 2. Strip prefixes (a, an, the)
+        foreach (var prefix in NameParsing.Prefixes)
+        {
+            if (text.StartsWith(prefix, StringComparison.OrdinalIgnoreCase))
+            {
+                text = text[prefix.Length..].TrimStart();
+                break;
+            }
+        }
+
+        // 3. Sentence case (Capitalize first letter)
+        return text.Length > 0
+            ? char.ToUpper(text[0]) + text[1..]
+            : text;
     }
 
 }

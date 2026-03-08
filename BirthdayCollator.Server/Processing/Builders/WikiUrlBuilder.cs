@@ -38,4 +38,14 @@ public class WikiUrlBuilder()
         _redirectCache[url] = finalUrl;
         return finalUrl;
     }
+    public static string ExtractSlug(string? url)
+    {
+        if (string.IsNullOrWhiteSpace(url)) return string.Empty;
+
+        if (url.Contains("/wiki/"))
+            return url.Split("/wiki/").Last();
+
+        return url.Replace("./", "").Replace("/wiki/", "").Trim();
+    }
+
 }

@@ -3,54 +3,23 @@ using Microsoft.AspNetCore.Mvc;
 
 namespace BirthdayCollator.Server.Controllers;
 
-public sealed class SummarizeRequest
-{
-    public string Name { get; set; } = "";
-    public string Description { get; set; } = "";
-}
-
 [ApiController]
 [Route("api/ai")]
-public class AIController(IPersonEnrichmentService enrichmentService, IConfiguration config) : ControllerBase
+public class AIController(IPersonEnrichmentService enrichment, IConfiguration config) : ControllerBase
 {
-
     [HttpGet("has-key")]
-    public IActionResult HasKey()
-    {
-        var key = config["OpenAI:ApiKey"];
-        bool hasKey = !string.IsNullOrWhiteSpace(key);
-        return Ok(new { hasKey });
-    }
+    public IActionResult HasKey() => Ok(new { hasKey = !string.IsNullOrWhiteSpace(config["OpenAI:ApiKey"]) });
 
     [HttpPost("summarize")]
-    public async Task<IActionResult> Summarize([FromBody] SummarizeRequest request)
+    public async Task<IActionResult> Summarize([FromBody] SummarizeRequest req)
     {
-        if (string.IsNullOrWhiteSpace(request.Name) ||
-            string.IsNullOrWhiteSpace(request.Description))
-        {
+        if (string.IsNullOrWhiteSpace(req.Name) || string.IsNullOrWhiteSpace(req.Description))
             return BadRequest("Name and description are required.");
-        }
-
-        var serverKey = config["OpenAI:ApiKey"];
 
         var userKey = Request.Headers["X-OpenAI-Key"].FirstOrDefault();
-
-        var apiKey = !string.IsNullOrWhiteSpace(serverKey)
-            ? serverKey               
-            : userKey;               
-
-        if (string.IsNullOrWhiteSpace(apiKey))
-        {
-            return BadRequest("No OpenAI API key is available.");
-        }
-
-        string result = await enrichmentService.GetSummaryAsync(
-            request.Name,
-            request.Description,
-            apiKey
-        );
-
-        return Ok(result);
+        string result = await enrichment.GetSummaryAsync(req.Name, req.Description, userKey);
+        return result.Contains("No API key") ? BadRequest(result) : Ok(result);
     }
-
 }
+
+public record SummarizeRequest(string Name, string Description);

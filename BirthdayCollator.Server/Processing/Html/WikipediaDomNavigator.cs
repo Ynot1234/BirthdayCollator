@@ -1,22 +1,19 @@
-﻿namespace BirthdayCollator.Server.Processing.Html;
-
-using BirthdayCollator.Server.Constants;
+﻿using BirthdayCollator.Server.Constants;
+using BirthdayCollator.Server.Processing.Builders;
 using HtmlAgilityPack;
-//using global::BirthdayCollator.Server.Constants;
+
+namespace BirthdayCollator.Server.Processing.Html;
 
 
 public static class WikipediaDomNavigator
 {
-    /// <summary>
-    /// Finds the "Births" section and extracts all relevant list items (li nodes).
-    /// </summary>
     public static List<HtmlNode> ExtractBirthLiNodes(HtmlDocument htmlDoc)
     {
         HtmlNode birthsHeader = htmlDoc.DocumentNode.SelectSingleNode(XPathSelectors.YearBirthsHeader);
         if (birthsHeader == null) return [];
 
         List<HtmlNode> sections = [];
-        // Walk siblings until the next major header (h2)
+        
         for (HtmlNode node = birthsHeader.NextSibling; node != null; node = node.NextSibling)
         {
             if (node.Name == "h2") break;
@@ -29,19 +26,18 @@ public static class WikipediaDomNavigator
     public static string? GetFirstBioParagraph(string html)
     {
         if (string.IsNullOrWhiteSpace(html)) return null;
+
         HtmlDocument doc = new();
         doc.LoadHtml(html);
 
-        return doc.DocumentNode
-            .SelectSingleNode("//div[@class='mw-parser-output']/p[not(@class='mw-empty-elt')]")
-            ?.InnerText;
+        var node = doc.DocumentNode.SelectSingleNode(
+            "//body[contains(@class,'mw-parser-output')]//p[not(contains(@class,'shortdescription')) and normalize-space()]"
+        );
+
+        return node != null ? HtmlEntity.DeEntitize(node.InnerText).Trim() : null;
     }
 
-
-    /// <summary>
-    /// Filters through links in a list item to find the specific person's wiki link.
-    /// </summary>
-    public static HtmlNode? TryFindPersonLink(HtmlNode liNode)
+  public static HtmlNode? TryFindPersonLink(HtmlNode liNode)
     {
         var links = liNode.SelectNodes(XPathSelectors.DescendantAnchorHref);
         if (links == null) return null;
@@ -69,5 +65,13 @@ public static class WikipediaDomNavigator
                DateTime.TryParse($"{parts[0]} 1", out _) &&
                int.TryParse(parts[1], out _);
     }
-}
 
+    public static string? ExtractWikipediaHref(HtmlNode node)
+    {
+        var url = node.SelectSingleNode(".//a[contains(@href,'wikipedia.org')]")
+                      ?.GetAttributeValue("href", "");
+
+        return string.IsNullOrWhiteSpace(url) ? null : WikiUrlBuilder.NormalizeWikiHref(url);
+    }
+
+}

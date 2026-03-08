@@ -1,6 +1,7 @@
-﻿using BirthdayCollator.Server.Models;
+﻿using BirthdayCollator.Server.AI.Services;
+using BirthdayCollator.Server.Models;
+using BirthdayCollator.Server.Processing.Html;
 using Microsoft.Extensions.Caching.Memory;
-using BirthdayCollator.Server.AI.Services;
 
 namespace BirthdayCollator.Server.Processing.Enrichment;
 
@@ -10,7 +11,10 @@ public interface IPersonEnrichmentService
     Task<string> GetSummaryAsync(string name, string description, string? apiKey = null);
 }
 
-public class PersonEnrichmentService(IAIService ai, IMemoryCache cache, IConfiguration config) : IPersonEnrichmentService
+public class PersonEnrichmentService(
+    IBioService ai, // Swapped to your custom interface
+    IMemoryCache cache,
+    IConfiguration config) : IPersonEnrichmentService
 {
     public async Task<Person> EnrichAsync(Person person, string? apiKey = null)
     {
@@ -18,53 +22,20 @@ public class PersonEnrichmentService(IAIService ai, IMemoryCache cache, IConfigu
         return person;
     }
 
-
-    private async Task<string> GenerateSummaryAsync(string name, string description, string apiKey)
+    public async Task<string> GetSummaryAsync(string name, string desc, string? apiKey = null)
     {
-        string raw = await ai.SummarizeAsync(name, description, apiKey);
-
-        int index = raw.IndexOf(name, StringComparison.OrdinalIgnoreCase);
-
-        if (index >= 0)
-            raw = raw.Remove(index, name.Length).Trim();
-
-        return PersonAIEnricher.NormalizeDescription(raw);
-    }
-
-    public async Task<string> GetSummaryAsync(string name, string description, string? apiKey = null)
-    {
-        string n = name.Trim();
-        string d = description.Trim();
-        string cacheKey = $"summary:{n}:{d.GetHashCode()}";
-
         var key = apiKey ?? config["OpenAI:ApiKey"];
+        if (string.IsNullOrWhiteSpace(key)) return "No API key provided.";
 
-        if (string.IsNullOrWhiteSpace(key))
-            return "No OpenAI API key provided.";
+        string cacheKey = $"summary:{name.Trim()}:{desc.Trim().GetHashCode()}";
 
-        return await CreateCachedSummaryAsync(cacheKey, n, d, key);
-    }
-
-    private async Task<string> CreateCachedSummaryAsync(string cacheKey, 
-                                                        string name, 
-                                                        string description, 
-                                                        string apiKey)
-    {
-        var summary = await cache.GetOrCreateAsync(
-            cacheKey,
-            entry => CreateSummaryValueAsync(entry, name, description, apiKey)
-        );
-
-        return summary ?? string.Empty;
-    }
-
-
-    private async Task<string> CreateSummaryValueAsync(ICacheEntry entry,   
-                                                       string name, 
-                                                       string description, 
-                                                       string apiKey)
-    {
-        entry.Priority = CacheItemPriority.NeverRemove;
-        return await GenerateSummaryAsync(name, description, apiKey);
+        return await cache.GetOrCreateAsync(cacheKey, async entry =>
+        {
+            entry.Priority = CacheItemPriority.NeverRemove;
+            string raw = await ai.SummarizeAsync(name, desc, key);
+            int index = raw.IndexOf(name, StringComparison.OrdinalIgnoreCase);
+            if (index >= 0) raw = raw.Remove(index, name.Length).Trim();
+            return WikiTextUtility.NormalizeDescription(raw);
+        }) ?? string.Empty;
     }
 }

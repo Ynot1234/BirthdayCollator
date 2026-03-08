@@ -6,7 +6,6 @@ namespace BirthdayCollator.Server.Processing.Pipelines;
 
 public sealed class BirthSourceEngine(IWikiParser parser) 
 {
-
     public record PipelineOptions(
     IReadOnlyList<string> Years,
     IReadOnlyList<string> Suffixes,
@@ -21,7 +20,7 @@ public sealed class BirthSourceEngine(IWikiParser parser)
 
 
     public async Task<List<Person>> RunAsync(
-        PipelineOptions options, // Group those 10 params into a record
+        PipelineOptions options, 
         CancellationToken token)
     {
         var tasks = options.Years.SelectMany(year =>

@@ -5,92 +5,57 @@ using System.Globalization;
 using BirthdayCollator.Server.Helpers;
 
 namespace BirthdayCollator.Server.Processing.Parsers;
-
 public sealed class OnThisDayParser
 {
     public List<Person> Parse(string html, int month, int day)
     {
-        var htmlDoc = new HtmlDocument();
-        htmlDoc.LoadHtml(html);
+        var doc = new HtmlDocument();
+        doc.LoadHtml(html);
 
-        var liNodes = htmlDoc.DocumentNode.SelectNodes("//li[@class='person']");
-        if (liNodes == null || liNodes.Count == 0)
-            return [];
+        var nodes = doc.DocumentNode.SelectNodes("//li[@class='person']");
+        if (nodes == null) return [];
 
-        var results = new List<Person>();
+        return [.. nodes
+            .Select(node => TryParsePerson(node, month, day, out var p) ? p : null)
+            .Where(p => p != null)
+            .Cast<Person>()];
+    }
 
-        foreach (var li in liNodes)
+    private static bool TryParsePerson(HtmlNode li, int m, int d, out Person? person)
+    {
+        person = null;
+        string raw = HtmlEntity.DeEntitize(li.InnerText).Trim();
+
+        if (raw.Contains("(d.") || !TryExtractYear(li, out int year)) return false;
+
+        string trimmed = raw.StartsWith(year.ToString()) ? raw[year.ToString().Length..].Trim() : raw;
+        var (name, desc) = StringNormalization.SplitNameAndDescription(trimmed);
+
+        if (string.IsNullOrWhiteSpace(name) || string.IsNullOrWhiteSpace(desc)) return false;
+
+        person = new Person
         {
-            string raw = HtmlEntity.DeEntitize(li.InnerText).Trim();
+            Name = name,
+            Description = desc,
+            BirthYear = year,
+            Month = m,
+            Day = d,
+            Url = string.Empty,
+            SourceSlug = "OnThisDay",
+            DisplaySlug = "OnThisDay",
+            Section = "Births",
+            SourceUrl = $"{Urls.OnThisDayBase}/{CultureInfo.InvariantCulture.DateTimeFormat.GetMonthName(m).ToLower()}/{d}"
+        };
 
-            if (raw.Contains("(d."))
-                continue;
-
-            if (!TryExtractYear(li, out int year))
-                continue;
-
-            if (!TryExtractNameAndDescription(raw, year, out string name, out string description))
-                continue;
-
-            string monthName = CultureInfo.InvariantCulture.DateTimeFormat.GetMonthName(month).ToLowerInvariant();
-
-            results.Add(new Person
-            {
-                BirthYear = year,
-                Name = name,
-                Description = description,
-                Url = "",
-
-                Month = month,
-                Day = day,
-                Section = "Births",
-
-                SourceSlug = "onthisday",
-                DisplaySlug = "OnThisDay",
-                SourceUrl = $"{Urls.OnThisDayBase}/{monthName}/{day}"
-            });
-
-
-        }
-
-        return results;
+        return true;
     }
 
     private static bool TryExtractYear(HtmlNode li, out int year)
     {
-        year = 0;
+        string? yearText = li.SelectSingleNode(".//a[@class='birthDate']")?.InnerText
+                        ?? li.SelectSingleNode(".//b")?.InnerText;
 
-        HtmlNode a = li.SelectSingleNode(".//a[@class='birthDate']");
-
-        if (a != null && int.TryParse(a.InnerText.Trim(), out year))
-            return true;
-
-        HtmlNode b = li.SelectSingleNode(".//b");
-
-        if (b != null && int.TryParse(b.InnerText.Trim(), out year))
-            return true;
-
-        return false;
-    }
-
-    private static bool TryExtractNameAndDescription(string raw, int year, out string name, out string description)
-    {
-        string trimmed = raw.StartsWith(year.ToString())
-            ? raw[year.ToString().Length..].Trim()
-            : raw;
-
-        var (n, d) = StringNormalization.SplitNameAndDescription(trimmed);
-
-        if (d is null)
-        {
-            name = "";
-            description = "";
-            return false;
-        }
-
-        name = n;
-        description = d;
-        return true;
+        return int.TryParse(yearText?.Trim(), out year);
     }
 
 }

@@ -1,93 +1,31 @@
 ﻿using BirthdayCollator.Server.Models;
-using BirthdayCollator.Helpers;
-using System.Globalization;
-using System.Text;
+using BirthdayCollator.Server.Processing.Html;
 
-namespace BirthdayCollator.Server.Processing.Deduplication
+namespace BirthdayCollator.Server.Processing.Deduplication;
+public sealed class PersonDeduper
 {
-    public partial class PersonDeduper()
+    public List<Person> DeduplicateByNameAndYear(List<Person> people)
     {
-        public List<Person> DeduplicateByNameAndYear(List<Person> people)
+        var uniquePeople = new Dictionary<string, Person>(StringComparer.OrdinalIgnoreCase);
+
+        foreach (var p in people)
         {
-            HashSet<string> seen = new(StringComparer.OrdinalIgnoreCase);
-            List<Person> final = [];
+            var key = $"{WikiTextUtility.ToComparableSlug(p.Name)}|{p.BirthYear}";
 
-            foreach (Person p in people)
+            if (!uniquePeople.TryGetValue(key, out var existing))
             {
-                string normalizedName = NormalizeName(p.Name);
-                int year = p.BirthDate.Year;
-                string key = $"{normalizedName}|{year}";
-
-                if (seen.Add(key))
-                {
-                    final.Add(p);
-                    continue;
-                }
-
-                Person? existing = null;
-
-                foreach (var x in final)
-                {
-                    string existingName = NormalizeName(x.Name);
-                    int existingYear = x.BirthDate.Year;
-
-                    bool sameName = existingName.Equals(normalizedName, StringComparison.OrdinalIgnoreCase);
-                    bool sameYear = existingYear == year;
-
-                    if (sameName && sameYear)
-                    {
-                        existing = x;
-                        break;
-                    }
-                }
-
-                if (existing is null)
-                {
-                    final.Add(p);
-                    continue;
-                }
-
-                bool existingIsOTD = IsOnThisDay(existing);
-                bool incomingIsOTD = IsOnThisDay(p);
-
-                if (existingIsOTD && !incomingIsOTD)
-                {
-                    final.Remove(existing);
-                    final.Add(p);
-                }
+                uniquePeople[key] = p;
+                continue;
             }
 
-            return final;
-        }
-
-
-
-        public static string NormalizeName(string name)
-        {
-            if (string.IsNullOrWhiteSpace(name))
-                return string.Empty;
-
-            int bracketIndex = name.IndexOf('[');
-            if (bracketIndex >= 0)
-                name = name[..bracketIndex];
-
-            string normalized = name.Normalize(NormalizationForm.FormD);
-
-            var sb = new StringBuilder();
-            foreach (char c in normalized)
+            if (IsOnThisDay(existing) && !IsOnThisDay(p))
             {
-                var uc = CharUnicodeInfo.GetUnicodeCategory(c);
-                if (uc != UnicodeCategory.NonSpacingMark)
-                    sb.Append(c);
+                uniquePeople[key] = p;
             }
-
-            normalized = sb.ToString();
-            normalized = new string([.. normalized.Where(c => !char.IsPunctuation(c))]);
-            normalized = RegexPatterns.WhitespaceCollapseRegex().Replace(normalized, " ");
-            normalized = normalized.Replace(" ", "");
-            return normalized.Trim().ToLowerInvariant();
         }
 
-        private static bool IsOnThisDay(Person p) => string.Equals(p.DisplaySlug, "OnThisDay", StringComparison.OrdinalIgnoreCase);
+        return [.. uniquePeople.Values];
     }
+
+    private static bool IsOnThisDay(Person p) => string.Equals(p.DisplaySlug, "OnThisDay", StringComparison.OrdinalIgnoreCase);
 }

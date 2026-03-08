@@ -1,33 +1,41 @@
-﻿using BirthdayCollator.Server.Helpers;
-using BirthdayCollator.Server.Models;
+﻿using BirthdayCollator.Server.Models;
+using BirthdayCollator.Server.Processing.Builders;
+using BirthdayCollator.Server.Processing.Html;
 using HtmlAgilityPack;
 using System.Globalization;
 
-namespace BirthdayCollator.Server.Processing.Parsers;
+namespace BirthdayCollator.Server.Processing.Parsers;   
 public sealed class GenariansPageParser
 {
     public bool TryParseRow(HtmlNode row, string targetMonth, int targetDay, string sourceUrl, out Person? person)
     {
         person = null;
+        var cells = row.SelectNodes("./th");
 
-        if (row.SelectNodes("./th") is not { Count: >= 3 } cells) return false;
-        if (cells[2].SelectNodes(".//span") is not { Count: >= 2 } spans) return false;
+        if (cells is not { Count: >= 3 }) return false;
 
-        var nameNode = spans[0].InnerText.Contains("NEW CENTENARIAN", StringComparison.Ordinal) ? spans[1] : spans[0];
-        string name = StringNormalization.CleanName(HtmlEntity.DeEntitize(nameNode.InnerText).Trim());
+        // Use the middle cell for name/bio/date logic
+        var spans = cells[2].SelectNodes(".//span");
+        if (spans is not { Count: >= 2 }) return false;
 
+        // Skip the badge if it exists
+        var nameNode = spans[0].InnerText.Contains("NEW CENTENARIAN") ? spans[1] : spans[0];
+        string name = WikiTextUtility.Normalize(nameNode.InnerText);
+
+        // Extract lines and parse date
         var lines = CleanBrLines(spans.Last());
-        if (lines.Count < 2 || !DateTime.TryParseExact(lines[1], "MM/dd/yyyy", CultureInfo.InvariantCulture, default, out var bDay))
+        if (lines.Count < 2 || !DateTime.TryParseExact(lines.Last(), "MM/dd/yyyy", CultureInfo.InvariantCulture, default, out var bDay))
             return false;
 
-         if (bDay.Day != targetDay || !bDay.ToString("MMMM", CultureInfo.InvariantCulture).Equals(targetMonth, StringComparison.OrdinalIgnoreCase))
+        // Date Filter
+        if (bDay.Day != targetDay || !bDay.ToString("MMMM", CultureInfo.InvariantCulture).Equals(targetMonth, StringComparison.OrdinalIgnoreCase))
             return false;
 
         person = new Person
         {
             Name = name,
             Description = lines[0].Split(',')[0].Trim(),
-            Url = ExtractWikiUrl(cells[0]),
+            Url = WikipediaDomNavigator.ExtractWikipediaHref(cells[0]) ?? string.Empty,
             BirthYear = bDay.Year,
             Month = bDay.Month,
             Day = bDay.Day,
@@ -42,13 +50,5 @@ public sealed class GenariansPageParser
 
     private static List<string> CleanBrLines(HtmlNode node) =>
         [.. node.InnerHtml.Split("<br", StringSplitOptions.RemoveEmptyEntries)
-            .Select(s => HtmlEntity.DeEntitize(HtmlNode.CreateNode($"<span>{s}</span>").InnerText)
-            .Trim(' ', '\n', '\r', '>', '\t'))];
-
-    private static string ExtractWikiUrl(HtmlNode cell)
-    {
-        var url = cell.SelectSingleNode(".//a[contains(@href,'wikipedia.org')]")?.GetAttributeValue("href", "") ?? "";
-        return string.IsNullOrEmpty(url) ? "" : Uri.UnescapeDataString(url).Replace(" ", "_");
-    }
-
+            .Select(s => HtmlEntity.DeEntitize(s).Trim(' ', '\n', '\r', '>', '\t'))];
 }

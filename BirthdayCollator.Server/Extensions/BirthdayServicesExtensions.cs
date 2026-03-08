@@ -25,6 +25,7 @@ public static class BirthdayServicesExtensions
 
         services.AddScoped<PersonFactory>();
         services.AddScoped<OnThisDayParser>();
+      
 
         services.AddScoped<WikiHtmlFetcher>(sp =>
         {

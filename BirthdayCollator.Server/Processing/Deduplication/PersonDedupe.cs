@@ -1,82 +1,45 @@
 ﻿using BirthdayCollator.Server.Models;
-using BirthdayCollator.Server.Constants;
+using BirthdayCollator.Server.Processing.Html;
 
-namespace BirthdayCollator.Server.Processing.Deduplication
+namespace BirthdayCollator.Server.Processing.Deduplication;
+
+public sealed class PersonDedupe
 {
-    public  class PersonDedupe
+    public List<Person> DedupePeople(List<Person> people)
     {
-        public List<Person> DedupePeople(List<Person> people)
+        var groups = people.GroupBy(p => $"{p.BirthYear}|{WikiTextUtility.GetFirstName(p.Name)}");
+        List<Person> final = [];
+
+        foreach (var group in groups)
         {
-            List<Person> final = [];
-
-            foreach (var p in people)
+            var candidates = group.ToList();
+            while (candidates.Count > 0)
             {
-                var existing = final.FirstOrDefault(x =>
-                    x.BirthYear == p.BirthYear &&
-                    FirstName(x.Name) == FirstName(p.Name) &&
-                    HasKeywordOverlap(x.Description, p.Description)
-                );
+                var current = candidates[0];
+                candidates.RemoveAt(0);
+                var duplicate = candidates.FirstOrDefault(other =>
+                    WikiTextUtility.HasKeywordOverlap(current.Description, other.Description));
 
-                if (existing is null)
+                if (duplicate != null)
                 {
-                    final.Add(p);
+                    var best = GetScore(current) >= GetScore(duplicate) ? current : duplicate;
+                    final.Add(best);
+                    candidates.Remove(duplicate);
                 }
                 else
                 {
-                    if (Score(p) > Score(existing))
-                    {
-                        final.Remove(existing);
-                        final.Add(p);
-                    }
+                    final.Add(current);
                 }
             }
-
-            return final;
         }
-
-        private static string FirstName(string name)
-        {
-            if (string.IsNullOrWhiteSpace(name)) return "";
-            return name.Split(' ')[0].Trim().ToLowerInvariant();
-        }
-
-        private static HashSet<string> ExtractKeywords(string? text)
-        {
-            if (string.IsNullOrWhiteSpace(text))
-                return [];
-
-            return [.. text
-                .ToLowerInvariant()
-                .Split(' ', StringSplitOptions.RemoveEmptyEntries)
-                .Select(w => w.Trim(',', '.', ';', ':', '!', '?', '(', ')', '[', ']'))
-                .Where(w => w.Length >= 3 && !NameParsing.Stopwords.Contains(w))];
-        }
-
-
-        private static bool HasKeywordOverlap(string? a, string? b)
-        {
-            var wa = ExtractKeywords(a);
-            var wb = ExtractKeywords(b);
-
-            int count = wa.Intersect(wb).Count();
-
-            return count >= 2;
-        }
-
-        private static int Score(Person p)
-        {
-            var src = p.SourceUrl ?? string.Empty;
-
-            if (src.Contains("Wiki", StringComparison.OrdinalIgnoreCase))
-                return 3;
-
-            if (src.Contains("Genarians", StringComparison.OrdinalIgnoreCase))
-                return 2;
-
-            if (src.Contains("OnThisDay", StringComparison.OrdinalIgnoreCase))
-                return 1;
-
-            return 0;
-        }
+        return final;
     }
+
+    private static int GetScore(Person p) => p.SourceSlug switch
+    {
+        "Wikipedia" => 3,
+        "Genarians" => 2,
+        "OnThisDay" => 1,
+        _ => 0
+    };
 }
