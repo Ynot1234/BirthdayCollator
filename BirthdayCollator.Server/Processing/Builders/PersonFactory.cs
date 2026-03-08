@@ -23,7 +23,6 @@ public class PersonFactory(Func<string, string> normalizeHref, IPersonNameResolv
     {
         return new Person
         {
-            Id = 0,
             Name = name,
             Description = description,
             Url = wikiUrl,
