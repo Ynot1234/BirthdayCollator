@@ -7,8 +7,8 @@ public sealed class YearRangeProvider : IYearRangeProvider
 
     public string? CurrentOverrideYear => _overrides.Count == 1 ? _overrides[0] : null;
     public string CurrentOverrideSuffix { get; private set; } = string.Empty;
-    public bool IncludeAll { get; private set; } = true;
-    private static readonly int[] first = new[] { 60, 70, 80 };
+    public bool IncludeAll { get; private set; } = false;
+    private static readonly int[] first = [60, 70, 80];
 
     public YearRangeProvider()
     {

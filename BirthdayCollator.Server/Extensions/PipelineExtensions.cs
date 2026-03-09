@@ -28,7 +28,8 @@ public static class PipelineExtensions
         services.AddScoped<BirthdayFetcher>();
         services.AddScoped<Genarians>();
         services.AddScoped<GenariansPageParser>();
-      
+        services.AddScoped<GenarianPageLoader>();
+
 
         // Pipelines
         services.AddScoped<BirthSourceEngine>();
@@ -48,6 +49,8 @@ public static class PipelineExtensions
         services.AddSingleton<IBirthDateParser, BirthDateParser>();
         services.AddScoped<BirthEntryValidator>();
         services.AddScoped<PersonFactory>();
+
+      
 
         services.AddSingleton<IYearRangeProvider, YearRangeProvider>();  //make stateless at some point
 

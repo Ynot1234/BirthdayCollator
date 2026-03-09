@@ -4,7 +4,7 @@ using BirthdayCollator.Server.Processing.Html;
 using BirthdayCollator.Server.Processing.Links;
 
 namespace BirthdayCollator.Server.Processing.Enrichment;
-public sealed class PersonWikiEnricher(IHttpClientFactory httpFactory, ILinkResolver linkResolver)
+public sealed class PersonWikiEnricher(IHttpClientFactory httpFactory)
 {
     private readonly HttpClient _http = httpFactory.CreateClient("WikiClient");
 
@@ -21,7 +21,7 @@ public sealed class PersonWikiEnricher(IHttpClientFactory httpFactory, ILinkReso
             {
                 var (title, url) = await LookupWikiTitleAndUrlAsync(p.Name, p.Description, token);
 
-                if (title != null && linkResolver.HrefMatchesName(title, p.Name))
+                if (title != null && WikiValidator.HrefMatchesName(title, p.Name))
                     p.Url = url!;
             });
 

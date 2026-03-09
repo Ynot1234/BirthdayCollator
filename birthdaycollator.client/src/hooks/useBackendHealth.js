@@ -1,25 +1,31 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect } from "react"; // <--- This was missing!
 
 export function useBackendHealth() {
-    const [backendOnline, setBackendOnline] = useState(null);
-
-    async function checkBackend() {
-        const base = import.meta.env.VITE_API_BASE_URL;
-        try {
-            const res = await fetch(`${base}/health`);
-            return res.ok;
-        } catch {
-            return false;
-        }
-    }
+    const [status, setStatus] = useState("loading");
 
     useEffect(() => {
-        async function init() {
-            const online = await checkBackend();
-            setBackendOnline(online);
+        let isMounted = true;
+        const startTime = Date.now();
+
+        async function check() {
+            const base = import.meta.env.VITE_API_BASE_URL;
+            try {
+                const res = await fetch(`${base}/health`);
+                if (isMounted) setStatus(res.ok ? "online" : "offline");
+            } catch {
+                // Wait at least 400ms total to prevent the "flicker"
+                const elapsed = Date.now() - startTime;
+                const remaining = Math.max(0, 400 - elapsed);
+
+                setTimeout(() => {
+                    if (isMounted) setStatus("offline");
+                }, remaining);
+            }
         }
-        init();
+
+        check();
+        return () => { isMounted = false; };
     }, []);
 
-    return backendOnline;
+    return status;
 }

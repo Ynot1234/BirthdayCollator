@@ -11,13 +11,11 @@ public interface ILinkResolver
 {
     HtmlNode? FindPersonLink(HtmlNode li, string entry);
 
-    bool HrefMatchesName(string href, string name);
     bool TryApplyHrefOverride(Person person, string? href);
 
     string? ResolvePrimaryHref(string? innerHtml); 
     string? ExtractWikipediaHref(HtmlNode node);    
 
-    bool IsDateHref(string href);
 }
 
 public sealed class LinkResolver : ILinkResolver
@@ -28,7 +26,7 @@ public sealed class LinkResolver : ILinkResolver
 
         if (links.Count == 0) return null;
 
-        List<HtmlNode> candidates = [.. links.Where(a => !IsDateHref(a.GetAttributeValue("href", "")))];
+        List<HtmlNode> candidates = [.. links.Where(a => !WikiValidator.IsDateHref(a.GetAttributeValue("href", "")))];
 
         if (candidates.Count == 0) return null;
 
@@ -45,16 +43,6 @@ public sealed class LinkResolver : ILinkResolver
         return fuzzy ?? candidates.First();
     }
 
-    public bool IsDateHref(string href)
-    {
-        if (string.IsNullOrWhiteSpace(href)) return false;
-        string trimmed = href.TrimStart('.', '/');
-
-        if (trimmed.Length == 4 && int.TryParse(trimmed, out _)) return true;
-
-        var parts = trimmed.Split('_');
-        return parts.Length == 2 && DateTime.TryParse($"{parts[0]} 1", out _) && int.TryParse(parts[1], out _);
-    }
 
     public string? ResolvePrimaryHref(string? innerHtml)
     {
@@ -75,9 +63,6 @@ public sealed class LinkResolver : ILinkResolver
     {
         if (string.IsNullOrWhiteSpace(href)) return true;
         person.Url = Urls.Domain + WikiUrlBuilder.NormalizeWikiHref(href);
-        return HrefMatchesName(href, person.Name);
+        return WikiValidator.HrefMatchesName(href, person.Name);
     }
-
-    public bool HrefMatchesName(string href, string name) =>
-        WikiTextUtility.FuzzyNameMatch(href, name); 
 }

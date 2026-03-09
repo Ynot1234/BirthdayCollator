@@ -1,4 +1,5 @@
-﻿using BirthdayCollator.Server.Models;
+﻿using BirthdayCollator.Server.Helpers;
+using BirthdayCollator.Server.Models;
 using BirthdayCollator.Server.Processing.Html;
 
 namespace BirthdayCollator.Server.Processing.Deduplication;
@@ -10,7 +11,7 @@ public sealed class PersonDeduper
 
         foreach (var p in people)
         {
-            var key = $"{WikiTextUtility.ToComparableSlug(p.Name)}|{p.BirthYear}";
+            var key = $"{UrlNormalization.ToComparableSlug(p.Name)}|{p.BirthYear}";
 
             if (!uniquePeople.TryGetValue(key, out var existing))
             {

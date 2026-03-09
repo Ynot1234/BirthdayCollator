@@ -11,7 +11,7 @@ namespace BirthdayCollator.Server.Processing.Deduplication
         {
             List<Person> withUrls = [.. people.Where(p => !string.IsNullOrWhiteSpace(p.Url))];
             List<Person> withoutUrls = [.. people.Where(p => string.IsNullOrWhiteSpace(p.Url))];
-            List<NormalizedUrl> normalized = [.. withUrls.Select(p => new NormalizedUrl(p, UrlNomalization.NormalizeUrl(p.Url!)))];
+            List<NormalizedUrl> normalized = [.. withUrls.Select(p => new NormalizedUrl(p, UrlNormalization.NormalizeUrl(p.Url!)))];
             var grouped = normalized.GroupBy(x => x.Url, StringComparer.OrdinalIgnoreCase);
             List<Person> dedupedWithUrls = [.. grouped.Select(g => g.First().Person)];
             dedupedWithUrls.AddRange(withoutUrls);

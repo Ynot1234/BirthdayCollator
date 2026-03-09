@@ -1,6 +1,10 @@
-﻿namespace BirthdayCollator.Server.Helpers;
+﻿using BirthdayCollator.Helpers;
+using System.Globalization;
+using System.Text;
 
-public static class UrlNomalization
+namespace BirthdayCollator.Server.Helpers;
+
+public static class UrlNormalization
 {
 
     public static string NormalizeUrl(string url)
@@ -19,6 +23,22 @@ public static class UrlNomalization
         return url;
     }
 
+    public static string ToComparableSlug(string s)
+    {
+        if (string.IsNullOrWhiteSpace(s)) return string.Empty;
+
+        s = s.ToLowerInvariant().Replace("_", " ");
+        s = s.Normalize(NormalizationForm.FormD);
+
+        var chars = s.Where(c =>
+            CharUnicodeInfo.GetUnicodeCategory(c) != UnicodeCategory.NonSpacingMark &&
+            !char.IsPunctuation(c) &&
+            !char.IsSymbol(c)
+        );
+
+        string result = new([.. chars]);
+        return RegexPatterns.WhitespaceCollapseRegex().Replace(result, " ").Trim();
+    }
 
     public static string NormalizeWikiUrl(string url)
     {

@@ -14,52 +14,47 @@ import { ResultsList } from "../components/ResultsList";
 import { Pagination } from "../components/Pagination";
 import ToolsDropdown from "../components/ToolsDropdown";
 import SettingsModal from "../components/SettingsModal";
-import { StatusCard } from "../components/StatusCard";
 
 // Assets
-import { FiSettings } from "react-icons/fi";
+import { FiSettings, FiAlertCircle } from "react-icons/fi";
 import styles from "./BirthdaysPage.module.css";
 
 export default function BirthdaysPage() {
     const [settingsOpen, setSettingsOpen] = useState(false);
     const scrollAnchorRef = useRef(null);
 
-    // 1. Health & Configuration Hooks
-    const backendOnline = useBackendHealth();
+    const healthStatus = useBackendHealth();
+    const isOffline = healthStatus === "offline";
+    const isChecking = healthStatus === "loading";
+
     const { hasOpenAIKey } = useOpenAIKey();
     const { summaries, setSummaries, summarizePerson } = useSummaries();
 
-    // 2. Year Override Logic
     const override = useOverrideYear();
     const activeYear = override.overrideYear ?? new Date().getFullYear();
-
-    // 3. Core Data Hook
     const bday = useBirthdays(activeYear);
 
-    // Initial Load: Sync override settings from server/storage
     useEffect(() => {
         override.loadOverride();
     }, []);
 
-    // UX: Smooth scroll to top of results on page change
     useEffect(() => {
         if (bday.page > 1) {
             scrollAnchorRef.current?.scrollIntoView({ behavior: "smooth" });
         }
     }, [bday.page]);
 
-    // 4. Guard Clauses (Early Returns)
-    if (backendOnline === null) {
-        return <StatusCard message="Checking backend status..." />;
-    }
-    if (backendOnline === false) {
-        return <StatusCard message="Backend offline — please start the server." />;
-    }
-
     return (
         <div className={styles.page}>
             <div className={styles.card}>
-                {/* Header Actions */}
+
+                {isOffline && (
+                    <div className={styles.offlineBanner}>
+                        <FiAlertCircle size={18} />
+                        <span>Backend is offline. Please start the server to fetch data.</span>
+                    </div>
+                )}
+
                 <div className={styles.topRow}>
                     <ToolsDropdown
                         overrideInput={override.overrideInput}
@@ -84,7 +79,7 @@ export default function BirthdaysPage() {
 
                 <h1 className={styles.pageTitle}>Birthdays</h1>
 
-                {/* Main Controls */}
+                {/* 4. Pass disabled state to Toolbar */}
                 <Toolbar
                     onToday={bday.nav.today}
                     onNextDay={bday.nav.next}
@@ -92,7 +87,8 @@ export default function BirthdaysPage() {
                     onRun={() => bday.run(override.includeAll)}
                     onCancel={() => bday.runController?.abort()}
                     isRunning={!!bday.runController}
-                    loading={bday.loading}
+                    loading={bday.loading || isChecking}
+                    disabled={isOffline || isChecking}
                 />
 
                 <DateSelectors
@@ -105,19 +101,16 @@ export default function BirthdaysPage() {
                     includeAll={override.includeAll}
                 />
 
-                {/* Error Feedback */}
                 {bday.error && <div className={styles.error}>{bday.error}</div>}
 
-                {/* Results Anchor */}
                 <div ref={scrollAnchorRef} style={{ scrollMarginTop: "20px" }} />
 
-                {/* Results Display */}
                 {bday.results.length > 0 && (
                     <ResultsList
                         results={bday.results}
                         currentPageItems={bday.currentItems}
                         isStale={bday.isStale}
-                        includeAll={override.includeAll} // Pass through to show/hide dates
+                        includeAll={override.includeAll}
                         summaries={summaries}
                         setSummaries={setSummaries}
                         summarizePerson={summarizePerson}
@@ -125,7 +118,6 @@ export default function BirthdaysPage() {
                     />
                 )}
 
-                {/* Navigation */}
                 <Pagination
                     page={bday.page}
                     setPage={bday.setPage}
@@ -133,7 +125,6 @@ export default function BirthdaysPage() {
                 />
             </div>
 
-            {/* Modals */}
             <SettingsModal
                 isOpen={settingsOpen}
                 onClose={() => setSettingsOpen(false)}
