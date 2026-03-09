@@ -10,13 +10,14 @@ export function ResultItem({
     hasOpenAIKey
 }) {
     const isMilestone = person.age === 90 || person.age === 100;
-    const hasSummary = summaries[person.name];
+
+    const summaryKey = `${person.name}-${person.birthYear}`;
+    const currentSummary = summaries[summaryKey];
 
     const toggleSummary = () => {
-        if (hasSummary) {
-            const copy = { ...summaries };
-            delete copy[person.name];
-            setSummaries(copy);
+        if (currentSummary) {
+            const { [summaryKey]: removed, ...rest } = summaries;
+            setSummaries(rest);
         } else {
             summarizePerson(person);
         }
@@ -33,12 +34,12 @@ export function ResultItem({
                     rel="noopener noreferrer"
                     className={styles.nameLink}
                 >
-                    {person.name} — {person.description} 
+                    {person.name} — {person.description}
                 </a>
 
                 {includeAll && (
                     <span className={styles.dateBadge}>
-                       {person.month}/{person.day}
+                        {person.month}/{person.day}
                     </span>
                 )}
             </div>
@@ -47,15 +48,15 @@ export function ResultItem({
                 <button
                     className={styles.summaryChip}
                     disabled={!hasOpenAIKey}
-                    title={!hasOpenAIKey ? "Add an OpenAI API key to enable summaries" : ""}
+                    title={!hasOpenAIKey ? "Add an OpenAI API key in Settings to enable summaries" : ""}
                     onClick={toggleSummary}
                 >
-                    {hasSummary ? "Clear" : "Summarize"}
+                    {currentSummary ? "Clear Summary" : "AI Summarize"}
                 </button>
 
-                {hasSummary && (
+                {currentSummary && (
                     <div className={styles.summaryBox}>
-                        {summaries[person.name]}
+                        {currentSummary}
                     </div>
                 )}
             </div>

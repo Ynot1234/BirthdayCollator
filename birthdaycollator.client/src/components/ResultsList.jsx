@@ -17,16 +17,17 @@ export function ResultsList({
     return (
         <div className={styles.results}>
             <div className={styles.resultsHeader}>
-                {results.length} {results.length === 1 ? "result" : "results"}
+                <strong>{results.length}</strong> {results.length === 1 ? "result" : "results"}
                 {isStale && (
                     <span className={styles.staleNotice}> (stale - press Run)</span>
                 )}
             </div>
 
             <ul className={styles.list}>
-                {currentPageItems.map((p, i) => (
+                {currentPageItems.map((p) => (
                     <li
-                        key={i}
+                        /* Use a unique key based on person data, not index */
+                        key={`${p.name}-${p.birthYear}`}
                         className={`${styles.item} ${p.age === 90 || p.age === 100 ? styles.milestone : ""
                             }`}
                     >
@@ -44,11 +45,12 @@ export function ResultsList({
 
                             {includeAll && (
                                 <span className={styles.dateBadge}>
-                                    {p.month}/{p.day}   
+                                    {p.month}/{p.day}
                                 </span>
                             )}
                         </div>
 
+                        {/* Pass down the key status to show/hide AI features */}
                         <SummaryControls
                             person={p}
                             summaries={summaries}
@@ -57,7 +59,6 @@ export function ResultsList({
                             hasOpenAIKey={hasOpenAIKey}
                             styles={styles}
                         />
-
                     </li>
                 ))}
             </ul>

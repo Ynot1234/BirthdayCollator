@@ -2,32 +2,33 @@ import { useState } from "react";
 
 export function useSummaries() {
     const [summaries, setSummaries] = useState({});
+    const base = import.meta.env.VITE_API_BASE_URL;
 
-    async function summarizePerson(p) {
+    async function summarizePerson(person) {
+        const summaryKey = `${person.name}-${person.birthYear}`;
+
         try {
-            const apiKey = localStorage.getItem("openai_api_key") ?? "";
-
-            const res = await fetch("/api/ai/summarize", {
+            const res = await fetch(`${base}/api/ai/summarize`, {
                 method: "POST",
-                headers: {
-                    "Content-Type": "application/json",
-                    "X-OpenAI-Key": apiKey   
-                },
+                headers: { "Content-Type": "application/json" },
                 body: JSON.stringify({
-                    name: p.name,
-                    description: p.description
+                    name: person.name,
+                    description: person.description
                 })
             });
 
-            const text = await res.text();
+            if (!res.ok) throw new Error("Summarization failed");
+
+            // CHANGE HERE: Get the response as text, not JSON
+            const textData = await res.text();
 
             setSummaries(prev => ({
                 ...prev,
-                [p.name]: text
+                [summaryKey]: textData // Use the raw text directly
             }));
         } catch (err) {
-            console.error("Summarize failed:", err);
-            alert("Failed to summarize this person.");
+            console.error("AI Summary Error:", err);
+            alert("Failed to generate summary. Check backend logs.");
         }
     }
 

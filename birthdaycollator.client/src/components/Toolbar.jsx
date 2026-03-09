@@ -8,12 +8,17 @@ export function Toolbar({
     onRun,
     onCancel,
     isRunning,
-    loading,
-    hasRunController
+    loading
 }) {
+    const isBusy = isRunning || loading;
+
     return (
         <div className={styles.toolbar}>
-            <button className={styles.toolbarButton} onClick={onToday}>
+            <button
+                className={styles.toolbarButton}
+                onClick={onToday}
+                disabled={isBusy}
+            >
                 Today
             </button>
 
@@ -21,6 +26,8 @@ export function Toolbar({
                 <button
                     className={styles.toolbarButton}
                     onClick={onNextDay}
+                    disabled={isBusy}
+                    title="Next Day"
                 >
                     +
                 </button>
@@ -28,6 +35,8 @@ export function Toolbar({
                 <button
                     className={styles.toolbarButton}
                     onClick={onPrevDay}
+                    disabled={isBusy}
+                    title="Previous Day"
                 >
                     -
                 </button>
@@ -36,7 +45,6 @@ export function Toolbar({
                     <button
                         className={`${styles.toolbarButton} ${styles.cancelButton}`}
                         onClick={onCancel}
-                        disabled={!hasRunController}
                     >
                         Cancel
                     </button>

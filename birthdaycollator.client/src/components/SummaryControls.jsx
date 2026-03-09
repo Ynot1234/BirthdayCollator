@@ -6,13 +6,16 @@ export default function SummaryControls({
     hasOpenAIKey,
     styles
 }) {
-    const hasSummary = Boolean(summaries[person.name]);
+    // Unique key: name + birthYear prevents collisions
+    const summaryKey = `${person.name}-${person.birthYear}`;
+    const summaryText = summaries[summaryKey];
+    const hasSummary = Boolean(summaryText);
 
     const toggle = () => {
         if (hasSummary) {
-            const copy = { ...summaries };
-            delete copy[person.name];
-            setSummaries(copy);
+            // Atomic removal: Create a new object without this key
+            const { [summaryKey]: _, ...remaining } = summaries;
+            setSummaries(remaining);
         } else {
             summarizePerson(person);
         }
@@ -23,7 +26,7 @@ export default function SummaryControls({
             <button
                 className={styles.summaryChip}
                 disabled={!hasOpenAIKey}
-                title={!hasOpenAIKey ? "Add an OpenAI API key to enable summaries" : ""}
+                title={!hasOpenAIKey ? "Add an OpenAI API key in Settings to enable summaries" : ""}
                 onClick={toggle}
             >
                 {hasSummary ? "Clear" : "Summarize"}
@@ -31,7 +34,7 @@ export default function SummaryControls({
 
             {hasSummary && (
                 <div className={styles.summaryBox}>
-                    {summaries[person.name]}
+                    {summaryText}
                 </div>
             )}
         </div>

@@ -1,0 +1,11 @@
+.hoverCard {
+    background: white;
+    color: #333;
+    padding: 12px 16px;
+    border-radius: 8px;
+    border: 1px solid #ddd;
+    box-shadow: 0 10px 25px rgba(0,0,0,0.2);
+    width: 280px;
+    z-index: 10000;
+    pointer-events: auto;
+}

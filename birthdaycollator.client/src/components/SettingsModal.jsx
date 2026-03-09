@@ -62,7 +62,6 @@ export default function SettingsModal({ isOpen, onClose }) {
                     </button>
                 </div>
 
-                {/* Conditional button */}
                 {!hasExistingKey ? (
                     <button className={styles.saveButton} onClick={handleSave}>
                         Save API Key
