@@ -1,6 +1,7 @@
 ﻿using BirthdayCollator.Server.Configuration;
 using BirthdayCollator.Server.Models;
 using BirthdayCollator.Server.Processing.Builders;
+using BirthdayCollator.Server.Resources;
 using System.Globalization;
 
 namespace BirthdayCollator.Server.Processing.Sources
@@ -16,7 +17,6 @@ namespace BirthdayCollator.Server.Processing.Sources
                 actualDate.Day,
                 token);
         }
-
 
         public bool IsRelevant(BirthSourceOptions opt, IYearRangeProvider years, DateTime date)
         {

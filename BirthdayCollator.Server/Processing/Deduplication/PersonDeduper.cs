@@ -1,5 +1,6 @@
 ﻿using BirthdayCollator.Server.Models;
 using BirthdayCollator.Server.Helpers;
+using static BirthdayCollator.Server.Constants.AppStrings;
 
 namespace BirthdayCollator.Server.Processing.Deduplication;
 
@@ -7,8 +8,7 @@ public sealed class PersonDeduper
 {
     public List<Person> Deduplicate(List<Person> people)
     {
-        if (people.Count <= 1)
-            return people;
+        if (people.Count <= 1) return people;
 
         var uniquePeople = new Dictionary<string, Person>(StringComparer.OrdinalIgnoreCase);
 
@@ -38,9 +38,9 @@ public sealed class PersonDeduper
 
     private static int GetScore(Person p) => p.SourceSlug switch
     {
-        "Wikipedia" => 3,
-        "Genarians" => 2,
-        "OnThisDay" => 1,
+        Slugs.Wikipedia => 3,
+        Slugs.Genarians => 2,
+        Slugs.OnThisDay => 1,
         _ => 0
     };
 }

@@ -2,7 +2,8 @@
 using BirthdayCollator.Server.Models;
 using BirthdayCollator.Server.Processing.Html;
 using BirthdayCollator.Server.Processing.Links;
-using BirthdayCollator.Server.Helpers; 
+using BirthdayCollator.Server.Helpers;
+using static BirthdayCollator.Server.Constants.AppStrings;
 
 namespace BirthdayCollator.Server.Processing.Enrichment;
 
@@ -12,7 +13,7 @@ public sealed class PersonWikiEnricher(IHttpClientFactory httpFactory)
 
     public async Task<List<Person>> EnrichOnThisDayUrlsAsync(List<Person> people, CancellationToken ct)
     {
-        List<Person> targets = [.. people.Where(p => string.Equals(p.SourceSlug, "OnThisDay", StringComparison.OrdinalIgnoreCase))];
+        List<Person> targets = [.. people.Where(p => string.Equals(p.SourceSlug, Slugs.OnThisDay, StringComparison.OrdinalIgnoreCase))];
 
         ParallelOptions options = new() { MaxDegreeOfParallelism = 4, CancellationToken = ct };
 

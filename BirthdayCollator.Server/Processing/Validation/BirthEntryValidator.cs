@@ -22,7 +22,7 @@ public sealed class BirthEntryValidator(IYearRangeProvider yearProvider)
                 return false;
         }
 
-        if (RegexPatterns.ExcludeDiedRegex().IsMatch(rawText))
+        if (RegexPatterns.ExcludeDied().IsMatch(rawText))
             return false;
 
         var links = liNode.SelectNodes(".//a[@href]");

@@ -14,21 +14,27 @@ public sealed class GenariansPageParser(ILinkResolver linkResolver, IYearRangePr
         p = null;
         var cells = row.SelectNodes("./th");
         var spans = cells[2].SelectNodes(".//span");
+
         var nameNode = spans[0].InnerText.Contains("NEW CENTENARIAN") ? spans[1] : spans[0];
-        var lines = CleanBrLines(spans.Last());
-      
+
+        var lines = spans.Last().InnerHtml
+            .Split("<br", StringSplitOptions.RemoveEmptyEntries)
+            .Select(line => HtmlEntity.DeEntitize(line).Trim(' ', '\n', '\r', '>', '\t'))
+            .Where(s => !string.IsNullOrWhiteSpace(s))
+            .ToList();
+
         if (lines.Count < 2 || !DateTime.TryParseExact(lines.Last(), "MM/dd/yyyy", CultureInfo.InvariantCulture, default, out var bDay))
             return false;
-      
-        if (!year.IncludeAll)
-        {
-            if (bDay.Day != day || !bDay.ToString("MMMM", CultureInfo.InvariantCulture).Equals(month, StringComparison.OrdinalIgnoreCase))
-                return false;
-        }
-        else
+
+        if (year.IncludeAll)
         {
             var today = DateTime.Today;
             if (bDay.Month < today.Month || (bDay.Month == today.Month && bDay.Day < today.Day))
+                return false; 
+        }
+        else
+        {
+            if (bDay.Day != day || !bDay.ToString("MMMM", CultureInfo.InvariantCulture).Equals(month, StringComparison.OrdinalIgnoreCase))
                 return false;
         }
 
@@ -42,17 +48,9 @@ public sealed class GenariansPageParser(ILinkResolver linkResolver, IYearRangePr
             Day = bDay.Day,
             SourceSlug = Path.GetFileNameWithoutExtension(url),
             SourceUrl = url,
-            DisplaySlug = "Genarians",
-            Section = "Births"
-        };
+            DisplaySlug = Constants.AppStrings.Slugs.Genarians,
+            Section = Constants.AppStrings.Sections.Births};
 
         return true;
-    }
-    private static List<string> CleanBrLines(HtmlNode node)
-    {
-        return [.. node.InnerHtml
-            .Split("<br", StringSplitOptions.RemoveEmptyEntries)
-            .Select(line => HtmlEntity.DeEntitize(line).Trim(' ', '\n', '\r', '>', '\t'))
-            .Where(line => !string.IsNullOrWhiteSpace(line))];
     }
 }

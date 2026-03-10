@@ -12,8 +12,8 @@ public static partial class WikiTextUtility
 
         string cleaned = HtmlEntity.DeEntitize(input).Trim();
         cleaned = cleaned.Replace('—', '–').Replace('-', '–');
-        cleaned = RegexPatterns.WhitespaceCollapseRegex().Replace(cleaned, " ");
-        cleaned = RegexPatterns.OrdinalSuffixRegex().Replace(cleaned, "$1");
+        cleaned = RegexPatterns.WhitespaceCollapse().Replace(cleaned, " ");
+        cleaned = RegexPatterns.OrdinalSuffix().Replace(cleaned, "$1");
 
         return cleaned;
     }

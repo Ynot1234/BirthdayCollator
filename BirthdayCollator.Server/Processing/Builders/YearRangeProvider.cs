@@ -1,32 +1,27 @@
-﻿namespace BirthdayCollator.Server.Processing.Builders;
+﻿using BirthdayCollator.Server.Models;
+using Microsoft.AspNetCore.Mvc;
+
+namespace BirthdayCollator.Server.Processing.Builders;
 
 public sealed class YearRangeProvider : IYearRangeProvider
 {
     private readonly List<string> _defaults;
-    private readonly List<string> _overrides = [];
     private readonly List<string> _genarianYears;
-
-    public string? CurrentOverrideYear => _overrides.Count == 1 ? _overrides[0] : null;
-    public string CurrentOverrideSuffix { get; private set; } = string.Empty;
-    public bool IncludeAll { get; private set; } = false;
-    private static readonly int[] first = [60, 70, 80];
+    private readonly List<string> _overrides = [];
 
     public YearRangeProvider()
     {
         int cur = DateTime.Now.Year;
-        int cutoff = cur - 90;
-
-        var ages = first.Concat(Enumerable.Range(85, 105 - 85 + 1));
-        _defaults = [.. ages.Select(age => (cur - age).ToString()).OrderByDescending(y => y)];
-
-        int startYear = cutoff - 11;
-
-        _genarianYears = [.. Enumerable.Range(startYear, 12)
-            .Select(y => y.ToString())
-            .Reverse()];
-
-        _genarianYears.Add($"{startYear}-pre");
+        IEnumerable<int> targetAges = first.Concat(Enumerable.Range(85, 21));
+        _defaults = [.. targetAges.Select(age => (cur - age).ToString()).OrderByDescending(y => y)];
+        int startYear = cur - 90 - 11;
+        _genarianYears = [.. Enumerable.Range(startYear, 12).Select(y => y.ToString()).Reverse(), $"{startYear}-pre"];
     }
+
+    public string? CurrentOverrideYear => _overrides.Count == 1 ? _overrides[0] : null;
+    public string CurrentOverrideSuffix { get; private set; } = string.Empty;
+    public bool IncludeAll { get; private set; }
+    private static readonly int[] first = new[] { 60, 70, 80 };
 
     public void ForceYear(int year) { _overrides.Clear(); _overrides.Add(year.ToString()); }
     public void ForceYears(params string[] years) { _overrides.Clear(); _overrides.AddRange(years); }
@@ -37,14 +32,7 @@ public sealed class YearRangeProvider : IYearRangeProvider
 
     public IReadOnlyList<string> GetYears() => _overrides.Count > 0 ? _overrides : _defaults;
     public IReadOnlyList<string> GetDefaultYears() => _defaults;
-
-    public IReadOnlyList<string> GetGenarianYears()
-    {
-        if (_overrides.Count > 0)
-            return _overrides;
-
-        return _genarianYears;
-    }
+    public IReadOnlyList<string> GetGenarianYears() => _overrides.Count > 0 ? _overrides : _genarianYears;
 
     public IReadOnlyList<string> GetLeapYears() =>
         [.. GetYears().Where(y => int.TryParse(y, out int yr) && DateTime.IsLeapYear(yr))];

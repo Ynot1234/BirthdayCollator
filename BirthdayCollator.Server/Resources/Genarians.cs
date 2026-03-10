@@ -1,9 +1,10 @@
 ﻿using BirthdayCollator.Server.Helpers;
 using BirthdayCollator.Server.Models;
 using BirthdayCollator.Server.Processing.Builders;
-using BirthdayCollator.Server.Resources;
 using System.Collections.Concurrent;
 using System.Globalization;
+
+namespace BirthdayCollator.Server.Resources;
 
 public sealed class Genarians(
     GenarianPageLoader loader,

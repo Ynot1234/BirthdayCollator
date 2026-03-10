@@ -7,7 +7,7 @@ public sealed class BirthDateParser : IBirthDateParser
 {
     private static (string Month, string Day)? ExtractMonthDay(string text)
     {
-        var match = RegexPatterns.MonthDayLooseRegex().Match(text);
+        var match = RegexPatterns.MonthDayLoose().Match(text);
         return match.Success ? (match.Groups[1].Value, match.Groups[2].Value) : null;
     }
 

@@ -7,9 +7,7 @@ namespace BirthdayCollator.Server.Controllers;
 
 [ApiController]
 [Route("api/[controller]")]
-public class BirthdaysController(
-    BirthdayFetcher fetcher,
-    IYearRangeProvider years) : ControllerBase
+public class BirthdaysController(BirthdayFetcher fetcher, IYearRangeProvider years) : ControllerBase
 {
     [HttpGet]
     public async Task<List<Person>> Get(int month, int day, bool includeAll, CancellationToken ct)
@@ -39,26 +37,7 @@ public class BirthdaysController(
     [HttpPost("override")]
     public IActionResult SetOverride([FromBody] OverrideRequest req)
     {
-        var result = req.Year switch
-        {
-            var y when string.IsNullOrWhiteSpace(y) => ClearAndReset(),
-            var y when int.TryParse(y, out var parsed) => ApplyOverride(parsed, req.IncludeAll), _ => null
-        };
-
-        return result ?? BadRequest("Invalid year format.");
-
-        IActionResult ClearAndReset()
-        {
-            years.ClearYear();
-            years.SetIncludeAll(false);
-            return GetOverride(); 
-        }
-
-        IActionResult ApplyOverride(int y, bool all)
-        {
-            years.ForceYear(y);
-            years.SetIncludeAll(all);
-            return GetOverride();
-        }
+        years.HandleOverride(req);
+        return GetOverride();
     }
 }

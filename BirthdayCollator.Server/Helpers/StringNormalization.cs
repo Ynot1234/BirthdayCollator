@@ -38,7 +38,7 @@ public static class StringNormalization
         );
 
         string result = new([.. chars]);
-        return RegexPatterns.WhitespaceCollapseRegex().Replace(result, " ").Trim();
+        return RegexPatterns.WhitespaceCollapse().Replace(result, " ").Trim();
     }
 
     public static string NormalizeWikiUrl(string url)

@@ -14,7 +14,7 @@ public sealed class PersonFilter(WikiHtmlFetcher fetcher)
        await Parallel.ForEachAsync(people, new ParallelOptions { MaxDegreeOfParallelism = 5, CancellationToken = ct },
        async (p, token) =>
        {
-           if (RegexPatterns.ExcludeDiedRegex().IsMatch(p.Description))
+           if (RegexPatterns.ExcludeDied().IsMatch(p.Description))
                return;
 
            if (string.IsNullOrWhiteSpace(p.Url))
@@ -34,7 +34,7 @@ public sealed class PersonFilter(WikiHtmlFetcher fetcher)
 
     private async Task<bool> IsLikelyDeadAsync(Person p, CancellationToken ct)
     {
-        if (RegexPatterns.ExcludeDiedRegex().IsMatch(p.Description)) 
+        if (RegexPatterns.ExcludeDied().IsMatch(p.Description)) 
             return true;
 
         if (string.IsNullOrEmpty(p.Url) || !p.Url.Contains("wikipedia.org", StringComparison.OrdinalIgnoreCase)) 

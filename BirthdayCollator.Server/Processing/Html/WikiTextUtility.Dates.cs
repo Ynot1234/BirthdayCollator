@@ -42,7 +42,7 @@ public static partial class WikiTextUtility
 
     public static bool IsDateMismatch(string text, DateTime birthDate)
     {
-        var match = RegexPatterns.LongFormDateRegex().Match(text);
+        var match = RegexPatterns.LongFormDate().Match(text);
         return match.Success && DateTime.TryParse(match.Value, out var parsed)
                && (parsed.Month != birthDate.Month || parsed.Day != birthDate.Day);
     }

@@ -32,7 +32,7 @@ public sealed class EntrySplitter : IEntrySplitter
     }
 
     public bool IsDeathEntry(string entry) =>
-        RegexPatterns.ExcludeDiedRegex().IsMatch(entry);
+        RegexPatterns.ExcludeDied().IsMatch(entry);
 
     public IEnumerable<(string Text, DateTime Date)> SplitEntries(EntryContext ctx)
     {

@@ -29,26 +29,17 @@ public sealed class WikiParser(
         {
             string entry = node.InnerText;
 
-            if (entrySplitter.IsDeathEntry(entry) ||
-               !validator.IsValidBirthEntry(entry, birthDate.Year, birthDate.Month, birthDate.Day, node))
+            if (entrySplitter.IsDeathEntry(entry) || !validator.IsValidBirthEntry(entry, birthDate.Year, birthDate.Month, birthDate.Day, node))
                 continue;
 
-
-            bool isDateValid = includeAll
-                ? dateParser. IsOnOrAfterDate(entry, birthDate)
-                : dateParser.MatchesRequestedDate(entry, birthDate);
-
+            bool isDateValid = includeAll ? dateParser.IsOnOrAfterDate(entry, birthDate) : dateParser.MatchesRequestedDate(entry, birthDate);
             if (!isDateValid) continue;
 
             var personLink = linkResolver.FindPersonLink(node, entry);
             if (personLink == null) continue;
 
             var person = personFactory.BuildPerson(entry, birthDate, personLink);
-
-            person.SourceSlug = string.IsNullOrEmpty(suffix)
-                ? $"{birthDate.Year}"
-                : $"{birthDate.Year}_{suffix}";
-
+            person.SourceSlug = string.IsNullOrEmpty(suffix) ? $"{birthDate.Year}" : $"{birthDate.Year}_{suffix}";
             results.Add(personFactory.Finalize(person));
         }
 
