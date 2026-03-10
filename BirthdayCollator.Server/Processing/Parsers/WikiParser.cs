@@ -25,6 +25,8 @@ public sealed class WikiParser(
 
         List<Person> results = [];
 
+        string sourceSlug = string.IsNullOrEmpty(suffix) ? $"{birthDate.Year}" : $"{birthDate.Year}_{suffix}";
+
         foreach (var node in nodes)
         {
             string entry = node.InnerText;
@@ -33,16 +35,16 @@ public sealed class WikiParser(
                 continue;
 
             bool isDateValid = includeAll ? dateParser.IsOnOrAfterDate(entry, birthDate) : dateParser.MatchesRequestedDate(entry, birthDate);
+
             if (!isDateValid) continue;
 
             var personLink = linkResolver.FindPersonLink(node, entry);
+
             if (personLink == null) continue;
 
-            var person = personFactory.BuildPerson(entry, birthDate, personLink);
-            person.SourceSlug = string.IsNullOrEmpty(suffix) ? $"{birthDate.Year}" : $"{birthDate.Year}_{suffix}";
-            results.Add(personFactory.Finalize(person));
+            var person = personFactory.BuildFromWikiRow(rawText: entry, birthDate: birthDate, personLink: personLink, sourceSlug: sourceSlug);
+            results.Add(person);
         }
-
         return results;
     }
 }

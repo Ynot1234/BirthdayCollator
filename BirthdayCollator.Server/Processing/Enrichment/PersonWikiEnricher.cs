@@ -39,17 +39,10 @@ public sealed class PersonWikiEnricher(IHttpClientFactory httpFactory)
     {
         string query = $"{name}{WikiTextUtility.GetFirstTwoWords(description)}".Trim();
         string api = $"{Urls.Domain}{Urls.APISearchStub}{Uri.EscapeDataString(query)}&format=json";
-
-        try
-        {
-            var response = await _http.GetFromJsonAsync<WikiSearchResponse>(api, ct);
-            var first = response?.Query?.Search?.FirstOrDefault();
-
-            if (first is null) return (null, null);
-
-            return (first.Title, $"{Urls.ArticleBase}/{first.Title.Replace(' ', '_')}");
-        }
-        catch { return (null, null); }
+        var response = await _http.GetFromJsonAsync<WikiSearchResponse>(api, ct);
+        var first = response?.Query?.Search?.FirstOrDefault();
+        if (first is null) return (null, null);
+        return (first.Title, $"{Urls.ArticleBase}/{first.Title.Replace(' ', '_')}");
     }
 
     private record WikiSearchResponse(WikiQuery Query);

@@ -1,5 +1,6 @@
 ﻿using BirthdayCollator.Server.Processing.Builders;
 using BirthdayCollator.Server.Processing.Dates;
+using BirthdayCollator.Server.Processing.Enrichment;
 using BirthdayCollator.Server.Processing.Entries;
 using BirthdayCollator.Server.Processing.Html;
 using BirthdayCollator.Server.Processing.Links;
@@ -40,6 +41,16 @@ public static class PipelineExtensions
         services.AddScoped<PersonFactory>();
         services.AddSingleton<IYearRangeProvider, YearRangeProvider>();  //make stateless at some point
         services.AddSingleton<Func<string, string>>(sp => WikiUrlBuilder.NormalizeWikiHref);
+        services.AddScoped<GenariansBirthSource>();
+        services.AddScoped<OnThisDaySource>();
+        services.AddScoped<YearBirthSource>();
+        services.AddScoped<DateBirthSource>();
+      //  services.AddScoped<CategoryBirthSource>();
+        services.AddScoped<IBirthSource>(sp => new LeapYearSourceDecorator(sp.GetRequiredService<YearBirthSource>()));
+        services.AddScoped<IBirthSource>(sp => new LeapYearSourceDecorator(sp.GetRequiredService<DateBirthSource>()));
+        //services.AddScoped<IBirthSource>(sp => new LeapYearSourceDecorator(sp.GetRequiredService<CategoryBirthSource>()));
+        services.AddScoped<IBirthSource>(sp => new LeapYearSourceDecorator(sp.GetRequiredService<GenariansBirthSource>()));
+        services.AddScoped<IBirthSource>(sp => new LeapYearSourceDecorator(sp.GetRequiredService<OnThisDaySource>()));
         return services;
     }
 }

@@ -6,10 +6,7 @@ using HtmlAgilityPack;
 
 namespace BirthdayCollator.Server.Resources;
 
-public sealed class GenarianPageLoader(
-    IHttpClientFactory httpFactory,
-    GenariansPageParser parser,
-    PersonFactory personFactory)
+public sealed class GenarianPageLoader(IHttpClientFactory httpFactory, GenariansPageParser parser, PersonFactory personFactory)
 {
     private readonly HttpClient _http = httpFactory.CreateClient("WikiClient");
 
@@ -18,11 +15,9 @@ public sealed class GenarianPageLoader(
         string resource = year;
         string url = $"{Urls.GenarianBase}/{resource}.html";
         string html = await _http.GetStringAsync(url, ct);
-
         HtmlDocument doc = new();
         doc.LoadHtml(html);
         var rows = doc.DocumentNode.SelectNodes("//tr[count(th) >= 3 and th[3]//span[2]]");
-
         if (rows is null) return [];
 
         return

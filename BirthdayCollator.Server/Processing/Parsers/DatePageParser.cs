@@ -9,7 +9,10 @@ using BirthdayCollator.Server.Processing.Links;
 
 namespace BirthdayCollator.Server.Processing.Parsers;
 
-public sealed partial class DatePageParser(BirthEntryValidator validator, PersonFactory personFactory, ILinkResolver linkResolver) :IDatePageParser
+public sealed partial class DatePageParser(
+    BirthEntryValidator validator,
+    PersonFactory personFactory,
+    ILinkResolver linkResolver) : IDatePageParser
 {
     public List<Person> Parse(string html, int month, int day)
     {
@@ -32,20 +35,19 @@ public sealed partial class DatePageParser(BirthEntryValidator validator, Person
             if (!validator.IsValidBirthEntry(entry, birthYear, month, day, li))
                 continue;
 
-
             var link = linkResolver.FindPersonLink(li, entry);
             if (link == null) continue;
 
-            var birthDate = new DateTime(birthYear, month, day);
-            var person = personFactory.BuildPerson(entry, birthDate, link);
+            var person = personFactory.BuildFromWikiRow(
+                rawText: entry,
+                birthDate: new DateTime(birthYear, month, day),
+                personLink: link,
+                sourceSlug: sourceSlug
+            );
 
-            person.SourceSlug = sourceSlug;
-            person.SourceUrl = $"{Urls.ArticleBase}/{sourceSlug}#Births";
-
-            results.Add(personFactory.Finalize(person));
+            results.Add(person);
         }
 
         return results;
     }
-
 }

@@ -1,8 +1,6 @@
-﻿using BirthdayCollator.Server.Helpers;
-using BirthdayCollator.Server.Models;
+﻿using BirthdayCollator.Server.Models;
 using BirthdayCollator.Server.Processing.Builders;
 using System.Collections.Concurrent;
-using System.Globalization;
 
 namespace BirthdayCollator.Server.Resources;
 
@@ -10,22 +8,29 @@ public sealed class Genarians(
     GenarianPageLoader loader,
     IYearRangeProvider yearRangeProvider)
 {
+    //public async Task<List<Person>> ScrapeAllAsync(string monthName, int day, CancellationToken ct)
+    //{
+    //    var years = yearRangeProvider.GetGenarianYears();
+
+    //    var people = await ScrapeYearSetAsync(years, monthName, day, ct);
+
+    //    int month = DateTime.ParseExact(monthName, "MMMM", CultureInfo.InvariantCulture).Month;
+
+    //    if (LeapYear.IsNonLeapFeb28(month, day))
+    //    {
+    //        var leapYears = years.Where(y => int.TryParse(y, out int yr) && DateTime.IsLeapYear(yr));
+    //        var leapPeople = await ScrapeYearSetAsync(leapYears, monthName, day + 1, ct);
+    //        people.AddRange(leapPeople);
+    //    }
+
+    //    return people;
+    //}
+
     public async Task<List<Person>> ScrapeAllAsync(string monthName, int day, CancellationToken ct)
     {
         var years = yearRangeProvider.GetGenarianYears();
-
-        var people = await ScrapeYearSetAsync(years, monthName, day, ct);
-
-        int month = DateTime.ParseExact(monthName, "MMMM", CultureInfo.InvariantCulture).Month;
-
-        if (LeapYear.IsNonLeapFeb28(month, day))
-        {
-            var leapYears = years.Where(y => int.TryParse(y, out int yr) && DateTime.IsLeapYear(yr));
-            var leapPeople = await ScrapeYearSetAsync(leapYears, monthName, day + 1, ct);
-            people.AddRange(leapPeople);
-        }
-
-        return people;
+        if (day == 29) years = [.. years.Where(y => int.TryParse(y, out int yr) && DateTime.IsLeapYear(yr))];
+        return await ScrapeYearSetAsync(years, monthName, day, ct);
     }
 
     private async Task<List<Person>> ScrapeYearSetAsync(IEnumerable<string> years, string month, int day, CancellationToken ct)
