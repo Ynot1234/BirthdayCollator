@@ -5,7 +5,6 @@ namespace BirthdayCollator.Helpers;
 public partial class RegexPatterns
 {
     // --- 1. Wikipedia & HTML Structure ---
-    // Grabs the specific block between Births and Deaths headers
     [GeneratedRegex(@"(?s)Births\s*(.*?)\s*Deaths")]
     public static partial Regex BirthsSectionRegex();
 
@@ -19,7 +18,6 @@ public partial class RegexPatterns
     public static partial Regex CurlyBlockRegex();
 
     // --- 2. Identity & Link Extraction ---
-    // Specifically finds the slug and the display name in a Wiki <a> tag
     [GeneratedRegex(@"href=""/wiki/([^""]+)""[^>]*>([^<]+)</a>")]
     public static partial Regex WikiLinkRegex();
 
@@ -43,7 +41,6 @@ public partial class RegexPatterns
     public static partial Regex MonthDayLooseRegex();
 
     // --- 4. Filtering & Exclusion ---
-    // Crucial for your "Living People" logic - finds (died 1990) or (d. 2005)
     [GeneratedRegex(@"\(\s*(died|d\.|†)\s+\d{4}\s*\)", RegexOptions.IgnoreCase)]
     public static partial Regex ExcludeDiedRegex();
 
@@ -57,7 +54,6 @@ public partial class RegexPatterns
     [GeneratedRegex(@"\s+")]
     public static partial Regex WhitespaceCollapseRegex();
 
-    // Extracts the actual content from a JSON response like {"text": {"*": "content"}}
     [GeneratedRegex(@"""text"":\s*\{\s*""\*"":\s*""(.*?)""\s*\}", RegexOptions.Singleline)]
     public static partial Regex ExtractTextStarRegex();
 }

@@ -20,13 +20,8 @@ public static class StringNormalization
     public static (string name, string? description) SplitNameAndDescription(string text)
     {
         int commaIndex = text.IndexOf(',');
-        if (commaIndex < 0)
-            return (text.Trim(), null);
-
-        return (
-            text[..commaIndex].Trim(),
-            text[(commaIndex + 1)..].Trim()
-        );
+        if (commaIndex < 0) return (text.Trim(), null);
+        return ( text[..commaIndex].Trim(), text[(commaIndex + 1)..].Trim());
     }
 
     public static string ToComparableSlug(string s)
@@ -55,6 +50,4 @@ public static class StringNormalization
             .Replace("jr.", "jr")
             .Replace(",", "");
     }
-
-
 }

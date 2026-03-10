@@ -31,31 +31,34 @@ public class BirthdaysController(
     public ActionResult<IReadOnlyList<string>> GetYears() => Ok(years.GetDefaultYears());
 
     [HttpGet("current")]
-    public Task<List<Person>> GetCurrent(CancellationToken ct) =>
-        Get(DateTime.Today.Month, DateTime.Today.Day, false, ct);
+    public Task<List<Person>> GetCurrent(CancellationToken ct) => Get(DateTime.Today.Month, DateTime.Today.Day, false, ct);
 
     [HttpGet("override")]
-    public IActionResult GetOverride() =>
-        Ok(new { overrideYear = years.CurrentOverrideYear, includeAll = years.IncludeAll });
+    public IActionResult GetOverride() =>  Ok(new { overrideYear = years.CurrentOverrideYear, includeAll = years.IncludeAll });
 
     [HttpPost("override")]
     public IActionResult SetOverride([FromBody] OverrideRequest req)
     {
-        if (string.IsNullOrWhiteSpace(req.Year))
+        var result = req.Year switch
+        {
+            var y when string.IsNullOrWhiteSpace(y) => ClearAndReset(),
+            var y when int.TryParse(y, out var parsed) => ApplyOverride(parsed, req.IncludeAll), _ => null
+        };
+
+        return result ?? BadRequest("Invalid year format.");
+
+        IActionResult ClearAndReset()
         {
             years.ClearYear();
             years.SetIncludeAll(false);
-        }
-        else if (int.TryParse(req.Year, out var parsed))
-        {
-            years.ForceYear(parsed);
-            years.SetIncludeAll(req.IncludeAll);
-        }
-        else
-        {
-            return BadRequest("Invalid year format.");
+            return GetOverride(); 
         }
 
-        return Ok(new { overrideYear = years.CurrentOverrideYear, includeAll = years.IncludeAll });
+        IActionResult ApplyOverride(int y, bool all)
+        {
+            years.ForceYear(y);
+            years.SetIncludeAll(all);
+            return GetOverride();
+        }
     }
 }

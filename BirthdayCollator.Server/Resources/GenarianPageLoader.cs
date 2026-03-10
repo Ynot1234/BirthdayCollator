@@ -17,13 +17,12 @@ public sealed class GenarianPageLoader(
     {
         string resource = year;
         string url = $"{Urls.GenarianBase}/{resource}.html";
-
         string html = await _http.GetStringAsync(url, ct);
 
         HtmlDocument doc = new();
         doc.LoadHtml(html);
+        var rows = doc.DocumentNode.SelectNodes("//tr[count(th) >= 3 and th[3]//span[2]]");
 
-        var rows = doc.DocumentNode.SelectNodes("//tr[th]");
         if (rows is null) return [];
 
         return

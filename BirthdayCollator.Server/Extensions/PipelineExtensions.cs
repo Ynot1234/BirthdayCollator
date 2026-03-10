@@ -17,31 +17,20 @@ public static class PipelineExtensions
 {
     public static IServiceCollection AddBirthdayPipelines(this IServiceCollection services)
     {
-        // Sources
         services.AddScoped<IBirthSource, YearBirthSource>();
         services.AddScoped<IBirthSource, DateBirthSource>();
         services.AddScoped<IBirthSource, CategoryBirthSource>();
         services.AddScoped<IBirthSource, GenariansBirthSource>();
         services.AddScoped<IBirthSource, OnThisDaySource>();
-
-        // Fetching
         services.AddScoped<BirthdayFetcher>();
         services.AddScoped<Genarians>();
         services.AddScoped<GenariansPageParser>();
         services.AddScoped<GenarianPageLoader>();
-
-
-        // Pipelines
         services.AddScoped<BirthSourceEngine>();
         services.AddScoped<IFetchPipeline, FetchPipeline>();
         services.AddScoped<IPersonPipeline, PersonPipeline>();
-
-        // Parser 
         services.AddScoped<IWikiParser, WikiParser>();
         services.AddScoped<IDatePageParser, DatePageParser>();
-
-        // Stateless helpers
-
         services.AddSingleton<IEntrySplitter, EntrySplitter>();
         services.AddSingleton<ILinkResolver, LinkResolver>();
         services.AddSingleton<IPersonNameResolver, PersonNameResolver>();
@@ -49,14 +38,8 @@ public static class PipelineExtensions
         services.AddSingleton<IBirthDateParser, BirthDateParser>();
         services.AddScoped<BirthEntryValidator>();
         services.AddScoped<PersonFactory>();
-
-      
-
         services.AddSingleton<IYearRangeProvider, YearRangeProvider>();  //make stateless at some point
-
         services.AddSingleton<Func<string, string>>(sp => WikiUrlBuilder.NormalizeWikiHref);
-
         return services;
     }
-
 }
