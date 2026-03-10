@@ -5,8 +5,9 @@ using BirthdayCollator.Server.Models;
 using BirthdayCollator.Server.Processing.Builders;
 using BirthdayCollator.Server.Processing.Fetching;
 using BirthdayCollator.Server.Processing.Pipelines;
-using BirthdayCollator.Server.Processing.Sources;
 using static BirthdayCollator.Server.Processing.Pipelines.BirthSourceEngine;
+
+namespace BirthdayCollator.Server.Processing.Sources;
 
 public sealed class CategoryBirthSource(
     BirthSourceEngine engine,
@@ -25,13 +26,14 @@ public sealed class CategoryBirthSource(
     {
         string[] suffixes = _debugSuffixes ?? config.GetSection("CategorySuffixes").Get<string[]>() ?? [];
         bool includeAll = yearRangeProvider.IncludeAll;
+
         var people = await RunPipeline(yearRangeProvider.GetYears(), actualDate, suffixes, includeAll, token);
 
         if (LeapYear.IsNonLeapFeb28(actualDate.Month, actualDate.Day))
         {
             var leapDay = new DateTime(actualDate.Year, 2, 29);
-            var feb29 = await RunPipeline(yearRangeProvider.GetLeapYears(), leapDay, suffixes, includeAll, token);
-            people.AddRange(feb29);
+            var feb29Results = await RunPipeline(yearRangeProvider.GetLeapYears(), leapDay, suffixes, includeAll, token);
+            people.AddRange(feb29Results);
         }
 
         return people;
@@ -39,20 +41,22 @@ public sealed class CategoryBirthSource(
 
     private Task<List<Person>> RunPipeline(IEnumerable<string> years, DateTime date, string[] suffixes, bool includeAll, CancellationToken token)
     {
-        return engine.RunAsync(new PipelineOptions(
+        var options = new PipelineOptions(
             Years: [.. years],
             Suffixes: suffixes,
             SlugBuilder: (year, suffix) => $"{year}_{suffix}",
             XPath: XPathSelectors.CategoryBirthsHeader,
             UseThrottle: true,
             LogError: (slug, ex) => {
-                logger.LogError(ex, "Failed to fetch or parse slug '{Slug}'", slug);
+                logger.LogError(ex, "Failed to fetch/parse Category slug '{Slug}'", slug);
                 return Task.CompletedTask;
             },
             Fetcher: fetcher,
             ActualDate: date,
             IncludeAll: includeAll
-        ), token);
+        );
+
+        return engine.RunAsync(options, token);
     }
 
     public bool IsRelevant(BirthSourceOptions opt, IYearRangeProvider years, DateTime date) => opt.EnableCategoryParser;

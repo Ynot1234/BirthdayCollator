@@ -5,57 +5,73 @@ using System.Globalization;
 using BirthdayCollator.Server.Helpers;
 
 namespace BirthdayCollator.Server.Processing.Parsers;
+
 public sealed class OnThisDayParser
 {
-    public List<Person> Parse(string html, int month, int day)
+    public List<Person> Parse(string html, int month, int day, bool includeAll = false)
     {
+        if (string.IsNullOrWhiteSpace(html))
+            return [];
+
         var doc = new HtmlDocument();
         doc.LoadHtml(html);
 
-        var nodes = doc.DocumentNode.SelectNodes("//li[@class='person']");
-        if (nodes == null) return [];
+        var nodes = doc.DocumentNode.SelectNodes("//li[contains(@class, 'person')]");
+        if (nodes is null)
+            return [];
 
-        return [.. nodes
-            .Select(node => TryParsePerson(node, month, day, out var p) ? p : null)
-            .Where(p => p != null)
-            .Cast<Person>()];
+        var results = new List<Person>(nodes.Count);
+
+        foreach (var node in nodes)
+        {
+            var person = TryParsePerson(node, month, day);
+            if (person is not null)
+                results.Add(person);
+        }
+
+        return results;
     }
 
-    private static bool TryParsePerson(HtmlNode li, int m, int d, out Person? person)
+    private static Person? TryParsePerson(HtmlNode li, int month, int day)
     {
-        person = null;
         string raw = HtmlEntity.DeEntitize(li.InnerText).Trim();
 
-        if (raw.Contains("(d.") || !TryExtractYear(li, out int year)) return false;
+        if (raw.Contains("(d.") || !TryExtractYear(li, out int year))
+            return null;
 
-        string trimmed = raw.StartsWith(year.ToString()) ? raw[year.ToString().Length..].Trim() : raw;
+        string yearStr = year.ToString();
+        string trimmed = raw.StartsWith(yearStr)
+            ? raw[yearStr.Length..].Trim()
+            : raw;
+
         var (name, desc) = StringNormalization.SplitNameAndDescription(trimmed);
 
-        if (string.IsNullOrWhiteSpace(name) || string.IsNullOrWhiteSpace(desc)) return false;
+        if (string.IsNullOrWhiteSpace(name))
+            return null;
 
-        person = new Person
+        return new Person
         {
             Name = name,
-            Description = desc,
+            Description = string.IsNullOrWhiteSpace(desc) ? "Notable Person" : desc,
             BirthYear = year,
-            Month = m,
-            Day = d,
-            Url = string.Empty,
+            Month = month,
+            Day = day,
+            Url = string.Empty,//WikiEnricher fills this later
             SourceSlug = "OnThisDay",
             DisplaySlug = "OnThisDay",
             Section = "Births",
-            SourceUrl = $"{Urls.OnThisDayBase}/{CultureInfo.InvariantCulture.DateTimeFormat.GetMonthName(m).ToLower()}/{d}"
+            SourceUrl = $"{Urls.OnThisDayBase}/{CultureInfo.InvariantCulture.DateTimeFormat.GetMonthName(month).ToLower()}/{day}"
         };
-
-        return true;
     }
 
     private static bool TryExtractYear(HtmlNode li, out int year)
     {
-        string? yearText = li.SelectSingleNode(".//a[@class='birthDate']")?.InnerText
-                        ?? li.SelectSingleNode(".//b")?.InnerText;
+        string? yearText =
+            li.SelectSingleNode(".//a[contains(@class, 'birthDate')]")?.InnerText
+            ?? li.SelectSingleNode(".//b")?.InnerText;
 
-        return int.TryParse(yearText?.Trim(), out year);
+        string cleanYear = new(yearText?.Where(char.IsDigit).ToArray());
+
+        return int.TryParse(cleanYear, out year);
     }
-
 }

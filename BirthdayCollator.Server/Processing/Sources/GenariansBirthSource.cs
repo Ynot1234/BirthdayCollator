@@ -1,7 +1,6 @@
 ﻿using BirthdayCollator.Server.Configuration;
 using BirthdayCollator.Server.Models;
 using BirthdayCollator.Server.Processing.Builders;
-using BirthdayCollator.Server.Resources;
 using System.Globalization;
 
 namespace BirthdayCollator.Server.Processing.Sources
@@ -26,6 +25,5 @@ namespace BirthdayCollator.Server.Processing.Sources
             int cutoff = date.Year - 90;
             return years.GetYears().Any(y => int.TryParse(y, out int yr) && yr <= cutoff);
         }
-
     }
 }

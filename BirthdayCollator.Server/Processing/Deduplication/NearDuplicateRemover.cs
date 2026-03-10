@@ -8,7 +8,7 @@ public class NearDuplicateRemover
     public List<Person> RemoveNearDuplicates(List<Person> people)
     {
         List<Person> result = [.. people
-                                 .GroupBy(p => UrlNormalization.NormalizeWikiUrl(p.Url))
+                                 .GroupBy(p => StringNormalization.NormalizeWikiUrl(p.Url))
                                  .Select(g => g
                                .OrderBy(p =>
                                     p.Url?.Contains("wikipedia.org", StringComparison.OrdinalIgnoreCase) == true ? 0 :

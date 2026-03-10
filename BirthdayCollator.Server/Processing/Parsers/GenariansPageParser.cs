@@ -1,4 +1,5 @@
 ﻿using BirthdayCollator.Server.Models;
+using BirthdayCollator.Server.Processing.Builders;
 using BirthdayCollator.Server.Processing.Html;
 using BirthdayCollator.Server.Processing.Links;
 using HtmlAgilityPack;
@@ -6,7 +7,7 @@ using System.Globalization;
 
 namespace BirthdayCollator.Server.Processing.Parsers;
 
-public sealed class GenariansPageParser(ILinkResolver linkResolver) // Injected
+public sealed class GenariansPageParser(ILinkResolver linkResolver, IYearRangeProvider year) 
 {
     public bool TryParseRow(HtmlNode row, string month, int day, string url, out Person? p)
     {
@@ -24,8 +25,22 @@ public sealed class GenariansPageParser(ILinkResolver linkResolver) // Injected
         if (lines.Count < 2 || !DateTime.TryParseExact(lines.Last(), "MM/dd/yyyy", CultureInfo.InvariantCulture, default, out var bDay))
             return false;
 
-        if (bDay.Day != day || !bDay.ToString("MMMM", CultureInfo.InvariantCulture).Equals(month, StringComparison.OrdinalIgnoreCase))
-            return false;
+        var today = DateTime.Today;
+
+        if (!year.IncludeAll)
+        {
+            if (bDay.Day != day ||
+                !bDay.ToString("MMMM", CultureInfo.InvariantCulture)
+                    .Equals(month, StringComparison.OrdinalIgnoreCase))
+                return false;
+        }
+        else
+        {
+            if (bDay.Month < today.Month ||
+               (bDay.Month == today.Month && bDay.Day < today.Day))
+                return false;
+        }
+
 
         p = new Person
         {

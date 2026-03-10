@@ -1,8 +1,11 @@
-﻿namespace BirthdayCollator.Server.Helpers;
+﻿using BirthdayCollator.Helpers;
+using System.Globalization;
+using System.Text;
+
+namespace BirthdayCollator.Server.Helpers;
 
 public static class StringNormalization
 {
-
     public static string CleanName(string name)
     {
         return name.Trim().TrimEnd(',');
@@ -24,6 +27,33 @@ public static class StringNormalization
             text[..commaIndex].Trim(),
             text[(commaIndex + 1)..].Trim()
         );
+    }
+
+    public static string ToComparableSlug(string s)
+    {
+        if (string.IsNullOrWhiteSpace(s)) return string.Empty;
+
+        s = s.ToLowerInvariant().Replace("_", " ");
+        s = s.Normalize(NormalizationForm.FormD);
+
+        var chars = s.Where(c =>
+            CharUnicodeInfo.GetUnicodeCategory(c) != UnicodeCategory.NonSpacingMark &&
+            !char.IsPunctuation(c) &&
+            !char.IsSymbol(c)
+        );
+
+        string result = new([.. chars]);
+        return RegexPatterns.WhitespaceCollapseRegex().Replace(result, " ").Trim();
+    }
+
+    public static string NormalizeWikiUrl(string url)
+    {
+        if (string.IsNullOrWhiteSpace(url)) return string.Empty;
+
+        return url.Trim().ToLowerInvariant()
+            .Replace("_,jr.", "_jr.")
+            .Replace("jr.", "jr")
+            .Replace(",", "");
     }
 
 

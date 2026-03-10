@@ -11,6 +11,16 @@ public sealed class BirthDateParser : IBirthDateParser
         return match.Success ? (match.Groups[1].Value, match.Groups[2].Value) : null;
     }
 
+    public bool IsOnOrAfterDate(string entry, DateTime targetDate)
+    {
+        if (!TryParseMonthDay(entry, targetDate.Year, out var parsed))
+            return false;
+
+        if (parsed.Month > targetDate.Month) return true;
+
+        return parsed.Month == targetDate.Month && parsed.Day >= targetDate.Day;
+    }
+
     public bool TryParseMonthDay(string text, int year, out DateTime result)
     {
         result = default;

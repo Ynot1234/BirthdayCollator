@@ -15,7 +15,9 @@ public sealed class GenarianPageLoader(
 
     public async Task<List<Person>> LoadPageAsync(string year, string month, int day, CancellationToken ct)
     {
-        string url = $"{Urls.GenarianBase}/{year}.html";
+        string resource = year;
+        string url = $"{Urls.GenarianBase}/{resource}.html";
+
         string html = await _http.GetStringAsync(url, ct);
 
         HtmlDocument doc = new();
@@ -24,10 +26,14 @@ public sealed class GenarianPageLoader(
         var rows = doc.DocumentNode.SelectNodes("//tr[th]");
         if (rows is null) return [];
 
-        return [.. rows
-            .Select(row => parser.TryParseRow(row, month, day, url, out var p)
-                ? personFactory.Finalize(p!)
-                : null)
-            .OfType<Person>()];
+        return
+        [
+            .. rows
+                .Select(row =>
+                    parser.TryParseRow(row, month, day, url,out var p)
+                        ? personFactory.Finalize(p!)
+                        : null)
+                .OfType<Person>()
+        ];
     }
 }

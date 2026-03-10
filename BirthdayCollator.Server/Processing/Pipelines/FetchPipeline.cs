@@ -22,14 +22,11 @@ public sealed class FetchPipeline(
         var tasks = sources
             .Where(s => s.IsRelevant(opt, years, date))
             .Select(async s => {
-                try
-                {
+              
                     if (s is CategoryBirthSource cat && _debugSuffixes != null)
                         cat.ForceSuffixes(_debugSuffixes);
 
                     return await s.GetPeopleAsync(date, token);
-                }
-                catch { return []; }
             });
 
         var results = await Task.WhenAll(tasks);

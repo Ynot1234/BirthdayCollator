@@ -14,8 +14,8 @@ public sealed class WikiParser(
     IEntrySplitter entrySplitter,
     ILinkResolver linkResolver,
     IBirthDateParser dateParser,
-    BirthEntryValidator validator,    
-    PersonFactory personFactory       
+    BirthEntryValidator validator,
+    PersonFactory personFactory
 ) : IWikiParser
 {
     public List<Person> Parse(string html, DateTime birthDate, string? suffix, string xpath, bool includeAll)
@@ -29,12 +29,16 @@ public sealed class WikiParser(
         {
             string entry = node.InnerText;
 
-            if (!includeAll && (entrySplitter.IsDeathEntry(entry) ||
-                !validator.IsValidBirthEntry(entry, birthDate.Year, node)))
+            if (entrySplitter.IsDeathEntry(entry) ||
+               !validator.IsValidBirthEntry(entry, birthDate.Year, birthDate.Month, birthDate.Day, node))
                 continue;
 
-            if (!dateParser.MatchesRequestedDate(entry, birthDate))
-                continue;
+
+            bool isDateValid = includeAll
+                ? dateParser. IsOnOrAfterDate(entry, birthDate)
+                : dateParser.MatchesRequestedDate(entry, birthDate);
+
+            if (!isDateValid) continue;
 
             var personLink = linkResolver.FindPersonLink(node, entry);
             if (personLink == null) continue;

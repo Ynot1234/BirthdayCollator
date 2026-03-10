@@ -61,7 +61,7 @@ public static partial class WikiTextUtility
 
     private static List<string> GetCleanTokens(string s)
     {
-        var slug = UrlNormalization.ToComparableSlug(s);
+        var slug = StringNormalization.ToComparableSlug(s);
         var tokens = Tokenize(slug);
 
         return [.. tokens

@@ -4,9 +4,7 @@ using BirthdayCollator.Server.Processing.Fetching;
 
 namespace BirthdayCollator.Server.Processing.Pipelines;
 
-public sealed class BirthSourceEngine(IWikiParser parser) 
-{
-    public record PipelineOptions(
+public record PipelineOptions(
     IReadOnlyList<string> Years,
     IReadOnlyList<string> Suffixes,
     Func<string, string, string> SlugBuilder,
@@ -18,45 +16,51 @@ public sealed class BirthSourceEngine(IWikiParser parser)
     bool IncludeAll
 );
 
-
-    public async Task<List<Person>> RunAsync(
-        PipelineOptions options, 
-        CancellationToken token)
+public sealed class BirthSourceEngine(IWikiParser parser)
+{
+    public async Task<List<Person>> RunAsync(PipelineOptions options, CancellationToken token)
     {
         var tasks = options.Years.SelectMany(year =>
-            options.Suffixes.Select(suffix => {
-                var date = new DateTime(int.Parse(year), options.ActualDate.Month, options.ActualDate.Day);
-                return ProcessAsync(options, year, suffix, date, token);
-            })
+            options.Suffixes.Select(suffix =>
+                ProcessYearSuffixAsync(options, year, suffix, token)
+            )
         );
 
         var results = await Task.WhenAll(tasks);
         return [.. results.SelectMany(x => x)];
     }
 
-    private async Task<List<Person>> ProcessAsync(
-        PipelineOptions opt, string year, string suffix, DateTime date, CancellationToken ct)
+    private async Task<List<Person>> ProcessYearSuffixAsync(
+        PipelineOptions opt, string year, string suffix, CancellationToken ct)
     {
-        async Task<List<Person>> Execute()
+        async Task<List<Person>> ExecuteFetchAndParse()
         {
             ct.ThrowIfCancellationRequested();
-            var slug = opt.SlugBuilder(year, suffix);
-            var html = await opt.Fetcher.FetchHtmlAsync(slug, ct);
-            return parser.Parse(html, date, suffix, opt.XPath, opt.IncludeAll);
+
+            string slug = opt.SlugBuilder(year, suffix);
+            string html = await opt.Fetcher.FetchHtmlAsync(slug, ct);
+          
+            var contextualDate = new DateTime(
+                int.Parse(year),
+                opt.ActualDate.Month,
+                opt.ActualDate.Day
+            );
+
+            return parser.Parse(html, contextualDate, suffix, opt.XPath, opt.IncludeAll);
         }
 
         try
         {
             return opt.UseThrottle
-                ? await Throttle.Category.RunAsync(Execute)
-                : await Execute();
+                ? await Throttle.Category.RunAsync(ExecuteFetchAndParse)
+                : await ExecuteFetchAndParse();
         }
         catch (Exception ex) when (ex is not OperationCanceledException)
         {
             if (opt.LogError is not null)
                 await opt.LogError($"{year} {suffix}".Trim(), ex);
+
             return [];
         }
     }
-
 }

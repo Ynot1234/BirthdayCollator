@@ -26,18 +26,16 @@ public sealed partial class DatePageParser(BirthEntryValidator validator, Person
         {
             string entry = WikiTextUtility.Normalize(li.InnerText);
 
-            // 1. Validate Year and Entry
             if (!entry.Contains('–') || !WikiTextUtility.TryExtractBirthYear(entry, out int birthYear))
                 continue;
 
-            if (!validator.IsValidBirthEntry(entry, birthYear, li))
+            if (!validator.IsValidBirthEntry(entry, birthYear, month, day, li))
                 continue;
 
-            // 2. Resolve Link (using the new smart signature)
+
             var link = linkResolver.FindPersonLink(li, entry);
             if (link == null) continue;
 
-            // 3. Build and Finalize Person
             var birthDate = new DateTime(birthYear, month, day);
             var person = personFactory.BuildPerson(entry, birthDate, link);
 

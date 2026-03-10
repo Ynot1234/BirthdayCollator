@@ -19,7 +19,6 @@ public static class BirthdayServicesExtensions
         services.AddScoped<PersonSorter>();
         services.AddScoped<NearDuplicateRemover>();
         services.AddScoped<DeduplicateByURL>();
-        services.AddScoped<PersonDedupe>();
         services.AddScoped<PersonAIEnricher>();
         services.AddScoped<PersonWikiEnricher>();
         services.AddScoped<PersonFactory>();
