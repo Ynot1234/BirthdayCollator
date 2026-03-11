@@ -13,23 +13,7 @@ public static partial class WikiTextUtility
         return text.Trim().TrimEnd(',');
     }
 
-    public static string GetFirstTwoWords(string text)
-    {
-        if (string.IsNullOrWhiteSpace(text)) return string.Empty;
-        string[] words = text.Split(' ', StringSplitOptions.RemoveEmptyEntries);
-        return string.Join(" ", words.Take(2));
-    }
-
-    public static List<string> Tokenize(string s)
-    {
-        return [.. s
-            .Split([' ', ',', '.', '/', '-', '(', ')', '[', ']', '\'', ':', ';'], StringSplitOptions.RemoveEmptyEntries)
-            .Select(t => t.Trim())
-            .Where(t => t.Length > 0)
-        ];
-    }
-
-    public static bool FuzzyNameMatch(string a, string b)
+   public static bool FuzzyNameMatch(string a, string b)
     {
         var aTokens = GetCleanTokens(a);
         var bTokens = GetCleanTokens(b);
@@ -42,7 +26,14 @@ public static partial class WikiTextUtility
     private static List<string> GetCleanTokens(string s)
     {
         var slug = StringNormalization.ToComparableSlug(s);
-        var tokens = Tokenize(slug);
+
+        List<string> tokens = [.. (slug
+                                .Split([' ', ',', '.', '/', '-', '(', ')', '[', ']', '\'', ':', ';'],
+                                        StringSplitOptions.RemoveEmptyEntries)
+                                .Select(t => t.Trim())
+                                .Where(t => t.Length > 0))
+                              ];
+
 
         return [.. tokens
             .Except(NameParsing.Stopwords, StringComparer.OrdinalIgnoreCase)

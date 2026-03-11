@@ -1,6 +1,5 @@
 ﻿using BirthdayCollator.Server.Constants;
 using BirthdayCollator.Server.Models;
-using BirthdayCollator.Server.Processing.Html;
 using BirthdayCollator.Server.Processing.Links;
 using BirthdayCollator.Server.Helpers;
 using static BirthdayCollator.Server.Constants.AppStrings;
@@ -37,11 +36,21 @@ public sealed class PersonWikiEnricher(IHttpClientFactory httpFactory)
 
     private async Task<(string? Title, string? Url)> ResolveWikiMatchAsync(string name, string description, CancellationToken ct)
     {
-        string query = $"{name}{WikiTextUtility.GetFirstTwoWords(description)}".Trim();
+        string descSnippet = string.Empty;
+        if (!string.IsNullOrWhiteSpace(description))
+        {
+            var words = description.Split(' ', StringSplitOptions.RemoveEmptyEntries);
+            descSnippet = string.Join(" ", words.Take(2));
+        }
+
+        string query = $"{name} {descSnippet}".Trim();
         string api = $"{Urls.Domain}{Urls.APISearchStub}{Uri.EscapeDataString(query)}&format=json";
+
         var response = await _http.GetFromJsonAsync<WikiSearchResponse>(api, ct);
         var first = response?.Query?.Search?.FirstOrDefault();
+
         if (first is null) return (null, null);
+
         return (first.Title, $"{Urls.ArticleBase}/{first.Title.Replace(' ', '_')}");
     }
 

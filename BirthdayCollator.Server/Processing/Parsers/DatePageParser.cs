@@ -9,10 +9,7 @@ using BirthdayCollator.Server.Processing.Links;
 
 namespace BirthdayCollator.Server.Processing.Parsers;
 
-public sealed partial class DatePageParser(
-    BirthEntryValidator validator,
-    PersonFactory personFactory,
-    ILinkResolver linkResolver) : IDatePageParser
+public sealed partial class DatePageParser( BirthEntryValidator validator, PersonFactory personFactory, ILinkResolver linkResolver) : IDatePageParser
 {
     public List<Person> Parse(string html, int month, int day)
     {
@@ -29,25 +26,31 @@ public sealed partial class DatePageParser(
         {
             string entry = WikiTextUtility.Normalize(li.InnerText);
 
-            if (!entry.Contains('–') || !WikiTextUtility.TryExtractBirthYear(entry, out int birthYear))
-                continue;
-
-            if (!validator.IsValidBirthEntry(entry, birthYear, month, day, li))
-                continue;
+            if (!entry.Contains('–') || !WikiTextUtility.TryExtractBirthYear(entry, out int birthYear)) continue;
+            if (!validator.IsValidBirthEntry(entry, birthYear, month, day, li)) continue;
 
             var link = linkResolver.FindPersonLink(li, entry);
             if (link == null) continue;
 
-            var person = personFactory.BuildFromWikiRow(
-                rawText: entry,
+            string name = !string.IsNullOrWhiteSpace(link.InnerText)
+                ? WikiTextUtility.Normalize(link.InnerText)
+                : WikiTextUtility.ExtractPersonName(entry);
+
+            string description = WikiTextUtility.SanitizeWikiText(entry);
+            string rawHref = link.GetAttributeValue("href", string.Empty);
+            string slug = rawHref.Split('/').Last().TrimStart('.');
+            string absoluteUrl = !string.IsNullOrEmpty(slug) ? $"{Urls.ArticleBase}/{slug}" : string.Empty;
+
+            results.Add(personFactory.CreatePerson(
+                name: name,
+                desc: description,
                 birthDate: new DateTime(birthYear, month, day),
-                personLink: link,
-                sourceSlug: sourceSlug
-            );
-
-            results.Add(person);
+                url: absoluteUrl,
+                sourceSlug: sourceSlug,
+                section: AppStrings.Sections.Births,
+                displaySlug: slug
+            ));
         }
-
         return results;
     }
 }

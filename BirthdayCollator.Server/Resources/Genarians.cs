@@ -4,45 +4,24 @@ using System.Collections.Concurrent;
 
 namespace BirthdayCollator.Server.Resources;
 
-public sealed class Genarians(
-    GenarianPageLoader loader,
-    IYearRangeProvider yearRangeProvider)
+public sealed class Genarians(GenarianPageLoader loader, IYearRangeProvider yearRangeProvider)
 {
-    //public async Task<List<Person>> ScrapeAllAsync(string monthName, int day, CancellationToken ct)
-    //{
-    //    var years = yearRangeProvider.GetGenarianYears();
-
-    //    var people = await ScrapeYearSetAsync(years, monthName, day, ct);
-
-    //    int month = DateTime.ParseExact(monthName, "MMMM", CultureInfo.InvariantCulture).Month;
-
-    //    if (LeapYear.IsNonLeapFeb28(month, day))
-    //    {
-    //        var leapYears = years.Where(y => int.TryParse(y, out int yr) && DateTime.IsLeapYear(yr));
-    //        var leapPeople = await ScrapeYearSetAsync(leapYears, monthName, day + 1, ct);
-    //        people.AddRange(leapPeople);
-    //    }
-
-    //    return people;
-    //}
-
     public async Task<List<Person>> ScrapeAllAsync(string monthName, int day, CancellationToken ct)
     {
         var years = yearRangeProvider.GetGenarianYears();
-        if (day == 29) years = [.. years.Where(y => int.TryParse(y, out int yr) && DateTime.IsLeapYear(yr))];
-        return await ScrapeYearSetAsync(years, monthName, day, ct);
-    }
+        if (day == 29)
+        {
+            years = [.. years.Where(y => int.TryParse(y, out int yr) && DateTime.IsLeapYear(yr))];
+        }
 
-    private async Task<List<Person>> ScrapeYearSetAsync(IEnumerable<string> years, string month, int day, CancellationToken ct)
-    {
-        var results = new ConcurrentBag<List<Person>>();
+        ConcurrentBag<List<Person>> results = [];
 
         await Parallel.ForEachAsync(
             years,
             new ParallelOptions { MaxDegreeOfParallelism = 4, CancellationToken = ct },
             async (year, token) =>
             {
-                var pageResults = await loader.LoadPageAsync(year, month, day, token);
+                var pageResults = await loader.LoadPageAsync(year, monthName, day, token);
                 results.Add(pageResults);
             });
 

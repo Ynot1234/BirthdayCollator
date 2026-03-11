@@ -7,11 +7,10 @@ using BirthdayCollator.Server.Processing.Parsers;
 using BirthdayCollator.Server.Processing.Pipelines;
 using BirthdayCollator.Server.Processing.Sorting;
 
-namespace BirthdayCollator.Server.Extensions;
-
+namespace BirthdayCollator.Server.Extensions;   
 public static class BirthdayServicesExtensions
 {
-    public static IServiceCollection AddBirthdayCore(this IServiceCollection services)
+    public static IServiceCollection AddBirthdayProcessing(this IServiceCollection services)
     {
         services.AddScoped<PersonDeduper>();
         services.AddScoped<PersonCleaner>();
@@ -23,7 +22,6 @@ public static class BirthdayServicesExtensions
         services.AddScoped<PersonWikiEnricher>();
         services.AddScoped<PersonFactory>();
         services.AddScoped<OnThisDayParser>();
-      
 
         services.AddScoped<WikiHtmlFetcher>(sp =>
         {

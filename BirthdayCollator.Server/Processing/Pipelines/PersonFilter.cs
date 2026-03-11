@@ -1,6 +1,5 @@
 ﻿using BirthdayCollator.Helpers;
 using BirthdayCollator.Server.Models;
-using BirthdayCollator.Server.Processing.Builders;
 using BirthdayCollator.Server.Processing.Fetching;
 using BirthdayCollator.Server.Processing.Html;
 
@@ -34,13 +33,16 @@ public sealed class PersonFilter(WikiHtmlFetcher fetcher)
 
     private async Task<bool> IsLikelyDeadAsync(Person p, CancellationToken ct)
     {
-        if (RegexPatterns.ExcludeDied().IsMatch(p.Description)) 
+        if (RegexPatterns.ExcludeDied().IsMatch(p.Description))
             return true;
 
-        if (string.IsNullOrEmpty(p.Url) || !p.Url.Contains("wikipedia.org", StringComparison.OrdinalIgnoreCase)) 
+        if (string.IsNullOrEmpty(p.Url) || !p.Url.Contains("wikipedia.org", StringComparison.OrdinalIgnoreCase))
             return false;
 
-        string slug = WikiUrlBuilder.ExtractSlug(p.Url);
+        string slug = p.Url.Split('/').Last().TrimStart('.');
+
+        if (string.IsNullOrEmpty(slug)) return false;
+
         string html = await fetcher.FetchHtmlAsync(slug, ct);
         string? bioText = WikiTextUtility.GetFirstBioParagraph(html);
         string? paren = WikiTextUtility.ExtractBioParenthetical(bioText ?? "");

@@ -39,17 +39,18 @@ public sealed class GenariansPageParser(ILinkResolver linkResolver, IYearRangePr
 
         var name = WikiTextUtility.Normalize(nameNode.InnerText);
         var description = lines[0].Split(',')[0].Trim();
-        var personUrl = linkResolver.ExtractWikipediaHref(cells[0]) ?? string.Empty;
-        var sourceSlug = Path.GetFileNameWithoutExtension(url);
+        var rawHref = linkResolver.ExtractWikipediaHref(cells[0]) ?? string.Empty;
+        string slug = rawHref.Split('/').Last().TrimStart('.');
+        string absoluteUrl = !string.IsNullOrEmpty(slug) ? $"{Constants.Urls.ArticleBase}/{slug}" : string.Empty;
 
         p = factory.CreatePerson(
             name: name,
             desc: description,
             birthDate: bDay,
-            url: personUrl,
-            sourceSlug: sourceSlug,
+            url: absoluteUrl,
+            sourceSlug: Path.GetFileNameWithoutExtension(url),
             section: Constants.AppStrings.Sections.Births,
-            displaySlug: Constants.AppStrings.Slugs.Genarians
+            displaySlug: slug
         );
 
         return true;
