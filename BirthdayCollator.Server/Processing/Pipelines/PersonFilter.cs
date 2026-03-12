@@ -8,45 +8,58 @@ public sealed class PersonFilter(WikiHtmlFetcher fetcher)
 {
     public async Task<List<Person>> FilterLivingAsync(List<Person> people, CancellationToken ct)
     {
-       var livingPeople = new System.Collections.Concurrent.ConcurrentBag<Person>();
+        var livingPeople = new System.Collections.Concurrent.ConcurrentBag<Person>();
 
-       await Parallel.ForEachAsync(people, new ParallelOptions { MaxDegreeOfParallelism = 5, CancellationToken = ct },
-       async (p, token) =>
-       {
-           if (RegexPatterns.ExcludeDied().IsMatch(p.Description))
-               return;
+        await Parallel.ForEachAsync(people, new ParallelOptions { MaxDegreeOfParallelism = 5, CancellationToken = ct },
+        async (p, token) =>
+        {
+            // 1. Fast static check
+            if (RegexPatterns.ExcludeDied().IsMatch(p.Description))
+                return;
 
-           if (string.IsNullOrWhiteSpace(p.Url))
-           {
-               livingPeople.Add(p);
-               return;
-           }
+            // 2. Short-circuit if no URL available
+            if (string.IsNullOrWhiteSpace(p.Url))
+            {
+                livingPeople.Add(p);
+                return;
+            }
 
-           if (!await IsLikelyDeadAsync(p, token))
-           {
-               livingPeople.Add(p);
-           }
-       });
-       
+            // 3. Wikipedia Verification & Description Update
+            // We've moved the HTML fetching and description cleaning inside this helper
+            if (!await IsLikelyDeadAsync(p, token))
+            {
+                livingPeople.Add(p);
+            }
+        });
+
         return [.. livingPeople.OrderByDescending(p => p.BirthYear)];
     }
 
     private async Task<bool> IsLikelyDeadAsync(Person p, CancellationToken ct)
     {
-        if (RegexPatterns.ExcludeDied().IsMatch(p.Description))
-            return true;
+        try
+        {
+            string slug = p.Url.Split('/').Last();
+            string html = await fetcher.FetchHtmlAsync(slug, ct);
+            string? rawBio = WikiTextUtility.GetRawFirstParagraph(html);
+            string? paren = WikiTextUtility.ExtractBioParenthetical(rawBio ?? "");
 
-        if (string.IsNullOrEmpty(p.Url) || !p.Url.Contains("wikipedia.org", StringComparison.OrdinalIgnoreCase))
+            if (WikiTextUtility.IndicatesDeath(paren, p.BirthDate))
+            {
+                return true; 
+            }
+
+            string? cleanDescription = WikiTextUtility.GetFirstBioParagraph(html);
+            if (!string.IsNullOrWhiteSpace(cleanDescription))
+            {
+                p.Description = cleanDescription;
+            }
+
             return false;
-
-        string slug = p.Url.Split('/').Last().TrimStart('.');
-
-        if (string.IsNullOrEmpty(slug)) return false;
-
-        string html = await fetcher.FetchHtmlAsync(slug, ct);
-        string? bioText = WikiTextUtility.GetFirstBioParagraph(html);
-        string? paren = WikiTextUtility.ExtractBioParenthetical(bioText ?? "");
-
-        return WikiTextUtility.IndicatesDeath(paren, p.BirthDate);
+        }
+        catch
+        {
+            return false;
+        }
     }
 }

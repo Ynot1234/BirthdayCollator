@@ -36,11 +36,16 @@ public sealed class PersonDeduper
         return [.. uniquePeople.Values];
     }
 
-    private static int GetScore(Person p) => p.SourceSlug switch
+    private static int GetScore(Person p)
     {
-        Slugs.Wikipedia => 3,
-        Slugs.Genarians => 2,
-        Slugs.OnThisDay => 1,
-        _ => 0
-    };
+        if (string.IsNullOrEmpty(p.SourceSlug)) return 0;
+
+        if (p.SourceSlug.Equals(Slugs.OnThisDay, StringComparison.OrdinalIgnoreCase))
+            return 1;
+
+        if (p.SourceSlug.Equals(Slugs.Genarians, StringComparison.OrdinalIgnoreCase))
+            return 2;
+
+        return 3;
+    }
 }

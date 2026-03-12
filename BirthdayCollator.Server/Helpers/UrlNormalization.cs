@@ -13,7 +13,15 @@ public static class UrlNormalization
             return $"{Urls.DDGSearchBase}/?q={Uri.EscapeDataString(name)}";
         }
 
-        return url.StartsWith("http") ? url : $"https://{url}";
+        string cleanUrl = url.StartsWith("http") ? url : $"https://{url}";
+
+        const string suffix = "_(disambiguation)";
+        if (cleanUrl.EndsWith(suffix, StringComparison.OrdinalIgnoreCase))
+        {
+            cleanUrl = cleanUrl[..^suffix.Length];
+        }
+
+        return cleanUrl;
     }
 
     public static string NormalizeUrl(string url)

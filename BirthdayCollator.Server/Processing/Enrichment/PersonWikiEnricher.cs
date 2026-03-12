@@ -45,16 +45,25 @@ public sealed class PersonWikiEnricher(IHttpClientFactory httpFactory)
 
         string query = $"{name} {descSnippet}".Trim();
         string api = $"{Urls.Domain}{Urls.APISearchStub}{Uri.EscapeDataString(query)}&format=json";
-
         var response = await _http.GetFromJsonAsync<WikiSearchResponse>(api, ct);
-        var first = response?.Query?.Search?.FirstOrDefault();
+        List<WikiSearchItem>? results = response?.Query?.Search;
 
-        if (first is null) return (null, null);
+        if (results == null || results.Count == 0) return (null, null);
 
-        return (first.Title, $"{Urls.ArticleBase}/{first.Title.Replace(' ', '_')}");
+        WikiSearchItem bestMatch = results
+            .OrderByDescending(s => string.Equals(s.Title, name, StringComparison.OrdinalIgnoreCase))
+            .ThenByDescending(s => s.Size)
+            .First();
+
+        return (bestMatch.Title, $"{Urls.ArticleBase}/{bestMatch.Title.Replace(' ', '_')}");
     }
 
     private record WikiSearchResponse(WikiQuery Query);
-    private record WikiQuery(List<WikiSearchResult> Search);
-    private record WikiSearchResult(string Title);
+    private record WikiQuery(List<WikiSearchItem> Search);
+    private record WikiSearchItem(
+        string Title,
+        int Wordcount,
+        int Size,
+        string Snippet
+    );
 }

@@ -16,17 +16,41 @@ public sealed class WikiParser(IHtmlBirthSectionExtractor htmlExtractor, IEntryS
     {
         var nodes = htmlExtractor.ExtractLiNodes(html, xpath);
         if (nodes.Count == 0) return [];
+
         List<Person> results = [];
         string sourceSlug = string.IsNullOrEmpty(suffix) ? $"{birthDate.Year}" : $"{birthDate.Year}_{suffix}";
+
+        // This tracks the "sticky" date header as we iterate
+        DateTime? activeDate = null;
 
         foreach (var node in nodes)
         {
             string entry = node.InnerText;
 
+            // 1. Check if this node is a date header (e.g., "March 11")
+            if (dateParser.TryParseMonthDay(entry, birthDate.Year, out var parsedDate))
+            {
+                activeDate = parsedDate;
+                // Usually, date headers aren't person entries, but we don't 'continue' 
+                // here just in case a person line starts with a date.
+            }
+
+            // 2. Validate if it's a legitimate birth entry
             if (entrySplitter.IsDeathEntry(entry) || !validator.IsValidBirthEntry(entry, birthDate.Year, birthDate.Month, birthDate.Day, node))
                 continue;
 
-            bool isDateValid = includeAll ? dateParser.IsOnOrAfterDate(entry, birthDate) : dateParser.MatchesRequestedDate(entry, birthDate);
+            bool isDateValid = false;
+            if (includeAll)
+            {
+                var dateToCheck = activeDate ?? (dateParser.TryParseMonthDay(entry, birthDate.Year, out var d) ? d : null);
+                isDateValid = dateToCheck.HasValue && dateToCheck.Value >= birthDate;
+            }
+            else
+            {
+                isDateValid = (activeDate.HasValue && activeDate.Value.Month == birthDate.Month && activeDate.Value.Day == birthDate.Day)
+                              || dateParser.MatchesRequestedDate(entry, birthDate);
+            }
+
             if (!isDateValid) continue;
 
             var personLink = linkResolver.FindPersonLink(node, entry);

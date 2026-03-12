@@ -26,4 +26,10 @@ public partial class RegexPatterns
     // --- 5. Text Cleanup ---
     [GeneratedRegex(@"\s+")]
     public static partial Regex WhitespaceCollapse();
+
+    [GeneratedRegexAttribute(@"[–-]\s*(?:[A-Za-z]+\s+\d{1,2},\s+)?(\d{4})|died\s+(\d{4})", RegexOptions.IgnoreCase, "en-US")]
+    public static partial Regex DeathYearMarker();
+
+    [GeneratedRegex(@"\s*\(.*?\)")]
+    public static partial Regex DisplayCleaner();
 }
