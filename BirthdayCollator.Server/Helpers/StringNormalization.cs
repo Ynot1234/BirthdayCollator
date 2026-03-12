@@ -50,4 +50,15 @@ public static class StringNormalization
             .Replace("jr.", "jr")
             .Replace(",", "");
     }
+
+
+
+
+    private static readonly char[] _debris = [' ', ',', '.', ';', ':', '-', '–'];
+
+    public static string TrimDebris(this string? text)
+    {
+        return text?.TrimStart(_debris).Trim() ?? string.Empty;
+    }
+
 }

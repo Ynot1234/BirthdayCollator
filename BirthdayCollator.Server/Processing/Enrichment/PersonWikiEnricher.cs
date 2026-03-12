@@ -28,7 +28,7 @@ public sealed class PersonWikiEnricher(IHttpClientFactory httpFactory)
 
         foreach (var p in people)
         {
-            p.Url = UrlNormalization.Fix(p.Url, p.Name);
+            p.Url = UrlNormalization.Fix(p.Url, p.Description, p.Name);
         }
 
         return people;

@@ -1,5 +1,6 @@
 ﻿using BirthdayCollator.Helpers;
 using BirthdayCollator.Server.Constants;
+using BirthdayCollator.Server.Helpers;
 using HtmlAgilityPack;
 using System.Text.RegularExpressions;
 
@@ -28,49 +29,48 @@ public static partial class WikiTextUtility
 
         if (lastMetadataIndex >= 0 && lastMetadataIndex < targetLine.Length - 1)
         {
-            description = targetLine[(lastMetadataIndex + 1)..].Trim();
+            description = targetLine[(lastMetadataIndex + 1)..].TrimDebris();
         }
         else
         {
             int dash = targetLine.IndexOfAny(['–', '-']);
-            description = dash >= 0 ? targetLine[(dash + 1)..].Trim() : targetLine.Trim();
+            description = dash >= 0 ? targetLine[(dash + 1)..].TrimDebris() : targetLine.TrimDebris();
         }
 
         if (!string.IsNullOrEmpty(personName))
         {
-            description = Regex.Replace(description, Regex.Escape(personName),  "", RegexOptions.IgnoreCase).Trim();
+            description = Regex.Replace(description, Regex.Escape(personName), "", RegexOptions.IgnoreCase).TrimDebris();
         }
 
         foreach (var title in NameParsing.Titles)
         {
             if (description.Contains(title, StringComparison.OrdinalIgnoreCase))
             {
-                description = description.Replace(title, "", StringComparison.OrdinalIgnoreCase).Trim();
+                description = description.Replace(title, "", StringComparison.OrdinalIgnoreCase).TrimDebris();
             }
         }
 
-        description = description.TrimStart(' ', ',', '.', ';', ':', '-');
+        description = description.TrimDebris();
 
         foreach (var prefix in NameParsing.Prefixes)
         {
             if (description.StartsWith(prefix, StringComparison.OrdinalIgnoreCase))
             {
-                description = description[prefix.Length..].Trim();
+                description = description[prefix.Length..].TrimDebris();
                 break;
             }
         }
 
         if (description.StartsWith("is ", StringComparison.OrdinalIgnoreCase) && description.Length > 3)
-            description = description[3..].Trim();
+            description = description[3..].TrimDebris();
         else if (description.StartsWith("was ", StringComparison.OrdinalIgnoreCase) && description.Length > 4)
-            description = description[4..].Trim();
+            description = description[4..].TrimDebris();
 
         int sentenceEnd = description.IndexOfAny(['.', ';']);
-        string final = sentenceEnd > 0 ? description[..sentenceEnd].Trim() : description.Trim();
+        string final = sentenceEnd > 0 ? description[..sentenceEnd].TrimDebris() : description.TrimDebris();
 
         return string.IsNullOrWhiteSpace(final) || final.Length < 3 ? targetLine.Trim() : final;
     }
-    
     public static string? GetFirstBioParagraph(string html)
     {
         if (string.IsNullOrWhiteSpace(html)) return null;
@@ -85,11 +85,15 @@ public static partial class WikiTextUtility
             return RegexPatterns.DisplayCleaner().Replace(text, "").Trim();
         }
 
-        var pNode = doc.DocumentNode.SelectSingleNode(
-            "//div[contains(@class,'mw-parser-output')]/p[not(contains(@class,'mw-empty-elt')) and normalize-space()]"
-        );
+        var pNode = doc.DocumentNode.SelectSingleNode("//p[b]");
 
-        return pNode != null ? HtmlEntity.DeEntitize(pNode.InnerText).Trim() : null;
+        if (pNode != null)
+        {
+            string text = HtmlEntity.DeEntitize(pNode.InnerText).Trim();
+            return RegexPatterns.DisplayCleaner().Replace(text, "").Trim();
+        }
+
+        return null;
     }
 
     public static string? GetRawFirstParagraph(string html)

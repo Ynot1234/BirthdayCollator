@@ -1,4 +1,5 @@
-﻿using BirthdayCollator.Server.Models;
+﻿using BirthdayCollator.Server.Helpers;
+using BirthdayCollator.Server.Models;
 using BirthdayCollator.Server.Processing.Html;
 
 namespace BirthdayCollator.Server.Processing.Cleaning;
@@ -15,10 +16,9 @@ public sealed class PersonCleaner
 
         if (!string.IsNullOrEmpty(cleaned.Name) && !string.IsNullOrEmpty(cleaned.Description))
         {
-            cleaned.Description = cleaned.Description
-                .Replace(cleaned.Name, "", StringComparison.OrdinalIgnoreCase)
-                .TrimStart(' ', ',', '.', ';', ':', '-')
-                .Trim();
+          cleaned.Description = cleaned.Description
+                                       .Replace(cleaned.Name, "", StringComparison.OrdinalIgnoreCase)
+                                       .TrimDebris();
         }
 
         return cleaned;

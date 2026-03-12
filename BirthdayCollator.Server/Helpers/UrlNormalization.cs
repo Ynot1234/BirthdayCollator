@@ -1,16 +1,18 @@
 ﻿using BirthdayCollator.Server.Constants;
+using System.Text.RegularExpressions;
 
 namespace BirthdayCollator.Server.Helpers;
 
 public static class UrlNormalization
 {
-    public static string Fix(string? url, string name)
+    public static string Fix(string? url, string desc, string name)
     {
         if (string.IsNullOrWhiteSpace(url) ||
-            url.Equals("null", StringComparison.OrdinalIgnoreCase) ||
-            url.Equals("undefined", StringComparison.OrdinalIgnoreCase))
+        url.Equals("null", StringComparison.OrdinalIgnoreCase) ||
+        url.Equals("undefined", StringComparison.OrdinalIgnoreCase) ||
+        url.Contains("action=edit"))
         {
-            return $"{Urls.DDGSearchBase}/?q={Uri.EscapeDataString(name)}";
+            return CreateDDGSearchUrl(name, desc);
         }
 
         string cleanUrl = url.StartsWith("http") ? url : $"https://{url}";
@@ -22,6 +24,21 @@ public static class UrlNormalization
         }
 
         return cleanUrl;
+    }
+
+
+    public static string CreateDDGSearchUrl(string name, string desc)
+    {
+        string cleanDesc = Regex.Replace(desc ?? "", Regex.Escape(name), "", RegexOptions.IgnoreCase).TrimDebris();
+
+        if (cleanDesc.StartsWith("is ", StringComparison.OrdinalIgnoreCase))
+            cleanDesc = cleanDesc[3..].TrimDebris();
+        else if (cleanDesc.StartsWith("was ", StringComparison.OrdinalIgnoreCase))
+            cleanDesc = cleanDesc[4..].TrimDebris();
+
+        string searchTerm = string.IsNullOrWhiteSpace(cleanDesc) ? name : $"{name} {cleanDesc}";
+
+        return $"{Urls.DDGSearchBase}/?q={Uri.EscapeDataString(searchTerm)}";
     }
 
     public static string NormalizeUrl(string url)
