@@ -32,4 +32,7 @@ public partial class RegexPatterns
 
     [GeneratedRegex(@"\s*\(.*?\)")]
     public static partial Regex DisplayCleaner();
+
+    [GeneratedRegex(@"(?<!\b[A-Z]|Mr|St|Dr)[.;]")]
+    public static partial Regex SentenceBoundary();
 }
