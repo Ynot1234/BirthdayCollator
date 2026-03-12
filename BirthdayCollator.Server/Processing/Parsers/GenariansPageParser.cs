@@ -4,6 +4,7 @@ using BirthdayCollator.Server.Processing.Html;
 using BirthdayCollator.Server.Processing.Links;
 using HtmlAgilityPack;
 using System.Globalization;
+using static BirthdayCollator.Server.Constants.AppStrings;
 
 namespace BirthdayCollator.Server.Processing.Parsers;
 
@@ -23,7 +24,12 @@ public sealed class GenariansPageParser(ILinkResolver linkResolver, IYearRangePr
             .Select(line => HtmlEntity.DeEntitize(line).Trim(' ', '\n', '\r', '>', '\t'))
             .Where(s => !string.IsNullOrWhiteSpace(s))];
 
-        if (lines.Count < 2 || !DateTime.TryParseExact(lines.Last(), "MM/dd/yyyy", CultureInfo.InvariantCulture, DateTimeStyles.None, out var bDay))
+        if (lines.Count < 2 
+        || !DateTime.TryParseExact(lines.Last(), 
+                                   DateFormats.FullDate, 
+                                   CultureInfo.InvariantCulture, 
+                                   DateTimeStyles.None, 
+                                   out var bDay))
             return false;
 
         if (year.IncludeAll)
@@ -32,7 +38,7 @@ public sealed class GenariansPageParser(ILinkResolver linkResolver, IYearRangePr
             if (bDay.Month < today.Month || (bDay.Month == today.Month && bDay.Day < today.Day))
                 return false;
         }
-        else if (bDay.Day != day || !bDay.ToString("MMMM", CultureInfo.InvariantCulture).Equals(month, StringComparison.OrdinalIgnoreCase))
+        else if (bDay.Day != day || !bDay.ToString(DateFormats.MonthLong, CultureInfo.InvariantCulture).Equals(month, StringComparison.OrdinalIgnoreCase))
         {
             return false;
         }
@@ -49,7 +55,7 @@ public sealed class GenariansPageParser(ILinkResolver linkResolver, IYearRangePr
             birthDate: bDay,
             url: absoluteUrl,
             sourceSlug: Path.GetFileNameWithoutExtension(url),
-            section: Constants.AppStrings.Sections.Births,
+            section: Sections.Births,
             displaySlug: slug
         );
 

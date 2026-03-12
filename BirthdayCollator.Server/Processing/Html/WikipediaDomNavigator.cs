@@ -3,7 +3,6 @@ using HtmlAgilityPack;
 
 namespace BirthdayCollator.Server.Processing.Html;
 
-
 public static class WikipediaDomNavigator
 {
     public static List<HtmlNode> ExtractBirthLiNodes(HtmlDocument htmlDoc)

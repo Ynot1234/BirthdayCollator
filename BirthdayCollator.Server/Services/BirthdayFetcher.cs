@@ -11,8 +11,7 @@ public sealed class BirthdayFetcher(
     IYearRangeProvider years,
     IMemoryCache cache)
 {
-    private static string GetCacheKey(int m, int d, bool includeAll) =>
-        $"birthdays:{m}:{d}:all:{includeAll}";
+    private static string GetCacheKey(int m, int d, bool includeAll) => $"birthdays:{m}:{d}:all:{includeAll}";
 
     public async Task<List<Person>> GetBirthdays(int month, int day, bool includeAll, CancellationToken token)
     {

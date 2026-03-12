@@ -1,8 +1,6 @@
-﻿namespace BirthdayCollator.Server.Models
+﻿namespace BirthdayCollator.Server.Models;
+public sealed class OverrideRequest
 {
-    public sealed class OverrideRequest
-    {
-        public string? Year { get; set; }
-        public bool IncludeAll { get; set; }
-    }
+    public string? Year { get; set; }
+    public bool IncludeAll { get; set; }
 }

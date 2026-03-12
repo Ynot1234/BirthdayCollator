@@ -7,7 +7,7 @@ namespace BirthdayCollator.Server.Processing.Links;
 public interface ILinkResolver
 {
     HtmlNode? FindPersonLink(HtmlNode li, string entry);
-    string? ExtractWikipediaHref(HtmlNode node);    
+    string? ExtractWikipediaHref(HtmlNode node);
 }
 
 public sealed class LinkResolver : ILinkResolver
@@ -16,7 +16,7 @@ public sealed class LinkResolver : ILinkResolver
     {
         var links = li.SelectNodes(".//a")?.ToList() ?? [];
         if (links.Count == 0) return null;
-        
+
         List<HtmlNode> candidates = [.. links.Where(a => !WikiValidator.IsDateHref(a.GetAttributeValue("href", "")))];
         if (candidates.Count == 0) return null;
 
@@ -37,5 +37,4 @@ public sealed class LinkResolver : ILinkResolver
         var url = node.SelectSingleNode(".//a[contains(@href,'wikipedia.org')]")?.GetAttributeValue("href", "");
         return string.IsNullOrWhiteSpace(url) ? null : WikiUrlBuilder.NormalizeWikiHref(url);
     }
-
 }

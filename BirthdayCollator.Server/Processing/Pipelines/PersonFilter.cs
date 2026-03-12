@@ -13,19 +13,15 @@ public sealed class PersonFilter(WikiHtmlFetcher fetcher)
         await Parallel.ForEachAsync(people, new ParallelOptions { MaxDegreeOfParallelism = 5, CancellationToken = ct },
         async (p, token) =>
         {
-            // 1. Fast static check
             if (RegexPatterns.ExcludeDied().IsMatch(p.Description))
                 return;
 
-            // 2. Short-circuit if no URL available
             if (string.IsNullOrWhiteSpace(p.Url))
             {
                 livingPeople.Add(p);
                 return;
             }
 
-            // 3. Wikipedia Verification & Description Update
-            // We've moved the HTML fetching and description cleaning inside this helper
             if (!await IsLikelyDeadAsync(p, token))
             {
                 livingPeople.Add(p);

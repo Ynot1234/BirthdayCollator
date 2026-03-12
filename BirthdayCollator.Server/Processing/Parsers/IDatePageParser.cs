@@ -6,5 +6,4 @@ namespace BirthdayCollator.Server.Processing.Parsers
     {
         List<Person> Parse(string html, int month, int day);
     }
-
 }

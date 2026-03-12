@@ -26,7 +26,6 @@ public static class UrlNormalization
         return cleanUrl;
     }
 
-
     public static string CreateDDGSearchUrl(string name, string desc)
     {
         string cleanDesc = Regex.Replace(desc ?? "", Regex.Escape(name), "", RegexOptions.IgnoreCase).TrimDebris();

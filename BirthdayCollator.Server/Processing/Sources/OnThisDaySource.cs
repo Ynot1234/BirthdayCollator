@@ -1,5 +1,4 @@
 ﻿using BirthdayCollator.Server.Configuration;
-using BirthdayCollator.Server.Helpers;
 using BirthdayCollator.Server.Models;
 using BirthdayCollator.Server.Processing.Builders;
 using BirthdayCollator.Server.Processing.Fetching;

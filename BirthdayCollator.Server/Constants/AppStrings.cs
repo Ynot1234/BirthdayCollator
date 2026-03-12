@@ -18,7 +18,13 @@ public static class AppStrings
 
     public static class DateFormats
     {
-        public const string WikiFullDate = "MM/dd/yyyy";
+        public const string FullDate = "MM/dd/yyyy";
         public const string MonthLong = "MMMM";
+    }
+
+    public static class HttpClients
+    {
+        public const string Wikipedia = "WikiClient";
+        public const string Genarians = "GenarianClient";
     }
 }

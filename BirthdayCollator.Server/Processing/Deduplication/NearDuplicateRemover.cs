@@ -15,7 +15,6 @@ public class NearDuplicateRemover
             .Replace("jr.", "jr")
             .Replace(",", "");
     }
-
     public List<Person> RemoveNearDuplicates(List<Person> people)
     {
         List<Person> result =

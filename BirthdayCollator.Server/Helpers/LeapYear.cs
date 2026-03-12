@@ -6,6 +6,4 @@ public static class LeapYear
     {
         return month == 2 && day == 28 && !DateTime.IsLeapYear(DateTime.Now.Year);
     }
-
-
 }

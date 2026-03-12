@@ -6,9 +6,8 @@ namespace BirthdayCollator.Server.Processing.Cleaning;
 
 public sealed class PersonCleaner
 {
-    public List<Person> CleanPersons(List<Person> people) =>
-  [.. people
-    .Select(p =>
+    public List<Person> CleanPersons(List<Person> people) 
+        => [.. people.Select(p =>
     {
         var cleaned = p.Clone();
         cleaned.Name = WikiTextUtility.SanitizeWikiText(cleaned.Name);
@@ -24,5 +23,4 @@ public sealed class PersonCleaner
         return cleaned;
     })
     .Where(p => !string.IsNullOrWhiteSpace(p.Description))];
-
 }

@@ -9,6 +9,7 @@ public sealed class Genarians(GenarianPageLoader loader, IYearRangeProvider year
     public async Task<List<Person>> ScrapeAllAsync(string monthName, int day, CancellationToken ct)
     {
         var years = yearRangeProvider.GetGenarianYears();
+
         if (day == 29)
         {
             years = [.. years.Where(y => int.TryParse(y, out int yr) && DateTime.IsLeapYear(yr))];

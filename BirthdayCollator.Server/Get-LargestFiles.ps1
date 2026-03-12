@@ -1,5 +1,5 @@
 param(
-    [int]$Top = 50
+    [int]$Top = 200
 )
 
 # Find the first .csproj under the current directory

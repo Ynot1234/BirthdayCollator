@@ -67,6 +67,9 @@
     <Compile Remove="Controllers\VectorTestController.cs" />
     <Compile Remove="Extensions\AiHttpClientExtensions.cs" />
     <Compile Remove="Extensions\AiVectorStoreExtensions.cs" />
+    <Compile Remove="Helpers\HtmlParsing.cs" />
+    <Compile Remove="Processing\Deduplication\DeduplicateByURL.cs" />
+    <Compile Remove="Processing\Entries\EntryContext.cs" />
     <Compile Remove="Processing\Html\WikiTextUtility.cs" />
     <Compile Remove="WikiBirthdayFetcher.cs" />
   </ItemGroup>

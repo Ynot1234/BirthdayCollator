@@ -11,7 +11,7 @@ public sealed class DateBirthSource(WikiHtmlFetcher fetcher, IYearRangeProvider 
     public async Task<List<Person>> GetPeopleAsync(DateTime date, CancellationToken ct)
     {
         var people = await FetchAndParse($"{date:MMMM_d}", date.Month, date.Day, ct);
-        
+
         if (date is { Month: 2, Day: 29 })
         {
             var leapYears = years.GetLeapYears().ToHashSet();
@@ -23,12 +23,8 @@ public sealed class DateBirthSource(WikiHtmlFetcher fetcher, IYearRangeProvider 
 
     private async Task<List<Person>> FetchAndParse(string page, int m, int d, CancellationToken ct)
     {
-        try
-        {
-            string html = await fetcher.FetchHtmlAsync(page, ct);
-            return parser.Parse(html, m, d);
-        }
-        catch { return []; }
+        string html = await fetcher.FetchHtmlAsync(page, ct);
+        return parser.Parse(html, m, d);
     }
 
     public bool IsRelevant(BirthSourceOptions opt, IYearRangeProvider y, DateTime d) => opt.EnableDateParser;

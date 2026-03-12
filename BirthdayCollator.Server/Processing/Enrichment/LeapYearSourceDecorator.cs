@@ -21,7 +21,6 @@ namespace BirthdayCollator.Server.Processing.Enrichment
 
             return people;
         }
-
         public bool IsRelevant(BirthSourceOptions opt, IYearRangeProvider years, DateTime date) => innerSource.IsRelevant(opt, years, date);
     }
 }

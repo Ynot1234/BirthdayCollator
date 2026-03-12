@@ -2,6 +2,7 @@
 
 namespace BirthdayCollator.Server.Processing.Entries;
 
+public record EntryContext(string RawText, string? Href, bool IsMulti, DateTime Date);
 public interface IEntrySplitter
 {
     bool IsMulti(string text);
@@ -20,15 +21,16 @@ public sealed class EntrySplitter : IEntrySplitter
         if (string.IsNullOrWhiteSpace(text))
             return [];
 
+        // Splitting by newline and carriage return to handle different OS formats safely
         var lines = text
-            .Split('\n', StringSplitOptions.RemoveEmptyEntries)
-            .Select(l => l.Trim())
+            .Split(['\n', '\r'], StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries)
             .Where(l => l.Length > 0)
             .ToArray();
 
+        // If it's a multi-line entry, we usually want everything after the header/first line
         return lines.Length > 1
-            ? lines[1..]  
-            : lines;      
+            ? lines[1..]
+            : lines;
     }
 
     public bool IsDeathEntry(string entry) =>

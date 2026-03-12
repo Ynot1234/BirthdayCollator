@@ -1,7 +1,4 @@
-﻿using BirthdayCollator.Server.Models;
-using Microsoft.AspNetCore.Mvc;
-
-namespace BirthdayCollator.Server.Processing.Builders;
+﻿namespace BirthdayCollator.Server.Processing.Builders;
 
 public sealed class YearRangeProvider : IYearRangeProvider
 {
@@ -21,7 +18,7 @@ public sealed class YearRangeProvider : IYearRangeProvider
     public string? CurrentOverrideYear => _overrides.Count == 1 ? _overrides[0] : null;
     public string CurrentOverrideSuffix { get; private set; } = string.Empty;
     public bool IncludeAll { get; private set; }
-    private static readonly int[] first = new[] { 60, 70, 80 };
+    private static readonly int[] first = [60, 70, 80];
 
     public void ForceYear(int year) { _overrides.Clear(); _overrides.Add(year.ToString()); }
     public void ForceYears(params string[] years) { _overrides.Clear(); _overrides.AddRange(years); }
@@ -33,7 +30,5 @@ public sealed class YearRangeProvider : IYearRangeProvider
     public IReadOnlyList<string> GetYears() => _overrides.Count > 0 ? _overrides : _defaults;
     public IReadOnlyList<string> GetDefaultYears() => _defaults;
     public IReadOnlyList<string> GetGenarianYears() => _overrides.Count > 0 ? _overrides : _genarianYears;
-
-    public IReadOnlyList<string> GetLeapYears() =>
-        [.. GetYears().Where(y => int.TryParse(y, out int yr) && DateTime.IsLeapYear(yr))];
+    public IReadOnlyList<string> GetLeapYears() => [.. GetYears().Where(y => int.TryParse(y, out int yr) && DateTime.IsLeapYear(yr))];
 }

@@ -6,7 +6,7 @@ using BirthdayCollator.Server.Processing.Fetching;
 using BirthdayCollator.Server.Processing.Pipelines;
 
 namespace BirthdayCollator.Server.Processing.Sources;
-public sealed class CategoryBirthSource( BirthSourceEngine engine, WikiHtmlFetcher fetcher, 
+public sealed class CategoryBirthSource(BirthSourceEngine engine, WikiHtmlFetcher fetcher,
                                          IYearRangeProvider yearRangeProvider, IConfiguration config) : IBirthSource
 {
     private string[]? _debugSuffixes;

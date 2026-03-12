@@ -13,6 +13,4 @@ namespace BirthdayCollator.Server.Processing.Enrichment
         [JsonPropertyName("height")]
         public int Height { get; set; }
     }
-
-
 }

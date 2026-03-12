@@ -1,7 +1,5 @@
-﻿namespace BirthdayCollator.Server.AI.Services
+﻿namespace BirthdayCollator.Server.AI.Services;
+public interface IBioService
 {
-    public interface IBioService
-    {
-        Task<string> SummarizeAsync(string name, string desc, string? apiKey = null);
-    }
+    Task<string> SummarizeAsync(string name, string desc, string? apiKey = null);
 }

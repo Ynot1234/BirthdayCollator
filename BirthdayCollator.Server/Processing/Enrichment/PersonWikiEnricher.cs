@@ -8,7 +8,7 @@ namespace BirthdayCollator.Server.Processing.Enrichment;
 
 public sealed class PersonWikiEnricher(IHttpClientFactory httpFactory)
 {
-    private readonly HttpClient _http = httpFactory.CreateClient("WikiClient");
+    private readonly HttpClient _http = httpFactory.CreateClient(HttpClients.Wikipedia);
 
     public async Task<List<Person>> EnrichOnThisDayUrlsAsync(List<Person> people, CancellationToken ct)
     {

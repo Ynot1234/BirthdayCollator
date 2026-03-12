@@ -13,7 +13,6 @@ public partial class RegexPatterns
     [GeneratedRegex(@"([A-Za-z]+)\s+(\d{1,2})")]
     public static partial Regex MonthDayLoose();
 
-    // --- 4. Filtering & Exclusion ---
     [GeneratedRegex(@"\(\s*(died|d\.|†)\s+\d{4}\s*\)", RegexOptions.IgnoreCase)]
     public static partial Regex ExcludeDied();
 
@@ -23,7 +22,6 @@ public partial class RegexPatterns
     [GeneratedRegex(@"\([^)]*\)")]
     public static partial Regex Parentheses();
 
-    // --- 5. Text Cleanup ---
     [GeneratedRegex(@"\s+")]
     public static partial Regex WhitespaceCollapse();
 

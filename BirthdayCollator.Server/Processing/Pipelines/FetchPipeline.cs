@@ -1,7 +1,6 @@
 ﻿using BirthdayCollator.Server.Configuration;
 using BirthdayCollator.Server.Models;
 using BirthdayCollator.Server.Processing.Builders;
-using BirthdayCollator.Server.Processing.Pipelines;
 using BirthdayCollator.Server.Processing.Sources;
 using Microsoft.Extensions.Options;
 

@@ -63,6 +63,4 @@ public static partial class WikiTextUtility
         return match.Success && DateTime.TryParse(match.Value, out var parsed)
                && (parsed.Month != birthDate.Month || parsed.Day != birthDate.Day);
     }
-
-  
 }

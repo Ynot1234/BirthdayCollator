@@ -12,7 +12,7 @@ public interface IPersonEnrichmentService
 }
 
 public class PersonEnrichmentService(
-    IBioService ai, 
+    IBioService ai,
     IMemoryCache cache,
     IConfiguration config) : IPersonEnrichmentService
 {
