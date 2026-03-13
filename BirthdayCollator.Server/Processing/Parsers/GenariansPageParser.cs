@@ -19,12 +19,6 @@ public sealed class GenariansPageParser(ILinkResolver linkResolver, IYearRangePr
         var spans = cells[2].SelectNodes(".//span");
         var nameNode = spans[0].InnerText.Contains("NEW CENTENARIAN") ? spans[1] : spans[0];
 
-        if(nameNode.InnerText.Contains("Stoller"))
-        {
-                int debug = 1;
-        }
-
-
         List<string> lines = [.. spans.Last().InnerHtml
             .Split("<br", StringSplitOptions.RemoveEmptyEntries)
             .Select(line => HtmlEntity.DeEntitize(line).Trim(' ', '\n', '\r', '>', '\t'))
