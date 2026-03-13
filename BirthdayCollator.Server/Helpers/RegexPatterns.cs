@@ -13,7 +13,7 @@ public partial class RegexPatterns
     [GeneratedRegex(@"([A-Za-z]+)\s+(\d{1,2})")]
     public static partial Regex MonthDayLoose();
 
-    [GeneratedRegex(@"\(\s*(died|d\.|†)\s+\d{4}\s*\)", RegexOptions.IgnoreCase)]
+    [GeneratedRegex(@"\(\s*.*?\d{4}\s*\)", RegexOptions.IgnoreCase)]
     public static partial Regex ExcludeDied();
 
     [GeneratedRegex(@"\[\d+\]|\[\s*[^]]+\]")]
@@ -25,7 +25,7 @@ public partial class RegexPatterns
     [GeneratedRegex(@"\s+")]
     public static partial Regex WhitespaceCollapse();
 
-    [GeneratedRegexAttribute(@"[–-]\s*(?:[A-Za-z]+\s+\d{1,2},\s+)?(\d{4})|died\s+(\d{4})", RegexOptions.IgnoreCase, "en-US")]
+    [GeneratedRegex(@"(?<=\d{4}|\s)[–-]\s*.*?(?<deathYear>\d{4})|died\s+(?<diedYear>\d{4})", RegexOptions.IgnoreCase, "en-US")]
     public static partial Regex DeathYearMarker();
 
     [GeneratedRegex(@"\s*\(.*?\)")]
@@ -33,4 +33,13 @@ public partial class RegexPatterns
 
     [GeneratedRegex(@"(?<!\b[A-Z]|Mr|St|Dr)[.;]")]
     public static partial Regex SentenceBoundary();
+
+    [GeneratedRegex(@"\(([^)]*?(\d{4}|born|died)[^)]*?)\)", RegexOptions.IgnoreCase, "en-US")]
+    public static partial Regex BioParenthetical();
+
+    [GeneratedRegex(@"\b(January|February|March|April|May|June|July|August|September|October|November|December)\b", RegexOptions.IgnoreCase, "en-US")]
+    public static partial Regex MonthName();
+
+    [GeneratedRegex(@"\b\d{4}\b")]
+    public static partial Regex YearIndicator();
 }

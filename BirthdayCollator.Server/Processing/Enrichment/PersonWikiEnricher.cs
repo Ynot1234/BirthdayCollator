@@ -45,16 +45,17 @@ public sealed class PersonWikiEnricher(IHttpClientFactory httpFactory)
 
         string query = $"{name} {descSnippet}".Trim();
         string api = $"{Urls.Domain}{Urls.APISearchStub}{Uri.EscapeDataString(query)}&format=json";
+
         var response = await _http.GetFromJsonAsync<WikiSearchResponse>(api, ct);
         List<WikiSearchItem>? results = response?.Query?.Search;
 
         if (results == null || results.Count == 0) return (null, null);
 
-        WikiSearchItem bestMatch = results
-            .OrderByDescending(s => string.Equals(s.Title, name, StringComparison.OrdinalIgnoreCase))
-            .ThenByDescending(s => s.Size)
-            .First();
-
+        var exactMatch = results.FirstOrDefault(s =>
+       string.Equals(s.Title, name, StringComparison.OrdinalIgnoreCase) ||
+       s.Title.StartsWith($"{name} (", StringComparison.OrdinalIgnoreCase));
+       
+        WikiSearchItem bestMatch = exactMatch ?? results[0];
         return (bestMatch.Title, $"{Urls.ArticleBase}/{bestMatch.Title.Replace(' ', '_')}");
     }
 

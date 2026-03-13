@@ -26,6 +26,11 @@ public sealed class WikiParser(IHtmlBirthSectionExtractor htmlExtractor, IEntryS
         {
             string entry = node.InnerText;
 
+            if(node.InnerText.Contains("Awoonor"))
+            {
+                int r = 4;
+            }
+            
             if (dateParser.TryParseMonthDay(entry, birthDate.Year, out var parsedDate))
             {
                 activeDate = parsedDate;

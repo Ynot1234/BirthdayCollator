@@ -70,5 +70,33 @@ public static partial class WikiTextUtility
         return HtmlEntity.DeEntitize(pNode.InnerText).Trim();
     }
 
-    
+    public static string? ExtractSpecificParenthetical(string text, string personName)
+    {
+        if (string.IsNullOrWhiteSpace(text)) return null;
+
+        string lastName = personName.Split(' ').Last();
+        int lastIndex = text.LastIndexOf(lastName, StringComparison.OrdinalIgnoreCase);
+
+        if (lastIndex != -1)
+        {
+            string textAfterName = text[lastIndex..];
+            var bioMatch = RegexPatterns.BioParenthetical().Match(textAfterName);
+
+            if (bioMatch.Success)
+            {
+                return bioMatch.Value;
+            }
+
+            int start = textAfterName.IndexOf('(');
+            int end = textAfterName.IndexOf(')', start + 1);
+            if (start != -1 && end != -1)
+            {
+                return textAfterName.Substring(start, end - start + 1);
+            }
+        }
+
+        int fStart = text.IndexOf('(');
+        int fEnd = text.IndexOf(')', fStart + 1);
+        return (fStart != -1 && fEnd != -1) ? text.Substring(fStart, fEnd - fStart + 1) : null;
+    }
 }

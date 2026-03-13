@@ -36,26 +36,37 @@ public static partial class WikiTextUtility
         }
         return null;
     }
-
     public static bool IndicatesDeath(string? paren, DateTime birthDate)
     {
         if (string.IsNullOrWhiteSpace(paren)) return false;
 
-        var deathMatch = RegexPatterns.DeathYearMarker().Match(paren);
+        var match = RegexPatterns.DeathYearMarker().Match(paren);
 
-        if (deathMatch.Success)
+        if (match.Success)
         {
-            string yearStr = !string.IsNullOrEmpty(deathMatch.Groups[1].Value)
-                             ? deathMatch.Groups[1].Value
-                             : deathMatch.Groups[2].Value;
+            // Check our two possible named groups for a year string
+            string yearStr = match.Groups["deathYear"].Success
+                             ? match.Groups["deathYear"].Value
+                             : match.Groups["diedYear"].Value;
 
-            if (int.TryParse(yearStr, out int deathYear))
+            if (int.TryParse(yearStr, out int foundYear))
             {
-                return deathYear > birthDate.Year || deathYear != birthDate.Year;
+                // If the year we found is after the birth year, they are deceased.
+                // We use > to avoid accidental matches on the birth year itself.
+                return foundYear > birthDate.Year;
             }
         }
 
-        return IsDateMismatch(paren, birthDate);
+        // Secondary Check: Common "terminal" status keywords
+        string lower = paren.ToLower();
+        string[] deathKeywords = { " died ", " death ", " deceased ", " disappeared " };
+
+        if (deathKeywords.Any(k => lower.Contains(k)))
+        {
+            return true;
+        }
+
+        return false;
     }
     public static bool IsDateMismatch(string text, DateTime birthDate)
     {
