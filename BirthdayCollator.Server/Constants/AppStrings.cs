@@ -14,6 +14,7 @@ public static class AppStrings
         public const string OnThisDay = "OnThisDay";
         public const string Wikipedia = "Wikipedia";
         public const string Birthdays = "Birthdays";
+        public const string Imdb = "Imdb";
     }
 
     public static class DateFormats

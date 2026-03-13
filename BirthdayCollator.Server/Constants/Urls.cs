@@ -3,7 +3,11 @@
 public static class Urls
 {
     public const string Domain = "https://en.wikipedia.org";
-    
+
+    public const string ImdbBase = "https://www.imdb.com";
+
+    public const string ImdbSearchStub = $"{ImdbBase}/search/name/?birth_date";
+
     public const string APISub = $"/api/rest_v1/page";
     
     public const string GenarianBase = "https://www.genarians.com";
@@ -18,11 +22,12 @@ public static class Urls
     
     public static readonly string API = $"{Domain}/{APISub}/html";
     public static string GetWikiBirthsUrl(string slug) => $"{ArticleBase}/{slug}#{AppStrings.Sections.Births}";
-   
+
     public static string? GetSourceUrl(string? slug, string fallbackUrl) => slug switch
     {
-        null => null, 
-        AppStrings.Slugs.OnThisDay => fallbackUrl, 
+        null => null,
+        AppStrings.Slugs.OnThisDay => fallbackUrl,
+        AppStrings.Slugs.Imdb => fallbackUrl,
         _ => GetWikiBirthsUrl(slug)
     };
 

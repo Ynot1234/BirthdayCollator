@@ -10,15 +10,20 @@ public sealed class PersonDeduper
     {
         if (people.Count <= 1) return people;
 
-        var uniquePeople = new Dictionary<string, Person>(StringComparer.OrdinalIgnoreCase);
+        List<Person> uniquePeople = [];
 
         foreach (var p in people)
         {
-            var key = $"{StringNormalization.ToComparableSlug(p.Name)}|{p.BirthYear}";
+            string pName = StringNormalization.ToComparableSlug(p.Name);
 
-            if (!uniquePeople.TryGetValue(key, out var existing))
+            var existing = uniquePeople.FirstOrDefault(u =>
+                u.BirthYear == p.BirthYear &&
+                (pName.Contains(StringNormalization.ToComparableSlug(u.Name)) ||
+                 StringNormalization.ToComparableSlug(u.Name).Contains(pName)));
+
+            if (existing == null)
             {
-                uniquePeople[key] = p;
+                uniquePeople.Add(p);
                 continue;
             }
 
@@ -26,14 +31,14 @@ public sealed class PersonDeduper
             int scoreExisting = GetScore(existing);
 
             if (scoreP > scoreExisting ||
-               (scoreP == scoreExisting &&
-                (p.Description?.Length ?? 0) > (existing.Description?.Length ?? 0)))
+               (scoreP == scoreExisting && (p.Description?.Length ?? 0) > (existing.Description?.Length ?? 0)))
             {
-                uniquePeople[key] = p;
+                uniquePeople.Remove(existing);
+                uniquePeople.Add(p);
             }
         }
 
-        return [.. uniquePeople.Values];
+        return uniquePeople;
     }
 
     private static int GetScore(Person p)
@@ -43,9 +48,12 @@ public sealed class PersonDeduper
         if (p.SourceSlug.Equals(Slugs.OnThisDay, StringComparison.OrdinalIgnoreCase))
             return 1;
 
-        if (p.SourceSlug.Equals(Slugs.Genarians, StringComparison.OrdinalIgnoreCase))
+        if (p.SourceSlug.Equals(Slugs.Imdb, StringComparison.OrdinalIgnoreCase))
             return 2;
 
-        return 3;
+        if (p.SourceSlug.Equals(Slugs.Genarians, StringComparison.OrdinalIgnoreCase))
+            return 3;
+
+        return 4;
     }
 }

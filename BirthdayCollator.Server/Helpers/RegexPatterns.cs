@@ -42,4 +42,13 @@ public partial class RegexPatterns
 
     [GeneratedRegex(@"\b\d{4}\b")]
     public static partial Regex YearIndicator();
+
+    [GeneratedRegex(@"\b(?:was\s+)?born\s+on\s+.*?\.", RegexOptions.IgnoreCase, "en-US")]
+    public static partial Regex ExcludeBirthStatement();
+    [GeneratedRegex(@"\s*See full bio.*$", RegexOptions.IgnoreCase, "en-US")]
+    public static partial Regex BioLinkSuffix();
+    [GeneratedRegex(@"^\d+\.\s+")]
+    public static partial Regex BioLinkTail();
+    [GeneratedRegex(@"\s*See full bio.*$", RegexOptions.IgnoreCase, "en-US")]
+    public static partial Regex ExcludeImdbFooter();
 }

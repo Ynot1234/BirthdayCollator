@@ -24,8 +24,9 @@ public class NearDuplicateRemover
                 .Select(g => g
                     .OrderBy(p =>
                         p.Url?.Contains(AppStrings.Slugs.Wikipedia, StringComparison.OrdinalIgnoreCase) == true ? 0 :
-                        p.Url?.Contains(AppStrings.Slugs.Genarians, StringComparison.OrdinalIgnoreCase) == true ? 1 :
-                        p.Url?.Contains(AppStrings.Slugs.OnThisDay, StringComparison.OrdinalIgnoreCase) == true ? 2 : 3)
+                        p.Url?.Contains(AppStrings.Slugs.Imdb,      StringComparison.OrdinalIgnoreCase) == true ? 1 :
+                        p.Url?.Contains(AppStrings.Slugs.Genarians, StringComparison.OrdinalIgnoreCase) == true ? 2 :
+                        p.Url?.Contains(AppStrings.Slugs.OnThisDay, StringComparison.OrdinalIgnoreCase) == true ? 3 : 4)
                     .First())
         ];
 

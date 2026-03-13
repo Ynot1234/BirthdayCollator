@@ -16,18 +16,21 @@ public sealed partial class PersonFilter(WikiHtmlFetcher fetcher)
         await Parallel.ForEachAsync(people, new ParallelOptions { MaxDegreeOfParallelism = 5, CancellationToken = ct },
         async (p, token) =>
         {
-            if (RegexPatterns.ExcludeDied().IsMatch(p.Description))
-                return;
+            if (RegexPatterns.ExcludeDied().IsMatch(p.Description)) return;
 
-            if (string.IsNullOrWhiteSpace(p.Url) 
-            && p.SourceSlug == AppStrings.Slugs.OnThisDay)
+            if (p.Url.Contains("imdb"))
             {
                 livingPeople.Add(p);
                 return;
             }
 
-            if (!p.Url.Contains("duckduckgo")  
-             && !await IsLikelyDeadAsync(p, token))
+            if (string.IsNullOrWhiteSpace(p.Url) && p.SourceSlug == AppStrings.Slugs.OnThisDay)
+            {
+                livingPeople.Add(p);
+                return;
+            }
+
+            if (!p.Url.Contains("duckduckgo") && !await IsLikelyDeadAsync(p, token))
             {
                 livingPeople.Add(p);
             }
@@ -35,7 +38,6 @@ public sealed partial class PersonFilter(WikiHtmlFetcher fetcher)
 
         return [.. livingPeople.OrderByDescending(p => p.BirthYear)];
     }
-
     private async Task<bool> IsLikelyDeadAsync(Person p, CancellationToken ct)
     {
         string slug = p.Url.Split('/').Last();
