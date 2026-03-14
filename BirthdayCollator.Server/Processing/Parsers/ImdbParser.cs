@@ -46,14 +46,12 @@ public sealed partial class ImdbParser(PersonFactory personFactory)
                 if (description.Contains("was a") || description.Contains("was an") || description.Contains("dies"))
                     continue;
 
-                description = GetCleanDescription(node, description, name);
-
                 string href = linkNode.GetAttributeValue("href", "");
                 string slug = href.Split('/', StringSplitOptions.RemoveEmptyEntries).ElementAtOrDefault(1)?.Split('?')[0] ?? "";
 
-                var p = personFactory.CreatePerson(
+                Person p = personFactory.CreatePerson(
                     name: name,
-                    desc: description,
+                    desc: CleanDescription(node, description, name),
                     birthDate: bDay,
                     url: $"{Urls.ImdbBase}/name/{slug}/",
                     sourceSlug: Slugs.Imdb,
@@ -68,43 +66,20 @@ public sealed partial class ImdbParser(PersonFactory personFactory)
         return results;
     }
 
-    private string GetCleanDescription(HtmlNode node, string description, string name)
+    private static string CleanDescription(HtmlNode node, string description, string name)
     {
         if (description.StartsWith(name, StringComparison.OrdinalIgnoreCase))
-        {
             description = description[name.Length..].Trim();
-        }
 
-        description = Regex.Replace(description, @"^was born on.*?\d{4}.*?\.\s*", "", RegexOptions.IgnoreCase).Trim();
-
-        description = RegexPatterns.ExcludeBirthStatement().Replace(description, "").Trim();
+        description = RegexPatterns.LeadingBirthStatement().Replace(description, "");
+        description = RegexPatterns.ExcludeBirthStatement().Replace(description, "");
         description = RegexPatterns.BioLinkSuffix().Replace(description, "");
         description = RegexPatterns.ExcludeImdbFooter().Replace(description, "");
-        description = description.Replace("  ", " ").Trim();
-
-        foreach (var prefix in NameParsing.Prefixes)
-        {
-            int prefixIndex = description.IndexOf(prefix, StringComparison.OrdinalIgnoreCase);
-
-            if (prefixIndex != -1)
-            {
-                int commaIndex = description.IndexOf(',', prefixIndex + prefix.Length);
-
-                if (commaIndex != -1)
-                {
-                    description = description.Remove(prefixIndex, (commaIndex - prefixIndex) + 1).Trim();
-                    description = Regex.Replace(description, @"^(He|She|Who|\w+)\s+known for\s*", "", RegexOptions.IgnoreCase);
-                }
-                else
-                {
-                    description = description.Remove(prefixIndex, prefix.Length).Trim();
-                }
-
-                break;
-            }
-        }
-
-        description = Regex.Replace(description, @"^(\s*,\s*|\s*and\s+)", "", RegexOptions.IgnoreCase).Trim();
+        description = RegexPatterns.LeadingConnectors().Replace(description, "");
+        description = description.Trim();
+        description = PrefixProcesssing(description);
+        description = RegexPatterns.LeadingConnectors().Replace(description, "").Trim();
+        description = RegexPatterns.CollapseWhitespace().Replace(description, " ").Trim();
 
         if (string.IsNullOrWhiteSpace(description))
         {
@@ -113,10 +88,36 @@ public sealed partial class ImdbParser(PersonFactory personFactory)
         }
 
         if (description.Length > 0 && char.IsLower(description[0]))
-        {
             description = char.ToUpper(description[0]) + description[1..];
-        }
 
         return description;
+    }
+
+
+    private static string PrefixProcesssing(string desc)
+
+    {
+        foreach (var prefix in NameParsing.Prefixes)
+        {
+            int prefixIndex = desc.IndexOf(prefix, StringComparison.OrdinalIgnoreCase);
+
+            if (prefixIndex != -1)
+            {
+                int commaIndex = desc.IndexOf(',', prefixIndex + prefix.Length);
+
+                if (commaIndex != -1)
+                {
+                    desc = desc.Remove(prefixIndex, (commaIndex - prefixIndex) + 1).Trim();
+                    desc = RegexPatterns.KnownForPrefix().Replace(desc, "");
+                }
+                else
+                {
+                    desc = desc.Remove(prefixIndex, prefix.Length).Trim();
+                }
+
+                break;
+            }
+        }
+        return desc;
     }
 }

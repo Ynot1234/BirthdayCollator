@@ -1,4 +1,5 @@
-﻿using System.Text.RegularExpressions;
+﻿using BirthdayCollator.Server.Constants;
+using System.Text.RegularExpressions;
 
 namespace BirthdayCollator.Helpers;
 
@@ -54,4 +55,19 @@ public partial class RegexPatterns
 
     [GeneratedRegex(@"^\d+\.\s+")]
     public static partial Regex LeadingRank();
+
+    [GeneratedRegex(@"^was born on.*?\d{4}.*?\.\s*", RegexOptions.IgnoreCase, "en-US")]
+    public static partial Regex LeadingBirthStatement();
+
+    [GeneratedRegex(@"^(He|She|Who|\w+)\s+known for\s*", RegexOptions.IgnoreCase, "en-US")]
+    public static partial Regex KnownForPrefix();
+
+    [GeneratedRegex(@"^(\s*,\s*|\s*and\s+)", RegexOptions.IgnoreCase, "en-US")]
+    public static partial Regex LeadingConnectors();
+
+    [GeneratedRegex(@"\s{2,}")]
+    public static partial Regex CollapseWhitespace();
+
+
+
 }
