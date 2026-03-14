@@ -51,4 +51,7 @@ public partial class RegexPatterns
     public static partial Regex BioLinkTail();
     [GeneratedRegex(@"\s*See full bio.*$", RegexOptions.IgnoreCase, "en-US")]
     public static partial Regex ExcludeImdbFooter();
+
+    [GeneratedRegex(@"^\d+\.\s+")]
+    public static partial Regex LeadingRank();
 }

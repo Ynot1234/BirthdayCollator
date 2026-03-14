@@ -26,16 +26,31 @@ namespace BirthdayCollator.Server.Processing.Html
 
         private static string ExtractCoreDescription(string line)
         {
-            int lastMeta = Math.Max(line.LastIndexOf(']'), line.LastIndexOf(')'));
+            //int lastMeta = Math.Max(line.LastIndexOf(']'), line.LastIndexOf(')'));
 
-            if (lastMeta >= 0 && lastMeta < line.Length - 1)
-                return line[(lastMeta + 1)..].TrimDebris();
+            //if (lastMeta >= 0 && lastMeta < line.Length - 1)
+            //    return line[(lastMeta + 1)..].TrimDebris();
 
+            //int dash = line.IndexOfAny(['–', '-']);
+            //return dash >= 0
+            //    ? line[(dash + 1)..].TrimDebris()
+            //    : line.TrimDebris();
+
+
+            int prefixMeta = Math.Max(line.IndexOf(']'), line.IndexOf(')'));
+
+            if (prefixMeta >= 0 && prefixMeta < 25)
+                return line[(prefixMeta + 1)..].TrimDebris();
+
+            // Only chop at a dash if it's also near the start
             int dash = line.IndexOfAny(['–', '-']);
-            return dash >= 0
-                ? line[(dash + 1)..].TrimDebris()
-                : line.TrimDebris();
+            if (dash >= 0 && dash < 25)
+                return line[(dash + 1)..].TrimDebris();
+
+            return line.TrimDebris();
         }
+
+
 
         private static string RemovePersonName(string description, string? personName)
         {

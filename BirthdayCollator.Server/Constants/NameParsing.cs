@@ -22,7 +22,8 @@
                 "was a ",
                 "was an ",
                 "is the ",
-                "was the "
+                "was the ",
+                "known for"
              };
     }
 }

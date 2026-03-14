@@ -77,7 +77,7 @@ public sealed partial class PersonFilter(WikiHtmlFetcher fetcher)
             return false;
         }
 
-        string month = date.ToString("MMMM");
+        string month = date.ToString(AppStrings.DateFormats.MonthLong);
         string day = date.Day.ToString();
 
         bool hasAnyMonth = RegexPatterns.MonthName().IsMatch(paren);

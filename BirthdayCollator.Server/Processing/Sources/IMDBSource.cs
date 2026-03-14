@@ -10,15 +10,17 @@ public sealed class ImdbSource(ImdbFetcher fetcher, ImdbParser parser, IYearRang
 {
     public async Task<List<Person>> GetPeopleAsync(DateTime date, CancellationToken ct)
     {
-        var targetYears = yearRangeProvider.GetYears();
+        IReadOnlyList<string> targetYears = yearRangeProvider.GetYears();
 
         var tasks = targetYears.Select(yearStr =>
-            int.TryParse(yearStr, out int year)
+        {
+            return int.TryParse(yearStr, out int year)
                 ? FetchAndParse(year, date.Month, date.Day, ct)
-                : Task.FromResult(new List<Person>()));
+                : Task.FromResult(new List<Person>());
+        });
 
-        var results = await Task.WhenAll(tasks);
-        var allPeople = results.SelectMany(p => p).ToList();
+        List<Person>[] results = await Task.WhenAll(tasks);
+        List<Person> allPeople = [.. results.SelectMany(p => p)];
 
         if (date is { Month: 2, Day: 29 })
         {
@@ -28,6 +30,7 @@ public sealed class ImdbSource(ImdbFetcher fetcher, ImdbParser parser, IYearRang
 
         return allPeople;
     }
+
 
     private async Task<List<Person>> FetchAndParse(int y, int m, int d, CancellationToken ct)
     {
