@@ -5,7 +5,6 @@ public static class AppStrings
     public static class Sections
     {
         public const string Births = "Births";
-        public const string Deaths = "Deaths";
     }
 
     public static class Slugs

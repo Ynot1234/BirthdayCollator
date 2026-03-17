@@ -1,5 +1,6 @@
 ﻿using BirthdayCollator.Helpers;
 using HtmlAgilityPack;
+using System.Text.RegularExpressions;
 
 namespace BirthdayCollator.Server.Processing.Html;
 
@@ -79,24 +80,23 @@ public static partial class WikiTextUtility
 
         if (lastIndex != -1)
         {
-            string textAfterName = text[lastIndex..];
-            var bioMatch = RegexPatterns.BioParenthetical().Match(textAfterName);
+            int nameEnd = lastIndex + lastName.Length;
+            int start = text.IndexOf('(', nameEnd);
 
-            if (bioMatch.Success)
+            if (start != -1 && (start - nameEnd) < 5)
             {
-                return bioMatch.Value;
-            }
-
-            int start = textAfterName.IndexOf('(');
-            int end = textAfterName.IndexOf(')', start + 1);
-            if (start != -1 && end != -1)
-            {
-                return textAfterName.Substring(start, end - start + 1);
+                int end = text.IndexOf(')', start + 1);
+                if (end != -1)
+                {
+                    string candidate = text.Substring(start, end - start + 1);
+                    if (Regex.IsMatch(candidate, @"\d{4}"))
+                    {
+                        return candidate;
+                    }
+                }
             }
         }
 
-        int fStart = text.IndexOf('(');
-        int fEnd = text.IndexOf(')', fStart + 1);
-        return (fStart != -1 && fEnd != -1) ? text.Substring(fStart, fEnd - fStart + 1) : null;
+        return null;
     }
 }
