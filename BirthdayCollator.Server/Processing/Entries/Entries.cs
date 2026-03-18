@@ -1,8 +1,7 @@
-﻿using BirthdayCollator.Helpers;
-
-namespace BirthdayCollator.Server.Processing.Entries;
+﻿namespace BirthdayCollator.Server.Processing.Entries;
 
 public record EntryContext(string RawText, string? Href, bool IsMulti, DateTime Date);
+
 public interface IEntrySplitter
 {
     bool IsMulti(string text);
@@ -14,23 +13,35 @@ public interface IEntrySplitter
 public sealed class EntrySplitter : IEntrySplitter
 {
     public bool IsMulti(string text) =>
-        !string.IsNullOrWhiteSpace(text) && text.Contains('\n');
+        !string.IsNullOrWhiteSpace(text) && text.AsSpan().ContainsAny('\n', '\r');
 
     public IReadOnlyList<string> Split(string text)
     {
         if (string.IsNullOrWhiteSpace(text))
             return [];
 
-        // Splitting by newline and carriage return to handle different OS formats safely
-        var lines = text
-            .Split(['\n', '\r'], StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries)
-            .Where(l => l.Length > 0)
-            .ToArray();
+        var span = text.AsSpan();
+        var result = new List<string>();
 
-        // If it's a multi-line entry, we usually want everything after the header/first line
-        return lines.Length > 1
-            ? lines[1..]
-            : lines;
+        int lineCount = 0;
+        foreach (var line in span.EnumerateLines())
+        {
+            var trimmed = line.Trim();
+            if (trimmed.IsEmpty) continue;
+
+            lineCount++;
+
+            if (lineCount == 1) continue;
+
+            result.Add(new string(trimmed));
+        }
+
+        if (lineCount == 1)
+        {
+            result.Add(text.Trim());
+        }
+
+        return result;
     }
 
     public bool IsDeathEntry(string entry) =>
@@ -38,6 +49,9 @@ public sealed class EntrySplitter : IEntrySplitter
 
     public IEnumerable<(string Text, DateTime Date)> SplitEntries(EntryContext ctx)
     {
-        return Split(ctx.RawText).Select(t => (t, ctx.Date));
+        foreach (var line in Split(ctx.RawText))
+        {
+            yield return (line, ctx.Date);
+        }
     }
 }

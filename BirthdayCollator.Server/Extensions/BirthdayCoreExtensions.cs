@@ -1,6 +1,4 @@
-﻿using BirthdayCollator.Server.Processing.Builders;
-
-namespace BirthdayCollator.Server.Extensions;
+﻿namespace BirthdayCollator.Server.Extensions;
 
 public static class BirthdayCoreExtensions
 {

@@ -1,7 +1,4 @@
-﻿using BirthdayCollator.Server.Configuration;
-using BirthdayCollator.Server.Models;
-using BirthdayCollator.Server.Processing.Builders;
-using BirthdayCollator.Server.Processing.Sources;
+﻿using BirthdayCollator.Server.Processing.Sources;
 using Microsoft.Extensions.Options;
 
 namespace BirthdayCollator.Server.Processing.Pipelines;
@@ -20,26 +17,45 @@ public sealed class FetchPipeline(
 
         var tasks = sources
             .Where(s => s.IsRelevant(opt, years, date))
-            .Select(async s => {
-              
-                    if (s is CategoryBirthSource cat && _debugSuffixes != null)
-                        cat.ForceSuffixes(_debugSuffixes);
+            .Select(s =>
+            {
+                if (s is CategoryBirthSource cat && _debugSuffixes != null)
+                {
+                    cat.ForceSuffixes(_debugSuffixes);
+                }
+                return s.GetPeopleAsync(date, token);
+            })
+            .ToList();
 
-                    return await s.GetPeopleAsync(date, token);
-            });
+        if (tasks.Count == 0) return [];
 
-        var results = await Task.WhenAll(tasks);
-        return [.. results.SelectMany(x => x)];
+        List<Person> allPeople = [];
+
+        await foreach (var sourceTask in Task.WhenEach(tasks))
+        {
+               var sourceResults = await sourceTask;
+                if (sourceResults.Count > 0)
+                {
+                    allPeople.AddRange(sourceResults);
+                }
+         
+        }
+
+        return allPeople;
     }
 
     public void ForceSuffixes(params string[] suffixes)
     {
         _debugSuffixes = suffixes;
-        if (suffixes is { Length: > 0 }) years.ForceSuffix(suffixes[0]);
+        if (suffixes is { Length: > 0 })
+        {
+            years.ForceSuffix(suffixes[0]);
+        }
     }
 
-    public void ResetSuffixes() 
+    public void ResetSuffixes()
     {
-        _debugSuffixes = null; years.ClearSuffix(); 
+        _debugSuffixes = null;
+        years.ClearSuffix();
     }
 }

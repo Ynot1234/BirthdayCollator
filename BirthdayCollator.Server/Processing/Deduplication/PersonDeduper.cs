@@ -1,8 +1,4 @@
-﻿using BirthdayCollator.Server.Models;
-using BirthdayCollator.Server.Helpers;
-using static BirthdayCollator.Server.Constants.AppStrings;
-
-namespace BirthdayCollator.Server.Processing.Deduplication;
+﻿namespace BirthdayCollator.Server.Processing.Deduplication;
 
 public sealed class PersonDeduper
 {
@@ -10,50 +6,47 @@ public sealed class PersonDeduper
     {
         if (people.Count <= 1) return people;
 
-        List<Person> uniquePeople = [];
+        var uniqueMap = new Dictionary<(int Year, string Slug), Person>();
 
         foreach (var p in people)
         {
-            string pName = StringNormalization.ToComparableSlug(p.Name);
+            int year = p.BirthYear;
+            string slug = StringNormalization.ToComparableSlug(p.Name);
+            var key = (year, slug);
 
-            var existing = uniquePeople.FirstOrDefault(u =>
-                u.BirthYear == p.BirthYear &&
-                (pName.Contains(StringNormalization.ToComparableSlug(u.Name)) ||
-                 StringNormalization.ToComparableSlug(u.Name).Contains(pName)));
-
-            if (existing == null)
+            if (!uniqueMap.TryGetValue(key, out var existing))
             {
-                uniquePeople.Add(p);
+                uniqueMap[key] = p;
                 continue;
             }
 
             int scoreP = GetScore(p);
             int scoreExisting = GetScore(existing);
 
-            if (scoreP > scoreExisting ||
-               (scoreP == scoreExisting && (p.Description?.Length ?? 0) > (existing.Description?.Length ?? 0)))
+            bool isPBetter = scoreP > scoreExisting ||
+                            (scoreP == scoreExisting && (p.Description?.Length ?? 0) > (existing.Description?.Length ?? 0));
+
+            if (isPBetter)
             {
-                uniquePeople.Remove(existing);
-                uniquePeople.Add(p);
+                uniqueMap[key] = p;
             }
         }
 
-        return uniquePeople;
+        return [.. uniqueMap.Values];
     }
 
     private static int GetScore(Person p)
     {
+        // Simple null check
         if (string.IsNullOrEmpty(p.SourceSlug)) return 0;
 
-        if (p.SourceSlug.Equals(Slugs.OnThisDay, StringComparison.OrdinalIgnoreCase))
-            return 1;
-
-        if (p.SourceSlug.Equals(Slugs.Imdb, StringComparison.OrdinalIgnoreCase))
-            return 2;
-
-        if (p.SourceSlug.Equals(Slugs.Genarians, StringComparison.OrdinalIgnoreCase))
-            return 3;
-
-        return 4;
+        // Direct string comparison in the switch is highly optimized in .NET 9
+        return p.SourceSlug switch
+        {
+            var s when s.Equals(Slugs.OnThisDay, StringComparison.OrdinalIgnoreCase) => 1,
+            var s when s.Equals(Slugs.Imdb, StringComparison.OrdinalIgnoreCase) => 2,
+            var s when s.Equals(Slugs.Genarians, StringComparison.OrdinalIgnoreCase) => 3,
+            _ => 4
+        };
     }
 }

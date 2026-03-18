@@ -1,7 +1,4 @@
-﻿using BirthdayCollator.Server.Models;
-using BirthdayCollator.Server.Processing.Builders;
-
-namespace BirthdayCollator.Server.Processing.Sorting;
+﻿namespace BirthdayCollator.Server.Processing.Sorting;
 
 public sealed class PersonSorter(IYearRangeProvider yearRangeProvider)
 {

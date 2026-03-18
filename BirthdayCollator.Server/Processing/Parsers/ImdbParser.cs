@@ -1,11 +1,4 @@
-﻿using BirthdayCollator.Helpers;
-using BirthdayCollator.Server.Constants;
-using BirthdayCollator.Server.Models;
-using BirthdayCollator.Server.Processing.Builders;
-using HtmlAgilityPack;
-using static BirthdayCollator.Server.Constants.AppStrings;
-
-namespace BirthdayCollator.Server.Processing.Parsers;
+﻿namespace BirthdayCollator.Server.Processing.Parsers;
 public sealed partial class ImdbParser(PersonFactory personFactory)
 {
     public List<Person> Parse(string html, int year, int month, int day)

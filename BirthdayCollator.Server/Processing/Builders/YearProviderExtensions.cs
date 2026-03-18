@@ -1,6 +1,4 @@
-﻿using BirthdayCollator.Server.Models;
-
-namespace BirthdayCollator.Server.Processing.Builders;
+﻿namespace BirthdayCollator.Server.Processing.Builders;
 
 public static class YearProviderExtensions
 {

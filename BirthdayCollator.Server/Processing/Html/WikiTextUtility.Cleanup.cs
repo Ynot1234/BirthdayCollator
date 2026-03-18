@@ -1,7 +1,4 @@
-﻿using BirthdayCollator.Helpers;
-using HtmlAgilityPack;
-
-namespace BirthdayCollator.Server.Processing.Html;
+﻿namespace BirthdayCollator.Server.Processing.Html;
 
 public static partial class WikiTextUtility
 {
@@ -21,8 +18,8 @@ public static partial class WikiTextUtility
     {
         if (string.IsNullOrWhiteSpace(input)) return string.Empty;
 
-        string text = RegexPatterns.Citation().Replace(input, "");
-        text = RegexPatterns.Parentheses().Replace(text, "");
+        string text = RegexPatterns.Citation().Replace(input, String.Empty);
+        text = RegexPatterns.Parentheses().Replace(text, String.Empty);
         return ExtractDescription(text).Replace("  ", " ");
     }
 }

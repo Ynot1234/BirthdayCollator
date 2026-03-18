@@ -1,6 +1,4 @@
-﻿using BirthdayCollator.Server.Constants;
-
-namespace BirthdayCollator.Server.Processing.Html;
+﻿namespace BirthdayCollator.Server.Processing.Html;
 
 public static partial class WikiTextUtility
 {

@@ -1,7 +1,5 @@
 ﻿using BirthdayCollator.Server.AI.Services;
-using BirthdayCollator.Server.Models;
-using BirthdayCollator.Server.Processing.Html;
-using Microsoft.Extensions.Caching.Memory;
+using Microsoft.Extensions.Caching.Hybrid;
 
 namespace BirthdayCollator.Server.Processing.Enrichment;
 
@@ -13,11 +11,14 @@ public interface IPersonEnrichmentService
 
 public class PersonEnrichmentService(
     IBioService ai,
-    IMemoryCache cache,
+    HybridCache cache,
     IConfiguration config) : IPersonEnrichmentService
 {
     public async Task<Person> EnrichAsync(Person person, string? apiKey = null)
     {
+        if (!string.IsNullOrWhiteSpace(person.Summary))
+            return person;
+
         person.Summary = await GetSummaryAsync(person.Name, person.Description, apiKey);
         return person;
     }
@@ -25,17 +26,23 @@ public class PersonEnrichmentService(
     public async Task<string> GetSummaryAsync(string name, string desc, string? apiKey = null)
     {
         var key = apiKey ?? config["OpenAI:ApiKey"];
-        if (string.IsNullOrWhiteSpace(key)) return "No API key provided.";
+        if (string.IsNullOrWhiteSpace(key)) return "Missing API Key";
 
-        string cacheKey = $"summary:{name.Trim()}:{desc.Trim().GetHashCode()}";
+        string cacheKey = $"sum:{name.Trim().ToLowerInvariant()}:{desc.Length}";
 
-        return await cache.GetOrCreateAsync(cacheKey, async entry =>
+        return await cache.GetOrCreateAsync(cacheKey, async token =>
         {
-            entry.Priority = CacheItemPriority.NeverRemove;
             string raw = await ai.SummarizeAsync(name, desc, key);
+            if (string.IsNullOrWhiteSpace(raw)) return string.Empty;
+
             int index = raw.IndexOf(name, StringComparison.OrdinalIgnoreCase);
-            if (index >= 0) raw = raw.Remove(index, name.Length).Trim();
+            if (index >= 0)
+            {
+                ReadOnlySpan<char> rawSpan = raw.AsSpan();
+                raw = string.Concat(rawSpan[..index], rawSpan[(index + name.Length)..]).Trim();
+            }
+
             return WikiTextUtility.NormalizeDescription(raw);
-        }) ?? string.Empty;
+        });
     }
 }

@@ -1,5 +1,4 @@
-﻿using BirthdayCollator.Server.Processing.Pipelines;
-using BirthdayCollator.Server.Resources;
+﻿using BirthdayCollator.Server.Resources;
 using BirthdayCollator.Server.Services;
 
 namespace BirthdayCollator.Server.Extensions;

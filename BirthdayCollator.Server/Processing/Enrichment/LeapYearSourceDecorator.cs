@@ -1,8 +1,4 @@
-﻿using BirthdayCollator.Server.Configuration;
-using BirthdayCollator.Server.Helpers;
-using BirthdayCollator.Server.Models;
-using BirthdayCollator.Server.Processing.Builders;
-using BirthdayCollator.Server.Processing.Sources;
+﻿using BirthdayCollator.Server.Processing.Sources;
 
 namespace BirthdayCollator.Server.Processing.Enrichment
 {
@@ -21,6 +17,7 @@ namespace BirthdayCollator.Server.Processing.Enrichment
 
             return people;
         }
-        public bool IsRelevant(BirthSourceOptions opt, IYearRangeProvider years, DateTime date) => innerSource.IsRelevant(opt, years, date);
+        public bool IsRelevant(BirthSourceOptions opt, IYearRangeProvider years, DateTime date) => 
+            innerSource.IsRelevant(opt, years, date);
     }
 }

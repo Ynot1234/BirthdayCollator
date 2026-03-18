@@ -1,11 +1,4 @@
-﻿using BirthdayCollator.Server.Configuration;
-using BirthdayCollator.Server.Constants;
-using BirthdayCollator.Server.Models;
-using BirthdayCollator.Server.Processing.Builders;
-using BirthdayCollator.Server.Processing.Fetching;
-using BirthdayCollator.Server.Processing.Pipelines;
-
-namespace BirthdayCollator.Server.Processing.Sources;
+﻿namespace BirthdayCollator.Server.Processing.Sources;
 
 public sealed class YearBirthSource(BirthSourceEngine engine, WikiHtmlFetcher fetcher, IYearRangeProvider yearRangeProvider) : IBirthSource
 {

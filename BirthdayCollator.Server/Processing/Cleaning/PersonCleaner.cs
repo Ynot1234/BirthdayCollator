@@ -1,26 +1,32 @@
-﻿using BirthdayCollator.Server.Helpers;
-using BirthdayCollator.Server.Models;
-using BirthdayCollator.Server.Processing.Html;
-
-namespace BirthdayCollator.Server.Processing.Cleaning;
+﻿namespace BirthdayCollator.Server.Processing.Cleaning;
 
 public sealed class PersonCleaner
 {
-    public List<Person> CleanPersons(List<Person> people) 
-        => [.. people.Select(p =>
+    public List<Person> CleanPersons(List<Person> people)
     {
-        var cleaned = p.Clone();
-        cleaned.Name = WikiTextUtility.SanitizeWikiText(cleaned.Name);
-        cleaned.Description = WikiTextUtility.SanitizeWikiText(cleaned.Description);
+        if (people.Count == 0) return [];
 
-        if (!string.IsNullOrEmpty(cleaned.Name) && !string.IsNullOrEmpty(cleaned.Description))
+        List<Person> cleanedList = new(people.Count);
+
+        foreach (var p in people)
         {
-          cleaned.Description = cleaned.Description
-                                       .Replace(cleaned.Name, "", StringComparison.OrdinalIgnoreCase)
-                                       .TrimDebris();
-        }
+            string cleanName = WikiTextUtility.SanitizeWikiText(p.Name);
+            string cleanDesc = WikiTextUtility.SanitizeWikiText(p.Description);
 
-        return cleaned;
-    })
-    .Where(p => !string.IsNullOrWhiteSpace(p.Description))];
+            if (string.IsNullOrWhiteSpace(cleanDesc)) continue;
+
+            if (!string.IsNullOrEmpty(cleanName))
+            {
+                cleanDesc = cleanDesc
+                    .Replace(cleanName, String.Empty, StringComparison.OrdinalIgnoreCase)
+                    .TrimDebris();
+            }
+
+            var cleaned = p.Clone();
+            cleaned.Name = cleanName;
+            cleaned.Description = cleanDesc;
+            cleanedList.Add(cleaned);
+        }
+        return cleanedList;
+    }
 }

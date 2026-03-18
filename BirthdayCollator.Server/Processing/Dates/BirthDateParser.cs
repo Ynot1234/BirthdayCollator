@@ -1,14 +1,21 @@
-﻿using BirthdayCollator.Helpers;
-using BirthdayCollator.Server.Constants;
+﻿using static System.Globalization.CultureInfo;
 
 namespace BirthdayCollator.Server.Processing.Dates;
 
 public sealed class BirthDateParser : IBirthDateParser
 {
-    private static (string Month, string Day)? ExtractMonthDay(string text)
+    private static bool TryExtractMonthDay(string text, out ReadOnlySpan<char> month, out ReadOnlySpan<char> day)
     {
         var match = RegexPatterns.MonthDayLoose().Match(text);
-        return match.Success ? (match.Groups[1].Value, match.Groups[2].Value) : null;
+        if (match.Success)
+        {
+            month = match.Groups[1].ValueSpan;
+            day = match.Groups[2].ValueSpan;
+            return true;
+        }
+
+        month = day = default;
+        return false;
     }
 
     public bool IsOnOrAfterDate(string entry, DateTime targetDate)
@@ -24,10 +31,27 @@ public sealed class BirthDateParser : IBirthDateParser
     public bool TryParseMonthDay(string text, int year, out DateTime result)
     {
         result = default;
-        var parts = ExtractMonthDay(text);
 
-        return parts != null && DateTime.TryParse($"{parts.Value.Month} {parts.Value.Day} {year}",
-            System.Globalization.CultureInfo.InvariantCulture, out result);
+        if (!TryExtractMonthDay(text, out var m, out var d))
+            return false;
+
+        Span<char> dateBuffer = stackalloc char[64];
+        int written = 0;
+
+        m.CopyTo(dateBuffer);
+        written += m.Length;
+        dateBuffer[written++] = ' ';
+
+        d.CopyTo(dateBuffer[written..]);
+        written += d.Length;
+        dateBuffer[written++] = ' ';
+
+        if (!year.TryFormat(dateBuffer[written..], out int yearLen))
+            return false;
+
+        written += yearLen;
+
+        return DateTime.TryParse(dateBuffer[..written], InvariantCulture, out result);
     }
 
     public bool MatchesRequestedDate(string text, DateTime date)
@@ -36,8 +60,19 @@ public sealed class BirthDateParser : IBirthDateParser
                && parsed.Month == date.Month && parsed.Day == date.Day;
     }
 
-    public string? GetYearPageDateHeader(string rawText) =>
-        rawText.Split('\n', StringSplitOptions.RemoveEmptyEntries).FirstOrDefault()?.Trim();
+    public string? GetYearPageDateHeader(string rawText)
+    {
+        if (string.IsNullOrWhiteSpace(rawText)) return null;
+
+        ReadOnlySpan<char> span = rawText.AsSpan().Trim();
+        int newlineIdx = span.IndexOf('\n');
+
+        ReadOnlySpan<char> firstLine = newlineIdx == -1
+            ? span
+            : span[..newlineIdx].Trim();
+
+        return firstLine.IsEmpty ? null : new string(firstLine);
+    }
 
     public bool IsMonthName(string text) =>
         !string.IsNullOrWhiteSpace(text) && MonthNames.All.Contains(text, StringComparer.OrdinalIgnoreCase);

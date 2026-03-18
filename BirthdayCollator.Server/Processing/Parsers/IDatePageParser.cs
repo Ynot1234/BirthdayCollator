@@ -1,6 +1,4 @@
-﻿using BirthdayCollator.Server.Models;
-
-namespace BirthdayCollator.Server.Processing.Parsers
+﻿namespace BirthdayCollator.Server.Processing.Parsers
 {
     public interface IDatePageParser
     {

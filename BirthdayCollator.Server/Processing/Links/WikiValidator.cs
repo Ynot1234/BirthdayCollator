@@ -1,6 +1,4 @@
-﻿using BirthdayCollator.Server.Processing.Html;
-
-namespace BirthdayCollator.Server.Processing.Links;
+﻿namespace BirthdayCollator.Server.Processing.Links;
 
 public static class WikiValidator
 {
@@ -8,13 +6,19 @@ public static class WikiValidator
     {
         if (string.IsNullOrWhiteSpace(href)) return false;
 
-        string trimmed = href.TrimStart('.', '/');
+        var span = href.AsSpan().TrimStart("./");
 
-        if (trimmed.Length == 4 && int.TryParse(trimmed, out _)) return true;
+        if (span.Length == 4 && int.TryParse(span, out _)) return true;
 
-        var parts = trimmed.Split('_');
+        int underscoreIndex = span.IndexOf('_');
+        if (underscoreIndex == -1) return false;
 
-        return parts.Length == 2 && DateTime.TryParse($"{parts[0]} 1", out _) && int.TryParse(parts[1], out _);
+        var part1 = span[..underscoreIndex];
+        var part2 = span[(underscoreIndex + 1)..];
+
+        return (underscoreIndex + 1 < span.Length) &&
+               DateTime.TryParse(string.Concat(part1, " 1"), out _) &&
+               int.TryParse(part2, out _);
     }
 
     public static bool HrefMatchesName(string href, string name) => WikiTextUtility.FuzzyNameMatch(href, name);

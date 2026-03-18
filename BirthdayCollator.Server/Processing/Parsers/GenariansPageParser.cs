@@ -1,53 +1,65 @@
-﻿using BirthdayCollator.Server.Models;
-using BirthdayCollator.Server.Processing.Builders;
-using BirthdayCollator.Server.Processing.Html;
-using BirthdayCollator.Server.Processing.Links;
-using HtmlAgilityPack;
-using System.Globalization;
-using static BirthdayCollator.Server.Constants.AppStrings;
+﻿using System.Globalization;
 
 namespace BirthdayCollator.Server.Processing.Parsers;
 
-public sealed class GenariansPageParser(ILinkResolver linkResolver, IYearRangeProvider year, PersonFactory factory) 
+public sealed class GenariansPageParser(ILinkResolver linkResolver, IYearRangeProvider year, PersonFactory factory)
 {
     public bool TryParseRow(HtmlNode row, string month, int day, string url, out Person? p)
     {
         p = null;
         var cells = row.SelectNodes("./th");
-        if (cells == null || cells.Count < 3) return false;
+
+        if (cells is null or { Count: < 3 }) return false;
 
         var spans = cells[2].SelectNodes(".//span");
-        var nameNode = spans[0].InnerText.Contains("NEW CENTENARIAN") ? spans[1] : spans[0];
+        if (spans is null or { Count: 0 }) return false;
 
-        List<string> lines = [.. spans.Last().InnerHtml
-            .Split("<br", StringSplitOptions.RemoveEmptyEntries)
-            .Select(line => HtmlEntity.DeEntitize(line).Trim(' ', '\n', '\r', '>', '\t'))
-            .Where(s => !string.IsNullOrWhiteSpace(s))];
+        var nameNode = spans[0].InnerText.Contains("NEW CENTENARIAN", StringComparison.OrdinalIgnoreCase)
+            ? spans[1]
+            : spans[0];
 
-        if (lines.Count < 2 
-        || !DateTime.TryParseExact(lines.Last(), 
-                                   DateFormats.FullDate, 
-                                   CultureInfo.InvariantCulture, 
-                                   DateTimeStyles.None, 
-                                   out var bDay))
-            return false;
+        var lastSpanHtml = spans.Last().InnerHtml;
+        string[] rawLines = lastSpanHtml.Split("<br", StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries);
 
-        if (year.IncludeAll)
+        List<string> lines = [];
+        foreach (var line in rawLines)
         {
-            var today = DateTime.Today;
-            if (bDay.Month < today.Month || (bDay.Month == today.Month && bDay.Day < today.Day))
-                return false;
+            string clean = HtmlEntity.DeEntitize(line).Trim(' ', '\n', '\r', '>', '\t');
+            if (!string.IsNullOrWhiteSpace(clean))
+            {
+                lines.Add(clean);
+            }
         }
-        else if (bDay.Day != day || !bDay.ToString(DateFormats.MonthLong, CultureInfo.InvariantCulture).Equals(month, StringComparison.OrdinalIgnoreCase))
+
+        if (lines.Count < 2 || !DateTime.TryParseExact(lines.Last(),
+                DateFormats.FullDate,
+                CultureInfo.InvariantCulture,
+                DateTimeStyles.None,
+                out var bDay))
+        {
+            return false;
+        }
+
+        if (!IsDateRelevant(bDay, month, day))
         {
             return false;
         }
 
         var name = WikiTextUtility.Normalize(nameNode.InnerText);
-        var description = lines[0].Split(',')[0].Trim();
+
+        ReadOnlySpan<char> firstLine = lines[0].AsSpan();
+        int commaIndex = firstLine.IndexOf(',');
+        string description = (commaIndex == -1 ? firstLine : firstLine[..commaIndex]).Trim().ToString();
+
         var rawHref = linkResolver.ExtractWikipediaHref(cells[0]) ?? string.Empty;
-        string slug = rawHref.Split('/').Last().TrimStart('.');
-        string absoluteUrl = !string.IsNullOrEmpty(slug) ? $"{Constants.Urls.ArticleBase}/{slug}" : string.Empty;
+
+        ReadOnlySpan<char> hrefSpan = rawHref.AsSpan();
+        int lastSlash = hrefSpan.LastIndexOf('/');
+        string slug = lastSlash == -1
+            ? rawHref.TrimStart('.')
+            : new string(hrefSpan[(lastSlash + 1)..].TrimStart('.'));
+
+        string absoluteUrl = !string.IsNullOrEmpty(slug) ? $"{Urls.ArticleBase}/{slug}" : string.Empty;
 
         p = factory.CreatePerson(
             name: name,
@@ -60,5 +72,19 @@ public sealed class GenariansPageParser(ILinkResolver linkResolver, IYearRangePr
         );
 
         return true;
+    }
+
+    private bool IsDateRelevant(DateTime bDay, string targetMonth, int targetDay)
+    {
+        if (year.IncludeAll)
+        {
+            var today = DateTime.Today;
+            return bDay.Month > today.Month 
+               || (bDay.Month == today.Month && bDay.Day >= today.Day);
+        }
+
+        return bDay.Day == targetDay &&
+               bDay.ToString(DateFormats.MonthLong, CultureInfo.InvariantCulture)
+                   .Equals(targetMonth, StringComparison.OrdinalIgnoreCase);
     }
 }

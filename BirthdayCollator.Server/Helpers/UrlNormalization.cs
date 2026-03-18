@@ -1,21 +1,20 @@
-﻿using BirthdayCollator.Server.Constants;
-using System.Text.RegularExpressions;
+﻿using System.Text.RegularExpressions;
 
 namespace BirthdayCollator.Server.Helpers;
 
-public static class UrlNormalization
+public static partial class UrlNormalization
 {
+  
     public static string Fix(string? url, string desc, string name)
     {
         if (string.IsNullOrWhiteSpace(url) ||
-        url.Equals("null", StringComparison.OrdinalIgnoreCase) ||
-        url.Equals("undefined", StringComparison.OrdinalIgnoreCase) ||
-        url.Contains("action=edit"))
+            url is "null" or "undefined" ||
+            url.Contains("action=edit", StringComparison.OrdinalIgnoreCase))
         {
             return CreateDDGSearchUrl(name, desc);
         }
 
-        string cleanUrl = url.StartsWith("http") ? url : $"https://{url}";
+        string cleanUrl = url.StartsWith("http", StringComparison.OrdinalIgnoreCase) ? url : $"https://{url}";
 
         const string suffix = "_(disambiguation)";
         if (cleanUrl.EndsWith(suffix, StringComparison.OrdinalIgnoreCase))
@@ -30,10 +29,7 @@ public static class UrlNormalization
     {
         string cleanDesc = Regex.Replace(desc ?? "", Regex.Escape(name), "", RegexOptions.IgnoreCase).TrimDebris();
 
-        if (cleanDesc.StartsWith("is ", StringComparison.OrdinalIgnoreCase))
-            cleanDesc = cleanDesc[3..].TrimDebris();
-        else if (cleanDesc.StartsWith("was ", StringComparison.OrdinalIgnoreCase))
-            cleanDesc = cleanDesc[4..].TrimDebris();
+        cleanDesc = RegexPatterns.VerbPrefixRegex().Replace(cleanDesc, "").TrimDebris();
 
         string searchTerm = string.IsNullOrWhiteSpace(cleanDesc) ? name : $"{name} {cleanDesc}";
 
@@ -43,9 +39,12 @@ public static class UrlNormalization
     public static string NormalizeUrl(string url)
     {
         if (string.IsNullOrWhiteSpace(url)) return string.Empty;
-        url = url.Trim();
-        if (url.StartsWith("https://", StringComparison.OrdinalIgnoreCase)) return url[8..];
-        if (url.StartsWith("http://", StringComparison.OrdinalIgnoreCase)) return url[7..];
-        return url;
+
+        ReadOnlySpan<char> urlSpan = url.AsSpan().Trim();
+
+        if (urlSpan.StartsWith("https://", StringComparison.OrdinalIgnoreCase)) return new string(urlSpan[8..]);
+        if (urlSpan.StartsWith("http://", StringComparison.OrdinalIgnoreCase)) return new string(urlSpan[7..]);
+
+        return new string(urlSpan);
     }
 }

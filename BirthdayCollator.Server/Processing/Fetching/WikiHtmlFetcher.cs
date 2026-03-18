@@ -1,7 +1,4 @@
-﻿using BirthdayCollator.Server.Constants;
-using static BirthdayCollator.Server.Constants.AppStrings;
-
-namespace BirthdayCollator.Server.Processing.Fetching;
+﻿namespace BirthdayCollator.Server.Processing.Fetching;
 
 public sealed class WikiHtmlFetcher(IHttpClientFactory factory)
 {

@@ -21,7 +21,7 @@ public static class Urls
     public static readonly string ArticleBase = $"{Domain}/wiki";
     
     public static readonly string API = $"{Domain}/{APISub}/html";
-    public static string GetWikiBirthsUrl(string slug) => $"{ArticleBase}/{slug}#{AppStrings.Sections.Births}";
+    public static string GetWikiBirthsUrl(string slug) => $"{ArticleBase}/{slug}#{Sections.Births}";
 
     public static string? GetSourceUrl(string? slug, string fallbackUrl) => slug switch
     {

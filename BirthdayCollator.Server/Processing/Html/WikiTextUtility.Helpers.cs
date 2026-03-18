@@ -1,107 +1,94 @@
-﻿using BirthdayCollator.Helpers;
-using BirthdayCollator.Server.Constants;
-using BirthdayCollator.Server.Helpers;
-using System.Text.RegularExpressions;
+﻿using System.Buffers; 
 
-namespace BirthdayCollator.Server.Processing.Html
+namespace BirthdayCollator.Server.Processing.Html;
+
+public static partial class WikiTextUtility
 {
-    public static partial class WikiTextUtility
+    private static readonly SearchValues<char> PrefixMetaChars = SearchValues.Create("])");
+    private static readonly SearchValues<char> DashChars = SearchValues.Create("–-");
+
+    private static List<string> SplitAndCleanLines(string rawText) =>
+        [.. rawText.Split(['\n', '\r'], StringSplitOptions.RemoveEmptyEntries)
+             .Select(l => l.Trim())
+             .Where(l => !string.IsNullOrWhiteSpace(l))];
+
+    private static string SelectTargetLine(List<string> lines, string fallback)
     {
+        string? line = lines.FirstOrDefault(l => !MonthNames.All.Any(m =>
+                 l.Equals(m, StringComparison.OrdinalIgnoreCase) ||
+                (l.StartsWith(m, StringComparison.OrdinalIgnoreCase) && l.Length < m.Length + 5)
+            ));
 
-        private static List<string> SplitAndCleanLines(string rawText) =>
-          [.. rawText.Split(['\n', '\r'], StringSplitOptions.RemoveEmptyEntries)
-               .Select(l => l.Trim())
-               .Where(l => !string.IsNullOrWhiteSpace(l))];
+        return line ?? lines.FirstOrDefault() ?? fallback;
+    }
 
-        private static string SelectTargetLine(List<string> lines, string fallback)
+    private static string ExtractCoreDescription(string line)
+    {
+        ReadOnlySpan<char> span = line.AsSpan();
+
+        int prefixMeta = span.LastIndexOfAny(PrefixMetaChars);
+
+        if (prefixMeta >= 0 && prefixMeta < 25)
+            return new string(span[(prefixMeta + 1)..]).TrimDebris();
+
+        int dash = span.IndexOfAny(DashChars);
+        if (dash >= 0 && dash < 25)
+            return new string(span[(dash + 1)..]).TrimDebris();
+
+        return line.TrimDebris();
+    }
+
+    private static string RemovePersonName(string description, string? personName)
+    {
+        if (string.IsNullOrEmpty(personName))
+            return description;
+
+        return description.Replace(personName, "", StringComparison.OrdinalIgnoreCase)
+                          .TrimDebris();
+    }
+
+    private static string RemoveTitles(string description)
+    {
+        foreach (var title in NameParsing.Titles)
         {
-            string? line = lines.FirstOrDefault(l =>
-                !MonthNames.All.Any(m =>
-                    l.Equals(m, StringComparison.OrdinalIgnoreCase) ||
-                    (l.StartsWith(m, StringComparison.OrdinalIgnoreCase) && l.Length < m.Length + 5)
-                ));
-
-            return line ?? lines.FirstOrDefault() ?? fallback;
-        }
-
-        private static string ExtractCoreDescription(string line)
-        {
-            //int lastMeta = Math.Max(line.LastIndexOf(']'), line.LastIndexOf(')'));
-
-            //if (lastMeta >= 0 && lastMeta < line.Length - 1)
-            //    return line[(lastMeta + 1)..].TrimDebris();
-
-            //int dash = line.IndexOfAny(['–', '-']);
-            //return dash >= 0
-            //    ? line[(dash + 1)..].TrimDebris()
-            //    : line.TrimDebris();
-
-
-            int prefixMeta = Math.Max(line.IndexOf(']'), line.IndexOf(')'));
-
-            if (prefixMeta >= 0 && prefixMeta < 25)
-                return line[(prefixMeta + 1)..].TrimDebris();
-
-            // Only chop at a dash if it's also near the start
-            int dash = line.IndexOfAny(['–', '-']);
-            if (dash >= 0 && dash < 25)
-                return line[(dash + 1)..].TrimDebris();
-
-            return line.TrimDebris();
-        }
-
-
-
-        private static string RemovePersonName(string description, string? personName)
-        {
-            if (string.IsNullOrEmpty(personName))
-                return description;
-
-            return Regex.Replace(description, Regex.Escape(personName), "", RegexOptions.IgnoreCase)
-                        .TrimDebris();
-        }
-
-        private static string RemoveTitles(string description)
-        {
-            foreach (var title in NameParsing.Titles)
+            if (description.Contains(title, StringComparison.OrdinalIgnoreCase))
             {
-                if (description.Contains(title, StringComparison.OrdinalIgnoreCase))
-                {
-                    description = description.Replace(title, "", StringComparison.OrdinalIgnoreCase)
-                                             .TrimDebris();
-                }
+                description = description.Replace(title, "", StringComparison.OrdinalIgnoreCase);
             }
-            return description;
         }
+        return description.TrimDebris();
+    }
 
-        private static string RemovePrefixes(string description)
+    private static string RemovePrefixes(string description)
+    {
+        ReadOnlySpan<char> descSpan = description.AsSpan();
+        foreach (var prefix in NameParsing.Prefixes)
         {
-            foreach (var prefix in NameParsing.Prefixes)
-            {
-                if (description.StartsWith(prefix, StringComparison.OrdinalIgnoreCase))
-                    return description[prefix.Length..].TrimDebris();
-            }
-            return description;
+            if (descSpan.StartsWith(prefix, StringComparison.OrdinalIgnoreCase))
+                return new string(descSpan[prefix.Length..]).TrimDebris();
         }
+        return description;
+    }
 
-        private static string StripLeadingVerbs(string description)
-        {
-            if (description.StartsWith("is ", StringComparison.OrdinalIgnoreCase) && description.Length > 3)
-                return description[3..].TrimDebris();
+    private static string StripLeadingVerbs(string description)
+    {
+        ReadOnlySpan<char> span = description.AsSpan();
 
-            if (description.StartsWith("was ", StringComparison.OrdinalIgnoreCase) && description.Length > 4)
-                return description[4..].TrimDebris();
+        if (span.StartsWith("is ", StringComparison.OrdinalIgnoreCase) && span.Length > 3)
+            return new string(span[3..]).TrimDebris();
 
-            return description;
-        }
+        if (span.StartsWith("was ", StringComparison.OrdinalIgnoreCase) && span.Length > 4)
+            return new string(span[4..]).TrimDebris();
 
-        private static string ExtractFirstSentence(string description)
-        {
-            var match = RegexPatterns.SentenceBoundary().Match(description);
+        return description;
+    }
 
-            return match.Success
-                ? description[..match.Index].TrimDebris()
-                : description.TrimDebris();
-        }
+    private static string ExtractFirstSentence(string description)
+    {
+        var match = RegexPatterns.SentenceBoundary().Match(description);
+
+        return match.Success
+            ? description[..match.Index].TrimDebris()
+            : description.TrimDebris();
     }
 }

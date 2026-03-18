@@ -1,7 +1,6 @@
-﻿using BirthdayCollator.Server.Constants;
-using System.Text.RegularExpressions;
+﻿using System.Text.RegularExpressions;
 
-namespace BirthdayCollator.Helpers;
+namespace BirthdayCollator.Server.Helpers;
 
 public partial class RegexPatterns
 {
@@ -67,6 +66,10 @@ public partial class RegexPatterns
 
     [GeneratedRegex(@"\s{2,}")]
     public static partial Regex CollapseWhitespace();
+
+    [GeneratedRegex(@"\bis\s+|\bwas\s+", RegexOptions.IgnoreCase | RegexOptions.CultureInvariant)]
+    public static partial Regex VerbPrefixRegex();
+
 
 
 

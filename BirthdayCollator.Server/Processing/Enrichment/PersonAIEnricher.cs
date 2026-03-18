@@ -1,6 +1,4 @@
-﻿using BirthdayCollator.Server.Constants;
-
-namespace BirthdayCollator.Server.Processing.Enrichment;
+﻿namespace BirthdayCollator.Server.Processing.Enrichment;
 
 public sealed class PersonAIEnricher()
 {

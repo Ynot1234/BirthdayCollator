@@ -1,41 +1,42 @@
-﻿using BirthdayCollator.Server.Models;
-
-namespace BirthdayCollator.Server.Processing.Names;
+﻿namespace BirthdayCollator.Server.Processing.Names;
 
 public interface IPersonNameResolver
 {
     string ExtractName(string entryText);
     void FixSwappedName(Person person);
 }
-
 public sealed class PersonNameResolver : IPersonNameResolver
 {
     public string ExtractName(string text)
     {
         if (string.IsNullOrWhiteSpace(text))
             return string.Empty;
+         
+        ReadOnlySpan<char> span = text.AsSpan();
+        int idx = span.IndexOf('(');
 
-        int idx = text.IndexOf('(');
-        
-        string formatted = idx > 0
-            ? text[..idx].Trim()
-            : text.Trim();
+        ReadOnlySpan<char> namePart = idx > 0
+            ? span[..idx]
+            : span;
 
-        return formatted.Trim().TrimEnd(',');
+        return new string(namePart.Trim().TrimEnd(','));
     }
 
     public void FixSwappedName(Person person)
     {
-        if (person == null || string.IsNullOrWhiteSpace(person.Name))
+        if (person is null || string.IsNullOrWhiteSpace(person.Name))
             return;
 
-        if (person.Name.Contains(','))
+        ReadOnlySpan<char> nameSpan = person.Name.AsSpan();
+        int commaIndex = nameSpan.IndexOf(',');
+
+        if (commaIndex != -1 && nameSpan[(commaIndex + 1)..].IndexOf(',') == -1)
         {
-            var parts = person.Name.Split(',', StringSplitOptions.RemoveEmptyEntries);
-            if (parts.Length == 2)
+            ReadOnlySpan<char> last = nameSpan[..commaIndex].Trim();
+            ReadOnlySpan<char> first = nameSpan[(commaIndex + 1)..].Trim();
+
+            if (!first.IsEmpty && !last.IsEmpty)
             {
-                string first = parts[1].Trim();
-                string last = parts[0].Trim();
                 person.Name = $"{first} {last}";
             }
         }

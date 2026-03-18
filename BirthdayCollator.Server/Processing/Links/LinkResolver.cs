@@ -1,8 +1,4 @@
-﻿using BirthdayCollator.Server.Processing.Builders;
-using BirthdayCollator.Server.Processing.Html;
-using HtmlAgilityPack;
-
-namespace BirthdayCollator.Server.Processing.Links;
+﻿namespace BirthdayCollator.Server.Processing.Links;
 
 public interface ILinkResolver
 {
@@ -14,27 +10,55 @@ public sealed class LinkResolver : ILinkResolver
 {
     public HtmlNode? FindPersonLink(HtmlNode li, string entry)
     {
-        var links = li.SelectNodes(".//a")?.ToList() ?? [];
-        if (links.Count == 0) return null;
+        var allLinks = li.SelectNodes(".//a");
+        if (allLinks == null || allLinks.Count == 0) return null;
 
-        List<HtmlNode> candidates = [.. links.Where(a => !WikiValidator.IsDateHref(a.GetAttributeValue("href", "")))];
+        var candidates = new List<HtmlNode>(allLinks.Count);
+        foreach (var link in allLinks)
+        {
+            var href = link.GetAttributeValue("href", string.Empty);
+            if (!WikiValidator.IsDateHref(href))
+            {
+                candidates.Add(link);
+            }
+        }
+
         if (candidates.Count == 0) return null;
 
         string normalized = WikiTextUtility.ExtractPersonName(entry);
 
-        var exact = candidates.FirstOrDefault(c =>
-            string.Equals(HtmlEntity.DeEntitize(c.InnerText).Trim(), normalized, StringComparison.OrdinalIgnoreCase));
+        foreach (var c in candidates)
+        {
+            string innerText = HtmlEntity.DeEntitize(c.InnerText).Trim();
+            if (string.Equals(innerText, normalized, StringComparison.OrdinalIgnoreCase))
+            {
+                return c;
+            }
+        }
 
-        if (exact != null) return exact;
+        foreach (var c in candidates)
+        {
+            string innerText = HtmlEntity.DeEntitize(c.InnerText).Trim();
+            if (WikiTextUtility.FuzzyNameMatch(normalized, innerText))
+            {
+                return c;
+            }
+        }
 
-        HtmlNode? fuzzy = candidates.FirstOrDefault(c => WikiTextUtility.FuzzyNameMatch(normalized, HtmlEntity.DeEntitize(c.InnerText).Trim()));
-
-        return fuzzy ?? candidates.First();
+        return candidates[0];
     }
 
     public string? ExtractWikipediaHref(HtmlNode node)
     {
-        var url = node.SelectSingleNode(".//a[contains(@href,'wikipedia.org')]")?.GetAttributeValue("href", "");
-        return string.IsNullOrWhiteSpace(url) ? null : WikiUrlBuilder.NormalizeWikiHref(url);
+        var link = node.Name == "a" ? node : node.SelectSingleNode(".//a");
+
+        if (link == null) return null;
+
+        var url = link.GetAttributeValue("href", string.Empty);
+
+        if (string.IsNullOrWhiteSpace(url) || !url.Contains("wikipedia.org", StringComparison.OrdinalIgnoreCase))
+            return null;
+
+        return WikiUrlBuilder.NormalizeWikiHref(url);
     }
 }

@@ -1,12 +1,10 @@
-﻿using BirthdayCollator.Server.Processing.Builders;
-using BirthdayCollator.Server.Processing.Cleaning;
+﻿using BirthdayCollator.Server.Processing.Cleaning;
 using BirthdayCollator.Server.Processing.Deduplication;
 using BirthdayCollator.Server.Processing.Enrichment;
-using BirthdayCollator.Server.Processing.Fetching;
 using BirthdayCollator.Server.Processing.Parsers;
-using BirthdayCollator.Server.Processing.Pipelines;
 using BirthdayCollator.Server.Processing.Sorting;
 using BirthdayCollator.Server.Resources;
+using Microsoft.Extensions.Caching.Hybrid;
 
 namespace BirthdayCollator.Server.Extensions;
 
@@ -30,7 +28,14 @@ public static class BirthdayServicesExtensions
         services.AddSwaggerGen();
         services.AddHealthChecks();
         services.AddMemoryCache();
-
+        services.AddHybridCache(options =>
+        {
+            options.DefaultEntryOptions = new HybridCacheEntryOptions
+            {
+                Expiration = TimeSpan.FromDays(7),
+                LocalCacheExpiration = TimeSpan.FromDays(7)
+            };
+        });
         return services;
     }
 

@@ -1,6 +1,4 @@
-﻿using BirthdayCollator.Server.Constants;
-
-namespace BirthdayCollator.Server.Processing.Fetching;
+﻿namespace BirthdayCollator.Server.Processing.Fetching;
 
 public sealed class ImdbFetcher(HttpClient http)
 {

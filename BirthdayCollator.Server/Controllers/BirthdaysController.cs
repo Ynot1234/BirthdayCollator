@@ -1,6 +1,4 @@
-﻿using BirthdayCollator.Server.Models;
-using BirthdayCollator.Server.Processing.Builders;
-using BirthdayCollator.Server.Services;
+﻿using BirthdayCollator.Server.Services;
 using Microsoft.AspNetCore.Mvc;
 
 namespace BirthdayCollator.Server.Controllers;
@@ -32,7 +30,7 @@ public class BirthdaysController(BirthdayFetcher fetcher, IYearRangeProvider yea
     public Task<List<Person>> GetCurrent(CancellationToken ct) => Get(DateTime.Today.Month, DateTime.Today.Day, false, ct);
 
     [HttpGet("override")]
-    public IActionResult GetOverride() =>  Ok(new { overrideYear = years.CurrentOverrideYear, includeAll = years.IncludeAll });
+    public IActionResult GetOverride() => Ok(new { overrideYear = years.CurrentOverrideYear, includeAll = years.IncludeAll });
 
     [HttpPost("override")]
     public IActionResult SetOverride([FromBody] OverrideRequest req)

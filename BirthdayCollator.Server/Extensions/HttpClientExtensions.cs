@@ -1,10 +1,7 @@
-﻿using BirthdayCollator.Server.Processing.Fetching;
-using static BirthdayCollator.Server.Constants.AppStrings;
-
-namespace BirthdayCollator.Server.Extensions;   
+﻿namespace BirthdayCollator.Server.Extensions;   
 public static class HttpClientExtensions
 {
-    private static void ConfigureWikiClient(HttpClient client)
+    private static void ConfigureClient(HttpClient client)
     {
         client.Timeout = Timeout.InfiniteTimeSpan;
         client.DefaultRequestHeaders.UserAgent.Clear();
@@ -13,8 +10,8 @@ public static class HttpClientExtensions
 
     public static IServiceCollection AddWikiHttpClients(this IServiceCollection services)
     {
-        services.AddHttpClient<OnThisDayHtmlFetcher>(ConfigureWikiClient);
-        services.AddHttpClient(HttpClients.Wikipedia, ConfigureWikiClient)
+        services.AddHttpClient<OnThisDayHtmlFetcher>(ConfigureClient);
+        services.AddHttpClient(HttpClients.Wikipedia, ConfigureClient)
             .ConfigurePrimaryHttpMessageHandler(() => new HttpClientHandler { AllowAutoRedirect = true });
 
         return services;

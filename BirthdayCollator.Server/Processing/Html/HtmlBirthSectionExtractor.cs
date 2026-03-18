@@ -1,6 +1,4 @@
-﻿using HtmlAgilityPack;
-
-namespace BirthdayCollator.Server.Processing.Html;
+﻿namespace BirthdayCollator.Server.Processing.Html;
 
 public interface IHtmlBirthSectionExtractor
 {
@@ -23,11 +21,30 @@ public sealed class HtmlBirthSectionExtractor : IHtmlBirthSectionExtractor
 
         for (var node = header.NextSibling; node != null; node = node.NextSibling)
         {
-            if (node.Name.StartsWith("h", StringComparison.OrdinalIgnoreCase) && node.Name.Length == 2)
+            if (node.NodeType == HtmlNodeType.Element &&
+                node.Name.Length == 2 &&
+                node.Name.StartsWith("h", StringComparison.OrdinalIgnoreCase))
+            {
                 break;
+            }
 
-            var lis = node.SelectNodes(".//li");
-            if (lis != null) results.AddRange(lis);
+            if (node.NodeType == HtmlNodeType.Element)
+            {
+                if (node.Name is "ul" or "ol")
+                {
+                    var items = node.SelectNodes("./li");
+                    if (items != null) results.AddRange(items);
+                }
+                else if (node.Name == "li")
+                {
+                    results.Add(node);
+                }
+                else
+                {
+                    var nestedItems = node.SelectNodes(".//li");
+                    if (nestedItems != null) results.AddRange(nestedItems);
+                }
+            }
         }
 
         return results;

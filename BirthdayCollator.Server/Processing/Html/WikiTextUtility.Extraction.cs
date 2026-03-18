@@ -1,8 +1,4 @@
-﻿using BirthdayCollator.Helpers;
-using HtmlAgilityPack;
-using System.Text.RegularExpressions;
-
-namespace BirthdayCollator.Server.Processing.Html;
+﻿namespace BirthdayCollator.Server.Processing.Html;
 
 public static partial class WikiTextUtility
 {
@@ -22,77 +18,77 @@ public static partial class WikiTextUtility
 
         string final = ExtractFirstSentence(description);
 
-        return string.IsNullOrWhiteSpace(final) || final.Length < 3
-            ? targetLine.Trim()
-            : final;
+        return final.Length < 3 ? targetLine.Trim() : final;
     }
 
     public static string? GetFirstBioParagraph(string html)
     {
-        if (string.IsNullOrWhiteSpace(html))
-            return null;
+        if (string.IsNullOrWhiteSpace(html)) return null;
 
         HtmlDocument doc = new();
         doc.LoadHtml(html);
 
         var shortDescNode = doc.DocumentNode.SelectSingleNode("//div[contains(@class,'shortdescription')]");
-        if (shortDescNode != null)
+        if (shortDescNode is not null)
         {
-            string text = HtmlEntity.DeEntitize(shortDescNode.InnerText).Trim();
-            return RegexPatterns.DisplayCleaner().Replace(text, "").Trim();
+            return CleanNodeText(shortDescNode);
         }
 
         var pNode = doc.DocumentNode.SelectSingleNode("//p[b]");
-        if (pNode != null)
+        if (pNode is not null)
         {
-            string text = HtmlEntity.DeEntitize(pNode.InnerText).Trim();
-            return RegexPatterns.DisplayCleaner().Replace(text, "").Trim();
+            return CleanNodeText(pNode);
         }
 
         return null;
     }
 
+    private static string CleanNodeText(HtmlNode node)
+    {
+        string text = HtmlEntity.DeEntitize(node.InnerText).Trim();
+        return RegexPatterns.DisplayCleaner().Replace(text, "").Trim();
+    }
+
     public static string? GetRawFirstParagraph(string html)
     {
-        if (string.IsNullOrWhiteSpace(html))
-            return null;
+        if (string.IsNullOrWhiteSpace(html)) return null;
 
         HtmlDocument doc = new();
         doc.LoadHtml(html);
 
-        var pNode = doc.DocumentNode.SelectSingleNode("//p[b]");
-        pNode ??= doc.DocumentNode.SelectSingleNode(
-            "//p[not(contains(@class,'mw-empty-elt')) and string-length(normalize-space()) > 20]"
-        );
+        var pNode = doc.DocumentNode.SelectSingleNode("//p[b]")
+                   ?? doc.DocumentNode.SelectSingleNode("//p[not(contains(@class,'mw-empty-elt')) and string-length(normalize-space()) > 20]");
 
-        if (pNode == null)
-            return null;
-
-        return HtmlEntity.DeEntitize(pNode.InnerText).Trim();
+        return pNode is null ? null : HtmlEntity.DeEntitize(pNode.InnerText).Trim();
     }
 
     public static string? ExtractSpecificParenthetical(string text, string personName)
     {
         if (string.IsNullOrWhiteSpace(text)) return null;
 
+        ReadOnlySpan<char> textSpan = text.AsSpan();
         string lastName = personName.Split(' ').Last();
+
         int lastIndex = text.LastIndexOf(lastName, StringComparison.OrdinalIgnoreCase);
+        if (lastIndex == -1) return null;
 
-        if (lastIndex != -1)
+        int nameEnd = lastIndex + lastName.Length;
+
+        ReadOnlySpan<char> searchArea = textSpan[nameEnd..];
+        int startRel = searchArea.IndexOf('(');
+
+        if (startRel != -1 && startRel < 5)
         {
-            int nameEnd = lastIndex + lastName.Length;
-            int start = text.IndexOf('(', nameEnd);
+            int startAbs = nameEnd + startRel;
+            int end = text.IndexOf(')', startAbs + 1);
 
-            if (start != -1 && (start - nameEnd) < 5)
+            if (end != -1)
             {
-                int end = text.IndexOf(')', start + 1);
-                if (end != -1)
+                string candidate = text[startAbs..(end + 1)];
+
+                if (RegexPatterns.YearIndicator().IsMatch(candidate))
                 {
-                    string candidate = text.Substring(start, end - start + 1);
-                    if (Regex.IsMatch(candidate, @"\d{4}"))
-                    {
-                        return candidate;
-                    }
+                    return candidate;
                 }
             }
         }

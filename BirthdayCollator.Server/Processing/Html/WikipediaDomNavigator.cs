@@ -1,7 +1,4 @@
-﻿using BirthdayCollator.Server.Constants;
-using HtmlAgilityPack;
-
-namespace BirthdayCollator.Server.Processing.Html;
+﻿namespace BirthdayCollator.Server.Processing.Html;
 
 public static class WikipediaDomNavigator
 {
@@ -10,14 +7,31 @@ public static class WikipediaDomNavigator
         HtmlNode birthsHeader = htmlDoc.DocumentNode.SelectSingleNode(XPathSelectors.YearBirthsHeader);
         if (birthsHeader == null) return [];
 
-        List<HtmlNode> sections = [];
-        
+        List<HtmlNode> results = [];
+
         for (HtmlNode node = birthsHeader.NextSibling; node != null; node = node.NextSibling)
         {
-            if (node.Name == "h2") break;
-            if (node.Name is "section" or "div" or "ul") sections.Add(node);
+            if (node.NodeType == HtmlNodeType.Element &&
+                node.Name.Equals("h2", StringComparison.OrdinalIgnoreCase))
+            {
+                break;
+            }
+
+            if (node.NodeType == HtmlNodeType.Element)
+            {
+                if (node.Name == "ul")
+                {
+                    var items = node.SelectNodes("./li");
+                    if (items != null) results.AddRange(items);
+                }
+                else if (node.Name is "section" or "div")
+                {
+                    var items = node.SelectNodes(".//li");
+                    if (items != null) results.AddRange(items);
+                }
+            }
         }
 
-        return [.. sections.SelectMany(s => s.SelectNodes(".//li") ?? Enumerable.Empty<HtmlNode>())];
+        return results;
     }
 }

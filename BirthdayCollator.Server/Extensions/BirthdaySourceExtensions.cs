@@ -1,6 +1,5 @@
 ﻿using BirthdayCollator.Server.Processing.Enrichment;
 using BirthdayCollator.Server.Processing.Sources;
-using BirthdayCollator.Server.Processing.Fetching;
 using BirthdayCollator.Server.Processing.Parsers;  
 
 namespace BirthdayCollator.Server.Extensions;

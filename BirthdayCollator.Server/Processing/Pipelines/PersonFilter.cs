@@ -1,24 +1,25 @@
-﻿using BirthdayCollator.Helpers;
-using BirthdayCollator.Server.Constants;
-using BirthdayCollator.Server.Models;
-using BirthdayCollator.Server.Processing.Fetching;
-using BirthdayCollator.Server.Processing.Html;
-using System.Collections.Concurrent;
+﻿using System.Collections.Concurrent;
 using System.Text.RegularExpressions;
 
-namespace BirthdayCollator.Server.Processing.Pipelines; 
+namespace BirthdayCollator.Server.Processing.Pipelines;
+
 public sealed partial class PersonFilter(WikiHtmlFetcher fetcher)
 {
     public async Task<List<Person>> FilterLivingAsync(List<Person> people, CancellationToken ct)
     {
         ConcurrentBag<Person> livingPeople = [];
 
-        await Parallel.ForEachAsync(people, new ParallelOptions { MaxDegreeOfParallelism = 5, CancellationToken = ct },
-        async (p, token) =>
+        var options = new ParallelOptions
+        {
+            MaxDegreeOfParallelism = 5,
+            CancellationToken = ct
+        };
+
+        await Parallel.ForEachAsync(people, options, async (p, token) =>
         {
             if (RegexPatterns.ExcludeDied().IsMatch(p.Description)) return;
 
-            if (p.Url.Contains("imdb"))
+            if (p.Url.Contains("imdb", StringComparison.OrdinalIgnoreCase))
             {
                 livingPeople.Add(p);
                 return;
@@ -30,7 +31,8 @@ public sealed partial class PersonFilter(WikiHtmlFetcher fetcher)
                 return;
             }
 
-            if (!p.Url.Contains("duckduckgo") && !await IsLikelyDeadAsync(p, token))
+            if (!p.Url.Contains("duckduckgo", StringComparison.OrdinalIgnoreCase) &&
+                !await IsLikelyDeadAsync(p, token))
             {
                 livingPeople.Add(p);
             }
@@ -38,14 +40,18 @@ public sealed partial class PersonFilter(WikiHtmlFetcher fetcher)
 
         return [.. livingPeople.OrderByDescending(p => p.BirthYear)];
     }
+
     private async Task<bool> IsLikelyDeadAsync(Person p, CancellationToken ct)
     {
-        string slug = p.Url.Split('/').Last();
+        ReadOnlySpan<char> urlSpan = p.Url.AsSpan();
+        int lastSlash = urlSpan.LastIndexOf('/');
+        string slug = lastSlash == -1 ? p.Url : new string(urlSpan[(lastSlash + 1)..]);
+
         string html = await fetcher.FetchHtmlAsync(slug, ct);
         string? rawBio = WikiTextUtility.GetRawFirstParagraph(html);
-        string? paren = WikiTextUtility.ExtractSpecificParenthetical(rawBio ?? "", p.Name);
+        string? paren = WikiTextUtility.ExtractSpecificParenthetical(rawBio ?? string.Empty, p.Name);
 
-        if (!string.IsNullOrWhiteSpace(paren) && RegexPatterns.YearIndicator().IsMatch(paren))
+        if (paren is not null && RegexPatterns.YearIndicator().IsMatch(paren))
         {
             if (!IsBirthDateMatch(paren, p.BirthDate))
             {
@@ -58,8 +64,7 @@ public sealed partial class PersonFilter(WikiHtmlFetcher fetcher)
             return true;
         }
 
-        string? cleanDescription = WikiTextUtility.GetFirstBioParagraph(html);
-        if (!string.IsNullOrWhiteSpace(cleanDescription))
+        if (WikiTextUtility.GetFirstBioParagraph(html) is { } cleanDescription)
         {
             p.Description = cleanDescription;
         }
@@ -81,7 +86,9 @@ public sealed partial class PersonFilter(WikiHtmlFetcher fetcher)
         string day = date.Day.ToString();
 
         bool hasAnyMonth = RegexPatterns.MonthName().IsMatch(paren);
+
         bool monthMatch = paren.Contains(month, StringComparison.OrdinalIgnoreCase);
+
         bool dayMatch = Regex.IsMatch(paren, $@"\b{day}\b");
 
         if (hasAnyMonth && (!monthMatch || !dayMatch))

@@ -1,8 +1,4 @@
-﻿using BirthdayCollator.Server.Configuration;
-using BirthdayCollator.Server.Models;
-using BirthdayCollator.Server.Processing.Builders;
-
-namespace BirthdayCollator.Server.Processing.Sources;
+﻿namespace BirthdayCollator.Server.Processing.Sources;
 
 public interface IBirthSource
 {

@@ -1,8 +1,4 @@
-﻿using BirthdayCollator.Server.Configuration;
-using BirthdayCollator.Server.Models;
-using BirthdayCollator.Server.Processing.Builders;
-using BirthdayCollator.Server.Processing.Fetching;
-using BirthdayCollator.Server.Processing.Parsers;
+﻿using BirthdayCollator.Server.Processing.Parsers;
 
 namespace BirthdayCollator.Server.Processing.Sources;
 

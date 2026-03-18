@@ -1,7 +1,6 @@
-﻿using BirthdayCollator.Server.Processing.Dates;
+﻿using BirthdayCollator.Server.Infrastructure.Throttling;
+using BirthdayCollator.Server.Processing.Dates;
 using BirthdayCollator.Server.Processing.Entries;
-using BirthdayCollator.Server.Processing.Html;
-using BirthdayCollator.Server.Processing.Links;
 using BirthdayCollator.Server.Processing.Names;
 
 namespace BirthdayCollator.Server.Extensions;
@@ -15,6 +14,7 @@ public static class BirthdayHelperExtensions
         services.AddSingleton<IPersonNameResolver, PersonNameResolver>();
         services.AddSingleton<IHtmlBirthSectionExtractor, HtmlBirthSectionExtractor>();
         services.AddSingleton<IBirthDateParser, BirthDateParser>();
+        services.AddSingleton<IThrottleRegistry, ThrottleRegistry>();
         return services;
     }
 }
