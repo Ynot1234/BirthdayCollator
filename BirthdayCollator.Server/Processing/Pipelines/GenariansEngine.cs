@@ -1,10 +1,8 @@
-﻿using BirthdayCollator.Server.Models;
-using BirthdayCollator.Server.Processing.Builders;
-using System.Collections.Concurrent;
+﻿using System.Collections.Concurrent;
 
-namespace BirthdayCollator.Server.Resources;
+namespace BirthdayCollator.Server.Processing.Pipelines;
 
-public sealed class Genarians(GenarianPageLoader loader, IYearRangeProvider yearRangeProvider)
+public sealed class GenariansEngine(GenarianFetcher loader, IYearRangeProvider yearRangeProvider)
 {
     public async Task<List<Person>> ScrapeAllAsync(string monthName, int day, CancellationToken ct)
     {

@@ -1,9 +1,6 @@
 ﻿using BirthdayCollator.Server.Processing.Cleaning;
 using BirthdayCollator.Server.Processing.Deduplication;
-using BirthdayCollator.Server.Processing.Enrichment;
-using BirthdayCollator.Server.Processing.Parsers;
 using BirthdayCollator.Server.Processing.Sorting;
-using BirthdayCollator.Server.Resources;
 using Microsoft.Extensions.Caching.Hybrid;
 
 namespace BirthdayCollator.Server.Extensions;
@@ -76,7 +73,7 @@ public static class BirthdayServicesExtensions
         services.AddScoped<PersonFactory>();
         services.AddScoped<OnThisDayParser>();
         services.AddScoped<GenariansPageParser>();
-        services.AddScoped<GenarianPageLoader>();
+        services.AddScoped<GenarianFetcher>();
         services.AddScoped<WikiHtmlFetcher>();
         return services;
     }

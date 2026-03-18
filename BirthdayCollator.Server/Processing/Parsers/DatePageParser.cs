@@ -1,7 +1,4 @@
-﻿using System.Globalization;
-using BirthdayCollator.Server.Processing.Validation;
-
-namespace BirthdayCollator.Server.Processing.Parsers;
+﻿namespace BirthdayCollator.Server.Processing.Parsers;
 
 public sealed partial class DatePageParser(BirthEntryValidator validator,
                                             PersonFactory personFactory,

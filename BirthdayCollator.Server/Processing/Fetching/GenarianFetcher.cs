@@ -1,8 +1,6 @@
-﻿using BirthdayCollator.Server.Processing.Parsers;
+﻿namespace BirthdayCollator.Server.Processing.Fetching;
 
-namespace BirthdayCollator.Server.Resources;
-
-public sealed class GenarianPageLoader(
+public sealed class GenarianFetcher(
     IHttpClientFactory httpFactory,
     GenariansPageParser parser,
     PersonFactory personFactory)

@@ -1,5 +1,4 @@
-﻿using BirthdayCollator.Server.Processing.Enrichment;
-using Microsoft.AspNetCore.Mvc;
+﻿using Microsoft.AspNetCore.Mvc;
 
 namespace BirthdayCollator.Server.Controllers;
 

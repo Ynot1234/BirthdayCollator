@@ -1,6 +1,4 @@
-﻿using static System.Globalization.CultureInfo;
-
-namespace BirthdayCollator.Server.Processing.Dates;
+﻿namespace BirthdayCollator.Server.Processing.Dates;
 
 public sealed class BirthDateParser : IBirthDateParser
 {

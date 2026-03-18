@@ -1,6 +1,4 @@
-﻿using BirthdayCollator.Server.Constants;
-using BirthdayCollator.Server.Models;
-using BirthdayCollator.Server.Processing.Names;
+﻿using BirthdayCollator.Server.Processing.Names;
 
 namespace BirthdayCollator.Server.Processing.Builders;
 public class PersonFactory(IPersonNameResolver nameResolver)

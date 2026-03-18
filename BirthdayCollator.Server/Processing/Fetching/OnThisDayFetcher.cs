@@ -1,12 +1,10 @@
-﻿using System.Globalization;
-
-namespace BirthdayCollator.Server.Processing.Fetching;
+﻿namespace BirthdayCollator.Server.Processing.Fetching;
 
 public sealed class OnThisDayHtmlFetcher(HttpClient http)
 {
     public async Task<string> FetchAsync(int month, int day, CancellationToken cancellationToken)
     {
-        string monthName = CultureInfo.InvariantCulture.DateTimeFormat
+        string monthName = InvariantCulture.DateTimeFormat
             .GetMonthName(month)
             .ToLowerInvariant();
 

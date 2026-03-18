@@ -1,6 +1,4 @@
-﻿using System.Globalization;
-
-namespace BirthdayCollator.Server.Processing.Parsers;
+﻿namespace BirthdayCollator.Server.Processing.Parsers;
 
 public sealed class GenariansPageParser(ILinkResolver linkResolver, IYearRangeProvider year, PersonFactory factory)
 {
@@ -33,7 +31,7 @@ public sealed class GenariansPageParser(ILinkResolver linkResolver, IYearRangePr
 
         if (lines.Count < 2 || !DateTime.TryParseExact(lines.Last(),
                 DateFormats.FullDate,
-                CultureInfo.InvariantCulture,
+                InvariantCulture,
                 DateTimeStyles.None,
                 out var bDay))
         {
@@ -84,7 +82,7 @@ public sealed class GenariansPageParser(ILinkResolver linkResolver, IYearRangePr
         }
 
         return bDay.Day == targetDay &&
-               bDay.ToString(DateFormats.MonthLong, CultureInfo.InvariantCulture)
+               bDay.ToString(DateFormats.MonthLong, InvariantCulture)
                    .Equals(targetMonth, StringComparison.OrdinalIgnoreCase);
     }
 }

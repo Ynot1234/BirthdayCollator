@@ -69,8 +69,4 @@ public partial class RegexPatterns
 
     [GeneratedRegex(@"\bis\s+|\bwas\s+", RegexOptions.IgnoreCase | RegexOptions.CultureInvariant)]
     public static partial Regex VerbPrefixRegex();
-
-
-
-
 }

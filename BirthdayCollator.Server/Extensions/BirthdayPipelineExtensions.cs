@@ -1,5 +1,4 @@
-﻿using BirthdayCollator.Server.Resources;
-using BirthdayCollator.Server.Services;
+﻿using BirthdayCollator.Server.Services;
 
 namespace BirthdayCollator.Server.Extensions;
 
@@ -11,7 +10,7 @@ public static class BirthdayPipelineExtensions
         services.AddScoped<IFetchPipeline, FetchPipeline>();
         services.AddScoped<IPersonPipeline, PersonPipeline>();
         services.AddScoped<BirthdayFetcher>();
-        services.AddScoped<Genarians>();
+        services.AddScoped<GenariansEngine>();
         return services;
     }
 }

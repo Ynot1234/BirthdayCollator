@@ -1,6 +1,4 @@
-﻿using BirthdayCollator.Server.Processing.Parsers;
-
-namespace BirthdayCollator.Server.Processing.Sources;
+﻿namespace BirthdayCollator.Server.Processing.Sources;
 
 public sealed class DateBirthSource(WikiHtmlFetcher fetcher, IYearRangeProvider years, IDatePageParser parser) : IBirthSource
 {

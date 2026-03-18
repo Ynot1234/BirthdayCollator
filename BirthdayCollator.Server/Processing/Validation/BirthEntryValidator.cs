@@ -1,6 +1,4 @@
-﻿using BirthdayCollator.Server.Processing.Builders;
-
-namespace BirthdayCollator.Server.Processing.Validation;
+﻿namespace BirthdayCollator.Server.Processing.Validation;
 
 public sealed class BirthEntryValidator(IYearRangeProvider yearProvider)
 {
