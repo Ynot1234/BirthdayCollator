@@ -40,13 +40,8 @@ public sealed class WikiParser(
             var personLink = linkResolver.FindPersonLink(node, entry);
             if (personLink is null) continue;
 
-            string rawHref = personLink.GetAttributeValue("href", string.Empty);
-            ReadOnlySpan<char> hrefSpan = rawHref.AsSpan();
-            int lastSlash = hrefSpan.LastIndexOf('/');
-
-            string slug = lastSlash == -1
-                ? rawHref.TrimStart('.')
-                : new string(hrefSpan[(lastSlash + 1)..].TrimStart('.'));
+           string rawHref = personLink.GetAttributeValue("href", string.Empty);
+           string slug = rawHref.TrimStart('.', '/');
 
             string absoluteUrl = !string.IsNullOrEmpty(slug) ? $"{Urls.ArticleBase}/{slug}" : string.Empty;
 

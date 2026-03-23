@@ -25,7 +25,9 @@ public sealed partial class PersonFilter(WikiHtmlFetcher fetcher)
                 return;
             }
 
-            if (string.IsNullOrWhiteSpace(p.Url) && p.SourceSlug == AppStrings.Slugs.OnThisDay)
+            bool hasWiki = p.Url.Contains("wikipedia.org", StringComparison.OrdinalIgnoreCase);
+
+            if (!hasWiki && (string.IsNullOrWhiteSpace(p.Url) || p.SourceSlug == AppStrings.Slugs.OnThisDay))
             {
                 livingPeople.Add(p);
                 return;
@@ -36,6 +38,7 @@ public sealed partial class PersonFilter(WikiHtmlFetcher fetcher)
             {
                 livingPeople.Add(p);
             }
+
         });
 
         return [.. livingPeople.OrderByDescending(p => p.BirthYear)];

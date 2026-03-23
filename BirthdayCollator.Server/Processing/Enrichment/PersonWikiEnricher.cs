@@ -1,4 +1,6 @@
-﻿namespace BirthdayCollator.Server.Processing.Enrichment;
+﻿using System.Text.RegularExpressions;
+
+namespace BirthdayCollator.Server.Processing.Enrichment;
 
 public sealed class PersonWikiEnricher(IHttpClientFactory httpFactory)
 {
@@ -59,12 +61,16 @@ public sealed class PersonWikiEnricher(IHttpClientFactory httpFactory)
         if (results is null or { Count: 0 }) return (null, null);
 
         var bestMatch = results.FirstOrDefault(s =>
-            string.Equals(s.Title, name, StringComparison.OrdinalIgnoreCase) ||
-            s.Title.StartsWith($"{name} (", StringComparison.OrdinalIgnoreCase))
-            ?? results[0];
+           string.Equals(s.Title, name, StringComparison.OrdinalIgnoreCase) ||
+           s.Title.StartsWith($"{name} (", StringComparison.OrdinalIgnoreCase));
+
+        if (bestMatch == null)
+            return (null, null);
+
 
         return (bestMatch.Title, $"{Urls.ArticleBase}/{bestMatch.Title.Replace(' ', '_')}");
     }
+
 
     private record WikiSearchResponse(WikiQuery? Query);
     private record WikiQuery(List<WikiSearchItem> Search);
