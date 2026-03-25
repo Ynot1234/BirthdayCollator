@@ -90,3 +90,5 @@ BirthdayCollator.Server/Configuration/BirthSourceOptions.cs
 /wwwroot
 /run.ps1
 /Get-LargestFiles.ps1
+/BirthdayCollator.Server/chrome-profile
+/BirthdayCollator.Server/imdb_debug
