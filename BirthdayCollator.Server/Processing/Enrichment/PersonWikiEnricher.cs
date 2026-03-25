@@ -61,14 +61,28 @@ public sealed class PersonWikiEnricher(IHttpClientFactory httpFactory)
         if (results is null or { Count: 0 }) return (null, null);
 
         var bestMatch = results.FirstOrDefault(s =>
-           string.Equals(s.Title, name, StringComparison.OrdinalIgnoreCase) ||
-           s.Title.StartsWith($"{name} (", StringComparison.OrdinalIgnoreCase));
+        {
+            var normalizedTitle = Normalize(s.Title);
+            var normalizedName = Normalize(name);
+
+            return string.Equals(normalizedTitle, normalizedName, StringComparison.OrdinalIgnoreCase)
+                || normalizedTitle.StartsWith(normalizedName + " ", StringComparison.OrdinalIgnoreCase);
+        });
+
 
         if (bestMatch == null)
             return (null, null);
 
-
         return (bestMatch.Title, $"{Urls.ArticleBase}/{bestMatch.Title.Replace(' ', '_')}");
+    }
+    static string Normalize(string value)
+    {
+        if (string.IsNullOrWhiteSpace(value))
+            return value;
+
+        value = Regex.Replace(value, @"\s*[\(\[\{].*?[\)\]\}]\s*", " ");
+
+        return Regex.Replace(value, @"\s+", " ").Trim();
     }
 
 
