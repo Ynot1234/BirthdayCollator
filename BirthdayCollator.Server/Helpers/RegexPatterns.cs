@@ -69,4 +69,10 @@ public partial class RegexPatterns
 
     [GeneratedRegex(@"\bis\s+|\bwas\s+", RegexOptions.IgnoreCase | RegexOptions.CultureInvariant)]
     public static partial Regex VerbPrefixRegex();
+
+    [GeneratedRegex(@"nm\d+")]
+    public static partial Regex PersonId();
+
+    [GeneratedRegex(@"\b(19|20)\d{2}\b")]
+    public static partial Regex YearCandidate();
 }
