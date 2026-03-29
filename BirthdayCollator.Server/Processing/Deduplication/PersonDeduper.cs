@@ -46,9 +46,35 @@ public sealed class PersonDeduper
 
     private static string CanonicalNameKey(string name)
     {
-        var tokens = CanonicalTokens(name);
-        return tokens.Length == 0 ? "" : tokens[^1]; 
+        string cleanName = ExtractNameOnly(name);
+
+        var tokens = CanonicalTokens(cleanName);
+        return tokens.Length == 0 ? "" : tokens[^1];
     }
+
+
+    private static string ExtractNameOnly(string raw)
+    {
+        if (string.IsNullOrWhiteSpace(raw))
+            return raw;
+
+        var sb = new StringBuilder();
+
+        foreach (char c in raw)
+        {
+            if (char.IsLetter(c) || c == ' ')
+            {
+                sb.Append(c);
+            }
+            else
+            {
+                break;
+            }
+        }
+
+        return sb.ToString().Trim();
+    }
+
 
 
     private static bool HasTwoWordOverlap(string a, string b)

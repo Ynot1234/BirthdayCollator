@@ -29,7 +29,7 @@
 
         public string? Summary { get; set; }
 
-        public DateTime BirthDate => new(BirthYear, Month, Day);
+        public DateTime BirthDate => new(BirthYear > 0 ? BirthYear : 1, Month, Day);
 
         public Person Clone() => (Person)this.MemberwiseClone();
 

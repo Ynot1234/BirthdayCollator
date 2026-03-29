@@ -7,37 +7,38 @@ public sealed class ImdbSource(
 {
     public async Task<List<Person>> GetPeopleAsync(DateTime date, CancellationToken ct)
     {
-        IReadOnlyList<string> targetYears = yearRangeProvider.GetYears();
+        int currentYear = DateTime.Today.Year;
+        int[] milestones = [80, 70, 60];
 
-        var tasks = targetYears
-            .Select(yearStr => int.TryParse(yearStr, out int year)
-                ? FetchAndParse(year, date.Month, date.Day, ct)
-                : Task.FromResult(new List<Person>()));
+        List<(int Start, int End)> batches =
+        [
+            (currentYear - 105, currentYear - 85),
+        .. milestones.Select(age => (currentYear - age, currentYear - age))
+        ];
+
+        var tasks = batches.Select(range =>
+            FetchRangeAndParse(range.Start, range.End, date.Month, date.Day, ct));
 
         var results = await Task.WhenAll(tasks);
-
-        List<Person> allPeople = new(results.Sum(r => r.Count));
-        foreach (var list in results)
-        {
-            allPeople.AddRange(list);
-        }
+        List<Person> allPeople = [.. results.SelectMany(p => p)];
 
         if (date is { Month: 2, Day: 29 })
         {
-            var leapYears = yearRangeProvider.GetLeapYears()
-                .Select(int.Parse)
-                .ToHashSet();
+            HashSet<int> leapYears = [.. yearRangeProvider.GetLeapYears()
+            .Select(y => int.TryParse(y, out int year) ? year : 0)
+            .Where(y => y > 0)];
 
-            return allPeople.Where(p => leapYears.Contains(p.BirthYear)).ToList();
+            return [.. allPeople.Where(p => leapYears.Contains(p.BirthYear))];
         }
 
         return allPeople;
     }
 
-    private async Task<List<Person>> FetchAndParse(int y, int m, int d, CancellationToken ct)
+    private async Task<List<Person>> FetchRangeAndParse(int startYear, int endYear, int m, int d, CancellationToken ct)
     {
-        string html = await fetcher.FetchAsync(y, m, d, ct);
-        return parser.Parse(html, y, m, d);
+        string urlRange = $"{startYear},{endYear}";
+        string html = await fetcher.FetchRangeAsync(urlRange, m, d, ct);
+        return parser.Parse(html, m, d, startYear, endYear);
     }
 
     public bool IsRelevant(BirthSourceOptions opt, IYearRangeProvider years, DateTime date) => opt.EnableImdbParser;

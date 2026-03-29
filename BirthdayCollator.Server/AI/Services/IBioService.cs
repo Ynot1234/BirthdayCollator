@@ -2,4 +2,6 @@
 public interface IBioService
 {
     Task<string> SummarizeAsync(string name, string desc, string? apiKey = null);
+
+    Task<string> ExtractBirthYearAsync(string name, string bio, string? apiKey = null);
 }
