@@ -24,7 +24,6 @@ public sealed class WikiParser(
 
         foreach (var node in nodes)
         {
-            // Split the InnerText into lines to handle multi-person blocks
             var lines = node.InnerText.Split(['\r', '\n'], StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries);
 
             foreach (string line in lines)

@@ -78,5 +78,19 @@ public partial class RegexPatterns
     [GeneratedRegex(@"nm\d+")]
     public static partial Regex PersonId();
 
-  
+    [GeneratedRegex(@"(?<=\b\p{L})\.(?=\p{L}\b)")]
+    public static partial Regex SplitInitials();
+
+    [GeneratedRegex("[\"'()]")]
+    public static partial Regex RemoveQuotesAndParens();
+    [GeneratedRegex(@"[^\p{L}\p{N}\s]")]
+    public static partial Regex RemoveNonAlphanumeric();
+
+    [GeneratedRegex(@"\s+")]
+    public static partial Regex TokenizeCanonical();
+
+    [GeneratedRegex(@"[\[\]\(\),]")]
+    public static partial Regex BoundaryMarkers();
+
+
 }

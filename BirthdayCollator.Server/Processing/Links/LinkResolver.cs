@@ -13,14 +13,19 @@ public sealed class LinkResolver : ILinkResolver
         var allLinks = li.SelectNodes(".//a");
         if (allLinks == null || allLinks.Count == 0) return null;
 
-        var candidates = new List<HtmlNode>(allLinks.Count);
+        var candidates = new List<HtmlNode>();
         foreach (var link in allLinks)
         {
             var href = link.GetAttributeValue("href", string.Empty);
-            if (!WikiValidator.IsDateHref(href))
-            {
-                candidates.Add(link);
-            }
+            string innerText = HtmlEntity.DeEntitize(link.InnerText).Trim();
+            string className = link.GetAttributeValue("class", string.Empty);
+
+            if (WikiValidator.IsDateHref(href)) continue;
+            if (innerText.StartsWith('[') && innerText.EndsWith(']')) continue;
+            if (className.Contains("reference") || className.Contains("external")) continue;
+            if (innerText == "^" || string.IsNullOrWhiteSpace(innerText)) continue;
+
+            candidates.Add(link);
         }
 
         if (candidates.Count == 0) return null;
@@ -45,9 +50,17 @@ public sealed class LinkResolver : ILinkResolver
             }
         }
 
-        return candidates[0];
-    }
+        var bestGuess = candidates[0];
+        string guessText = HtmlEntity.DeEntitize(bestGuess.InnerText).Trim();
 
+        if (normalized.Contains(guessText, StringComparison.OrdinalIgnoreCase) ||
+            guessText.Contains(normalized, StringComparison.OrdinalIgnoreCase))
+        {
+            return bestGuess;
+        }
+
+        return null;
+    }
     public string? ExtractWikipediaHref(HtmlNode node)
     {
         var link = node.Name == "a" ? node : node.SelectSingleNode(".//a");
