@@ -23,6 +23,7 @@
     <Compile Remove="Processing\Sorting - Copy\**" />
     <Compile Remove="Processing\Sources - Copy\**" />
     <Compile Remove="Processing\Validation - Copy\**" />
+    <Compile Remove="Scripts\**" />
     <Content Remove="AI\Semantic\**" />
     <Content Remove="Processing\Builders - Copy\**" />
     <Content Remove="Processing\Cleaning - Copy\**" />
@@ -36,6 +37,7 @@
     <Content Remove="Processing\Sorting - Copy\**" />
     <Content Remove="Processing\Sources - Copy\**" />
     <Content Remove="Processing\Validation - Copy\**" />
+    <Content Remove="Scripts\**" />
     <EmbeddedResource Remove="AI\Semantic\**" />
     <EmbeddedResource Remove="Processing\Builders - Copy\**" />
     <EmbeddedResource Remove="Processing\Cleaning - Copy\**" />
@@ -49,6 +51,7 @@
     <EmbeddedResource Remove="Processing\Sorting - Copy\**" />
     <EmbeddedResource Remove="Processing\Sources - Copy\**" />
     <EmbeddedResource Remove="Processing\Validation - Copy\**" />
+    <EmbeddedResource Remove="Scripts\**" />
     <None Remove="AI\Semantic\**" />
     <None Remove="Processing\Builders - Copy\**" />
     <None Remove="Processing\Cleaning - Copy\**" />
@@ -62,6 +65,7 @@
     <None Remove="Processing\Sorting - Copy\**" />
     <None Remove="Processing\Sources - Copy\**" />
     <None Remove="Processing\Validation - Copy\**" />
+    <None Remove="Scripts\**" />
   </ItemGroup>
 
   <ItemGroup>

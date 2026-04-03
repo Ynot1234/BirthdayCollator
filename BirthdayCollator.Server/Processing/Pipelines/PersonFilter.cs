@@ -27,7 +27,7 @@ public sealed partial class PersonFilter(WikiHtmlFetcher fetcher)
 
             bool hasWiki = p.Url.Contains("wikipedia.org", StringComparison.OrdinalIgnoreCase);
 
-            if (!hasWiki && (string.IsNullOrWhiteSpace(p.Url) || p.SourceSlug == AppStrings.Slugs.OnThisDay))
+            if (!hasWiki && (string.IsNullOrWhiteSpace(p.Url) || p.SourceSlug == Slugs.OnThisDay))
             {
                 livingPeople.Add(p);
                 return;
@@ -85,7 +85,7 @@ public sealed partial class PersonFilter(WikiHtmlFetcher fetcher)
             return false;
         }
 
-        string month = date.ToString(AppStrings.DateFormats.MonthLong);
+        string month = date.ToString(DateFormats.MonthLong);
         string day = date.Day.ToString();
 
         bool hasAnyMonth = RegexPatterns.MonthName().IsMatch(paren);

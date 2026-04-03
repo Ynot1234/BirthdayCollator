@@ -1,5 +1,4 @@
 ﻿using System.Text;
-using System.Text.RegularExpressions;
 
 namespace BirthdayCollator.Server.Processing.Deduplication;
 
@@ -9,7 +8,7 @@ public sealed partial class PersonDeduper
     {
         if (people.Count <= 1) return people;
 
-        var uniqueMap = new Dictionary<string, Person>();
+        Dictionary<string, Person> uniqueMap = [];
 
         foreach (var p in people)
         {
@@ -55,9 +54,22 @@ public sealed partial class PersonDeduper
 
     private static string CanonicalNameKey(string name)
     {
-        var tokens = CanonicalTokens(name);
+        string clean = ExtractNameOnly(name);
+
+        var tokens = CanonicalTokens(clean);
         return tokens.Length == 0 ? "unknown" : tokens[^1].ToLowerInvariant();
     }
+
+
+    private static string ExtractNameOnly(string raw)
+    {
+        int cut = raw.IndexOfAny(['[', '(']);
+        if (cut > 0)
+            raw = raw[..cut];
+
+        return raw.Trim();
+    }
+
 
     private static string[] CanonicalTokens(string s)
     {

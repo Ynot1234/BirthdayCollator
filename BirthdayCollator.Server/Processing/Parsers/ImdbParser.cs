@@ -180,6 +180,8 @@ public sealed partial class ImdbParser(PersonFactory personFactory)
     private Person CreatePersonObject(string name, string desc, int? y, int m, int d, string slug, HtmlNode? node, string personUrl)
     {
         int yearToUse = y ?? 1; // Null becomes 1, used as a flag later
+        desc = StripHtml(desc);
+
 
         var p = personFactory.CreatePerson(
             name: name,
@@ -193,6 +195,14 @@ public sealed partial class ImdbParser(PersonFactory personFactory)
 
         return p;
     }
+
+    public static string StripHtml(string html)
+    {
+        var doc = new HtmlDocument();
+        doc.LoadHtml(html);
+        return HtmlEntity.DeEntitize(doc.DocumentNode.InnerText).Trim();
+    }
+
 
     private static string CleanDescription(HtmlNode node, string description, string name)
     {

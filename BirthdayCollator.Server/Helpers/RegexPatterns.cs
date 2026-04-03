@@ -16,9 +16,6 @@ public partial class RegexPatterns
     [GeneratedRegex(@"\(\s*.*?\d{4}\s*\)", RegexOptions.IgnoreCase)]
     public static partial Regex ExcludeDied();
 
-    [GeneratedRegex(@"\[\d+\]|\[\s*[^]]+\]")]
-    public static partial Regex Citation();
-
     [GeneratedRegex(@"\([^)]*\)")]
     public static partial Regex Parentheses();
 
@@ -28,7 +25,9 @@ public partial class RegexPatterns
     [GeneratedRegex(@"\s{2,}")]
     public static partial Regex CollapseWhitespace();
 
-    [GeneratedRegex(@"(?<=\d{4}|\s)[–-]\s*.*?(?<deathYear>\d{4})|died\s+(?<diedYear>\d{4})", RegexOptions.IgnoreCase, "en-US")]
+    [GeneratedRegex(
+    @"(?:[\u2013\u2014-]\s*(?:\d{1,2}\s+\w+\s+)?(?<deathYear>1[0-9]{3}|20[0-9]{2}))|died\s+(?<diedYear>1[0-9]{3}|20[0-9]{2})",
+    RegexOptions.IgnoreCase)]
     public static partial Regex DeathYearMarker();
 
     [GeneratedRegex(@"\s*\(.*?\)")]
@@ -92,5 +91,9 @@ public partial class RegexPatterns
     [GeneratedRegex(@"[\[\]\(\),]")]
     public static partial Regex BoundaryMarkers();
 
+    [GeneratedRegex(@"\s*[\(\[\{].*?[\)\]\}]\s*")]
+    public static partial Regex ParentheticalRemover();
 
+    [GeneratedRegex(@"\s+")]
+    public static partial Regex CondensedSpace();
 }

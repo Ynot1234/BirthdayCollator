@@ -1,8 +1,6 @@
-﻿using System.Text.RegularExpressions;
+﻿namespace BirthdayCollator.Server.Processing.Enrichment;
 
-namespace BirthdayCollator.Server.Processing.Enrichment;
-
-public sealed class PersonWikiEnricher(IHttpClientFactory httpFactory)
+public sealed partial class PersonWikiEnricher(IHttpClientFactory httpFactory)
 {
     private readonly HttpClient _http = httpFactory.CreateClient(HttpClients.Wikipedia);
 
@@ -80,9 +78,9 @@ public sealed class PersonWikiEnricher(IHttpClientFactory httpFactory)
         if (string.IsNullOrWhiteSpace(value))
             return value;
 
-        value = Regex.Replace(value, @"\s*[\(\[\{].*?[\)\]\}]\s*", " ");
+        value = RegexPatterns.ParentheticalRemover().Replace(value, " ");
 
-        return Regex.Replace(value, @"\s+", " ").Trim();
+        return RegexPatterns.CondensedSpace().Replace(value, " ").Trim();
     }
 
 

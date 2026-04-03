@@ -20,7 +20,7 @@ public static partial class WikiTextUtility
 
         string description = ExtractCoreDescription(targetLine);
         description = RemovePersonName(description, personName);
-        description = RemoveTitles(description);
+   //     description = RemoveTitles(description);
         description = RemovePrefixes(description);
         description = StripLeadingVerbs(description);
 
@@ -147,7 +147,7 @@ public static partial class WikiTextUtility
         if (nameIndex == -1 || nameEnd == -1)
         {
             Log("FAILURE: Could not anchor name in text.");
-            return null;
+            return TryFallbackParenthetical(normalizedText);
         }
 
         Log($"FINAL NAME INDEX: {nameIndex}");
@@ -159,7 +159,7 @@ public static partial class WikiTextUtility
         if (parenStart == -1)
         {
             Log("FAILURE: '(' not found after name.");
-            return null;
+            return TryFallbackParenthetical(normalizedText);
         }
 
         int distance = parenStart - nameEnd;
@@ -170,7 +170,7 @@ public static partial class WikiTextUtility
         if (distance > MaxDistance)
         {
             Log("FAILURE: '(' too far from name.");
-            return null;
+            return TryFallbackParenthetical(normalizedText);
         }
 
         int parenEnd = normalizedText.IndexOf(')', parenStart + 1);
@@ -179,7 +179,7 @@ public static partial class WikiTextUtility
         if (parenEnd == -1)
         {
             Log("FAILURE: ')' not found.");
-            return null;
+            return TryFallbackParenthetical(normalizedText);
         }
 
         string candidate = normalizedText.Substring(parenStart, parenEnd - parenStart + 1);
@@ -195,8 +195,47 @@ public static partial class WikiTextUtility
         }
 
         Log("FAILURE: Regex did not match.");
+        return TryFallbackParenthetical(normalizedText);
+    }
+
+    private static string? TryFallbackParenthetical(string normalizedText)
+    {
+        Log("FALLBACK: Attempting first parenthetical with year pattern.");
+
+        int firstParen = normalizedText.IndexOf('(');
+        Log($"FALLBACK FIRST '(' INDEX: {firstParen}");
+
+        if (firstParen == -1)
+        {
+            Log("FALLBACK FAILURE: No '(' found.");
+            return null;
+        }
+
+        int firstParenEnd = normalizedText.IndexOf(')', firstParen + 1);
+        Log($"FALLBACK FIRST ')' INDEX: {firstParenEnd}");
+
+        if (firstParenEnd == -1)
+        {
+            Log("FALLBACK FAILURE: No ')' found.");
+            return null;
+        }
+
+        string candidate = normalizedText.Substring(firstParen, firstParenEnd - firstParen + 1);
+        Log($"FALLBACK CANDIDATE: {candidate}");
+
+        bool matches = RegexPatterns.YearIndicator().IsMatch(candidate);
+        Log($"FALLBACK REGEX MATCH: {matches}");
+
+        if (matches)
+        {
+            Log("FALLBACK SUCCESS: Returning fallback candidate.");
+            return candidate;
+        }
+
+        Log("FALLBACK FAILURE: Regex did not match.");
         return null;
     }
+
 
     private static string NormalizeApostrophes(string s)
     {
