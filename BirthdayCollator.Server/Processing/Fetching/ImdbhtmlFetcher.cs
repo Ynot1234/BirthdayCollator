@@ -2,7 +2,7 @@
 
 namespace BirthdayCollator.Server.Processing.Fetching;
 
-public sealed class ImdbFetcher(HttpClient http)
+public sealed class ImdbFetcher(HttpClient http, IConfiguration config)
 {
     public async Task<string> FetchRangeAsync(string yearRange, int month, int day, CancellationToken ct)
     {
@@ -19,8 +19,9 @@ public sealed class ImdbFetcher(HttpClient http)
             return await File.ReadAllTextAsync(filePath, ct);
         }
 
-        string _apiKey = "FJOFF66F2WA3KD4E10UY5FZZUXNQWT6983G24EZE68LV8TTLUOFL6IUTT80ZFMQAVDRPMGAN89ZFFSD8";
 
+        var _apiKey = config["ScrapingBee:ApiKey"];
+     
         try
         {
             string targetUrl = $"{Urls.ImdbBase}/search/name/?" +
