@@ -2,8 +2,11 @@
 
 namespace BirthdayCollator.Server.Processing.Enrichment;
 
-public sealed class PersonAIEnricher(IBioService ai)
+public sealed class PersonAIEnricher(IBioService ai, IConfiguration config)
 {
+    private readonly Dictionary<string, int> _birthYearCache = [];
+
+
     public static string NormalizeDescription(string text)
     {
         if (string.IsNullOrWhiteSpace(text))
@@ -25,27 +28,34 @@ public sealed class PersonAIEnricher(IBioService ai)
     }
     public async Task EnrichAndFilterPeopleAsync(List<Person> people, string? apiKey = null)
     {
-        var candidates = people.Where(p => p.BirthYear == 1).ToList();
+        apiKey ??= config["OpenAI:ApiKey"];
 
-        if (candidates.Count > 0)
+        foreach (var person in people)
         {
-            var tasks = candidates.Select(async person =>
+            if (_birthYearCache.TryGetValue(person.Name, out int cachedYear))
+            {
+                person.BirthYear = cachedYear;
+                continue;
+            }
+
+            if (person.BirthYear == 1)
             {
                 string result = await ai.ExtractBirthYearAsync(person.Name, person.Description, apiKey);
 
                 if (int.TryParse(result, out int validYear) && validYear > 1)
                 {
                     person.BirthYear = validYear;
+                    _birthYearCache[person.Name] = validYear; 
                 }
                 else
                 {
-                    Console.WriteLine($"Removing: {person.Name} - AI returned '{result}'");
+                    person.BirthYear = 2; 
+                    _birthYearCache[person.Name] = 2; 
                 }
-            });
-
-            await Task.WhenAll(tasks);
+            }
         }
 
-        people.RemoveAll(p => p.BirthYear == 1);
+        people.RemoveAll(p => p.BirthYear == 1 || p.BirthYear == 2);
     }
+
 }

@@ -16,10 +16,6 @@ public sealed class PersonPipeline(
 {
     public async Task<List<Person>> Process(List<Person> people, CancellationToken token)
     {
-
-        people = [.. people.Where(p => p.Name?.Contains("Norlund", StringComparison.OrdinalIgnoreCase) == true)];
-
-
         people = deduper.Deduplicate(people);
         people = cleaner.CleanPersons(people);
         people = await filter.FilterLivingAsync(people, token);
