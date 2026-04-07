@@ -15,8 +15,11 @@
         {
             if (!opt.EnableGenarianParser) return false;
 
-            int cutoff = date.Year - 90;
-            return years.GetYears().Any(y => int.TryParse(y, out int yr) && yr <= cutoff);
+            int cutoff = DateTime.Now.Year - 90; 
+            var genarianYears = years.GetGenarianYears();
+
+            return genarianYears.Any(y => int.TryParse(y, out int yr) && yr <= cutoff);
         }
+
     }
 }

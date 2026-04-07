@@ -44,13 +44,25 @@ public sealed partial class PersonDeduper
 
     private static bool IsSamePerson(string name1, string name2)
     {
-        var set1 = CanonicalTokens(name1);
-        var set2 = CanonicalTokens(name2);
+        var set1 = CanonicalTokens(name1).ToArray();
+        var set2 = CanonicalTokens(name2).ToArray();
 
-        int overlap = set1.Intersect(set2, StringComparer.OrdinalIgnoreCase).Count();
+        if (set1.Length == 2 && set2.Length == 2)
+        {
+            return string.Equals(
+                set1[1],
+                set2[1],
+                StringComparison.OrdinalIgnoreCase
+            );
+        }
+
+        int overlap = set1
+            .Intersect(set2, StringComparer.OrdinalIgnoreCase)
+            .Count();
 
         return overlap >= 2;
     }
+
 
     private static string CanonicalNameKey(string name)
     {
@@ -100,12 +112,13 @@ public sealed partial class PersonDeduper
     {
         if (string.IsNullOrEmpty(p.SourceSlug)) return 0;
 
-        return p.SourceSlug.ToLowerInvariant() switch
+        return p.SourceSlug switch
         {
-            "on-this-day" => 1,
-            "imdb" => 2,
-            "generarians" => 3,
+            var s when s.Equals("OnThisDay", StringComparison.OrdinalIgnoreCase) => 1,
+            var s when s.Equals("imdb", StringComparison.OrdinalIgnoreCase) => 2,
+            var s when s.Equals("generarians", StringComparison.OrdinalIgnoreCase) => 3,
             _ => 4
         };
+
     }
 }
