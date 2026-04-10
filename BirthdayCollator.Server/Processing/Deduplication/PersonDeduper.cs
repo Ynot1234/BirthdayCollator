@@ -114,9 +114,9 @@ public sealed partial class PersonDeduper
 
         return p.SourceSlug switch
         {
-            var s when s.Equals("OnThisDay", StringComparison.OrdinalIgnoreCase) => 1,
-            var s when s.Equals("imdb", StringComparison.OrdinalIgnoreCase) => 2,
-            var s when s.Equals("generarians", StringComparison.OrdinalIgnoreCase) => 3,
+            var s when s.Equals(Slugs.OnThisDay, StringComparison.OrdinalIgnoreCase) => 1,
+            var s when s.Equals(Slugs.Imdb, StringComparison.OrdinalIgnoreCase) => 2,
+            var s when s.Equals(Slugs.Genarians, StringComparison.OrdinalIgnoreCase) => 3,
             _ => 4
         };
 
