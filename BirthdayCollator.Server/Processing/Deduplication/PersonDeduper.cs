@@ -44,6 +44,13 @@ public sealed partial class PersonDeduper
 
     private static bool IsSamePerson(string name1, string name2)
     {
+
+        if (string.IsNullOrWhiteSpace(name1) || string.IsNullOrWhiteSpace(name2))
+            return false;
+
+        if (string.Equals(name1, name2, StringComparison.OrdinalIgnoreCase))
+            return true;
+
         var set1 = CanonicalTokens(name1).ToArray();
         var set2 = CanonicalTokens(name2).ToArray();
 
