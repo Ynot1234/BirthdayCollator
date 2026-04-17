@@ -1,4 +1,6 @@
-﻿namespace BirthdayCollator.Server.Processing.Enrichment;
+﻿using System.Collections.Concurrent;
+
+namespace BirthdayCollator.Server.Processing.Enrichment;
 
 public sealed partial class PersonWikiEnricher(IHttpClientFactory httpFactory)
 {
@@ -6,11 +8,18 @@ public sealed partial class PersonWikiEnricher(IHttpClientFactory httpFactory)
 
     public async Task<List<Person>> EnrichOnThisDayUrlsAsync(List<Person> people, CancellationToken ct)
     {
-        var targets = people.Where(p => string.Equals(p.SourceSlug, Slugs.OnThisDay, StringComparison.OrdinalIgnoreCase)).ToList();
+        var targets = people
+            .Where(p => string.Equals(p.SourceSlug, Slugs.OnThisDay, StringComparison.OrdinalIgnoreCase))
+            .ToList();
 
-        if (targets.Count is 0) return people;
+        if (targets.Count == 0)
+            return people;
 
-        ParallelOptions options = new() { MaxDegreeOfParallelism = 4, CancellationToken = ct };
+        ParallelOptions options = new()
+        {
+            MaxDegreeOfParallelism = 4,
+            CancellationToken = ct
+        };
 
         await Parallel.ForEachAsync(targets, options, async (p, token) =>
         {
@@ -27,8 +36,23 @@ public sealed partial class PersonWikiEnricher(IHttpClientFactory httpFactory)
             p.Url = UrlNormalization.Fix(p.Url, p.Description, p.Name);
         }
 
+        HashSet<string> seen = new(StringComparer.OrdinalIgnoreCase);
+
+        people.RemoveAll(p =>
+        {
+            if (string.IsNullOrWhiteSpace(p.Url))
+                return false;
+
+            if (seen.Contains(p.Url))
+                return true; 
+
+            seen.Add(p.Url);
+            return false;
+        });
+
         return people;
     }
+
 
     private async Task<(string? Title, string? Url)> ResolveWikiMatchAsync(string name, string description, CancellationToken ct)
     {
