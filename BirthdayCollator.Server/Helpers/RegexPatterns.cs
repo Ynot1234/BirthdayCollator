@@ -26,9 +26,15 @@ public partial class RegexPatterns
     public static partial Regex CollapseWhitespace();
 
     [GeneratedRegex(
-    @"(?:[\u2013\u2014-]\s*(?:\d{1,2}\s+\w+\s+)?(?<deathYear>1[0-9]{3}|20[0-9]{2}))|died\s+(?<diedYear>1[0-9]{3}|20[0-9]{2})",
-    RegexOptions.IgnoreCase)]
+     @"(?:[-\p{Pd}]\s*.*?(?<deathYear>1[0-9]{3}|20[0-9]{2}))|died\s+(?<diedYear>1[0-9]{3}|20[0-9]{2})",
+     RegexOptions.IgnoreCase | RegexOptions.Singleline)]
     public static partial Regex DeathYearMarker();
+
+
+
+
+
+
 
     [GeneratedRegex(@"\s*\(.*?\)")]
     public static partial Regex DisplayCleaner();
