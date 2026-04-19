@@ -6,6 +6,7 @@ public interface IYearRangeProvider
     IReadOnlyList<string> GetLeapYears();
     IReadOnlyList<string> GetDefaultYears();
     IReadOnlyList<string> GetGenarianYears();
+    IReadOnlyList<int> GetOldRangeYears();
     void ForceYears(params string[] years);
     void ForceYear(int year);
     void ClearYear();

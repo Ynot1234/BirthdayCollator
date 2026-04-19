@@ -8,27 +8,61 @@ public sealed class ImdbSource(
     public async Task<List<Person>> GetPeopleAsync(DateTime date, CancellationToken ct)
     {
         int currentYear = DateTime.Today.Year;
-        int[] milestones = [80, 70, 60];
 
-        List<(int Start, int End)> batches =
-        [
-            (currentYear - 105, currentYear - 85),
-        .. milestones.Select(age => (currentYear - age, currentYear - age))
-        ];
+        List<int> overrideYears =
+                   [.. yearRangeProvider.GetYears()
+                    .Select(y => int.TryParse(y, out int yr) ? yr : (int?)null)
+                    .Where(yr => yr.HasValue)
+                    .Select(yr => yr!.Value)];
 
-        var tasks = batches.Select(range =>
-            FetchRangeAndParse(range.Start, range.End, date.Month, date.Day, ct));
+
+        var oldRangeYears = yearRangeProvider.GetOldRangeYears();
+        int youngest = oldRangeYears[0];
+        int oldest = oldRangeYears[^1];
+        
+
+
+        List<(int Start, int End)> batches;
+
+        if (overrideYears.Count > 0)
+        {
+            bool anyInOldRange = overrideYears.Any(y => oldRangeYears.Contains(y));
+
+            if (anyInOldRange)
+            {
+                batches = [(oldest, youngest)];
+            }
+            else
+            {
+                batches = [.. overrideYears.Select(y => (y, y))];
+            }
+        }
+        else
+        {
+            List<int> defaultYears = [.. yearRangeProvider.GetYears().Select(y => int.Parse(y))];
+            batches = [.. defaultYears.Select(y => (y, y))];
+        }
+
+        var tasks = batches.Select(range => FetchRangeAndParse(range.Start, range.End, date.Month, date.Day, ct));
 
         var results = await Task.WhenAll(tasks);
         List<Person> allPeople = [.. results.SelectMany(p => p)];
 
-        if (date is { Month: 2, Day: 29 })
+        if (date.Month == 2 && date.Day == 29)
         {
-            HashSet<int> leapYears = [.. yearRangeProvider.GetLeapYears()
-            .Select(y => int.TryParse(y, out int year) ? year : 0)
-            .Where(y => y > 0)];
+            HashSet<int> leapYears =
+            [
+                .. yearRangeProvider.GetLeapYears()
+                .Select(y => int.TryParse(y, out int yr) ? yr : 0)
+                .Where(yr => yr > 0)
+            ];
 
-            return [.. allPeople.Where(p => leapYears.Contains(p.BirthYear))];
+            allPeople = [.. allPeople.Where(p => leapYears.Contains(p.BirthYear))];
+        }
+
+        if (overrideYears.Count > 0)
+        {
+            allPeople = [.. allPeople.Where(p => overrideYears.Contains(p.BirthYear))];
         }
 
         return allPeople;

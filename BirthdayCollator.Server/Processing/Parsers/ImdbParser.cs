@@ -15,7 +15,7 @@ public sealed partial class ImdbParser(PersonFactory personFactory)
             ? HtmlEntity.DeEntitize(string.Join("\n", lineNodes.Select(n => n.InnerText)))
             : HtmlEntity.DeEntitize(html);
 
-        var match = Regex.Match(cleanCode, @"<script[^>]*id=""__NEXT_DATA__""[^>]*>(.*?)</script>", RegexOptions.Singleline);
+        var match = RegexPatterns.ExtractNextDataJson().Match(cleanCode);
 
         if (match.Success)
         {
@@ -42,7 +42,6 @@ public sealed partial class ImdbParser(PersonFactory personFactory)
         {
             JsonElement data = item.TryGetProperty("node", out var node) ? node : item;
 
-            // Simplified image check
             bool hasImage = (data.TryGetProperty("primaryImage", out var img) && img.ValueKind != JsonValueKind.Null) ||
                             (data.TryGetProperty("image", out var oldImg) && oldImg.ValueKind != JsonValueKind.Null);
 
@@ -241,6 +240,5 @@ public sealed partial class ImdbParser(PersonFactory personFactory)
         }
         return desc;
     }
-
-    #endregion
+#endregion
 }

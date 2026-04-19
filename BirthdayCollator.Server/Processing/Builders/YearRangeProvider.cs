@@ -11,8 +11,16 @@ public sealed class YearRangeProvider : IYearRangeProvider
         int cur = DateTime.Now.Year;
         IEnumerable<int> targetAges = first.Concat(Enumerable.Range(85, 21));
         _defaults = [.. targetAges.Select(age => (cur - age).ToString()).OrderByDescending(y => y)];
-        int startYear = cur - 90 - 10;
+        int startYear = cur - 100;
         _genarianYears = [.. Enumerable.Range(startYear, 11).Select(y => y.ToString()).Reverse(), $"{startYear}-pre"];
+    }
+
+    public IReadOnlyList<int> GetOldRangeYears()
+    {
+        int cur = DateTime.Now.Year;
+        return [.. Enumerable.Range(85, 21)
+            .Select(age => cur - age)
+            .OrderByDescending(y => y)];
     }
 
     public string? CurrentOverrideYear => _overrides.Count == 1 ? _overrides[0] : null;

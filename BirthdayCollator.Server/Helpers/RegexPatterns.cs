@@ -102,4 +102,8 @@ public partial class RegexPatterns
 
     [GeneratedRegex(@"\s+")]
     public static partial Regex CondensedSpace();
+
+    [GeneratedRegex(@"<script[^>]*id=""__NEXT_DATA__""[^>]*>(.*?)</script>", RegexOptions.Singleline)]
+    public static partial Regex ExtractNextDataJson();
+
 }
