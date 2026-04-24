@@ -16,11 +16,15 @@ public sealed class PersonPipeline(
 {
     public async Task<List<Person>> Process(List<Person> people, CancellationToken token)
     {
+
+        //people = [.. people.Where(p => string.Equals(p.Name, "?", StringComparison.OrdinalIgnoreCase))];
+
+
         people = deduper.Deduplicate(people);
         people = cleaner.CleanPersons(people);
+        people = await enricher.EnrichOnThisDayUrlsAsync(people, token);
         people = await filter.FilterLivingAsync(people, token);
         people = nearDupes.RemoveNearDuplicates(people);
-        people =  await enricher.EnrichOnThisDayUrlsAsync(people, token);
         await aiEnricher.EnrichAndFilterPeopleAsync(people);
         people = sorter.SortPersons(people);
         return people;
