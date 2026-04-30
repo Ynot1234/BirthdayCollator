@@ -1,4 +1,5 @@
 ﻿using System.Text;
+using System.Globalization;
 
 namespace BirthdayCollator.Server.Processing.Deduplication;
 
@@ -6,79 +7,86 @@ public sealed partial class PersonDeduper
 {
     public List<Person> Deduplicate(List<Person> people)
     {
-        if (people.Count <= 1) return people;
+        if (people.Count <= 1)
+            return people;
 
-        Dictionary<string, Person> uniqueMap = [];
+        List<Person> result = [];
 
         foreach (var p in people)
         {
-            string key = CanonicalNameKey(p.Name);
+            Person? bestMatch = null;
+            int bestIndex = -1;
 
-            if (!uniqueMap.TryGetValue(key, out var existing))
+            for (int i = 0; i < result.Count; i++)
             {
-                uniqueMap[key] = p;
-                continue;
+                var existing = result[i];
+
+                if (IsSamePerson(existing.Name, p.Name))
+                {
+                    bestMatch = existing;
+                    bestIndex = i;
+                    break;
+                }
             }
 
-            if (IsSamePerson(existing.Name, p.Name))
+            if (bestMatch is null)
             {
-                int scoreP = GetScore(p);
-                int scoreExisting = GetScore(existing);
-
-                bool isPBetter = scoreP > scoreExisting ||
-                                (scoreP == scoreExisting && (p.Description?.Length ?? 0) > (existing.Description?.Length ?? 0));
-
-                if (isPBetter)
-                {
-                    uniqueMap[key] = p;
-                }
+                result.Add(p);
             }
             else
             {
-                uniqueMap[$"{key}-{Guid.NewGuid()}"] = p;
+                int scoreP = GetScore(p);
+                int scoreExisting = GetScore(bestMatch);
+
+                bool isPBetter =
+                    scoreP > scoreExisting ||
+                    (scoreP == scoreExisting &&
+                     (p.Description?.Length ?? 0) > (bestMatch.Description?.Length ?? 0));
+
+                if (isPBetter)
+                    result[bestIndex] = p;
             }
         }
 
-        return [.. uniqueMap.Values];
+        return result;
     }
 
     private static bool IsSamePerson(string name1, string name2)
     {
-
         if (string.IsNullOrWhiteSpace(name1) || string.IsNullOrWhiteSpace(name2))
             return false;
 
         if (string.Equals(name1, name2, StringComparison.OrdinalIgnoreCase))
             return true;
 
-        var set1 = CanonicalTokens(name1).ToArray();
-        var set2 = CanonicalTokens(name2).ToArray();
+        var t1 = CanonicalTokens(name1);
+        var t2 = CanonicalTokens(name2);
 
-        if (set1.Length == 2 && set2.Length == 2)
-        {
-            return string.Equals(
-                set1[1],
-                set2[1],
-                StringComparison.OrdinalIgnoreCase
-            );
-        }
+        if (t1.Length == 0 || t2.Length == 0)
+            return false;
 
-        int overlap = set1
-            .Intersect(set2, StringComparer.OrdinalIgnoreCase)
-            .Count();
+        var set1 = t1.ToHashSet(StringComparer.OrdinalIgnoreCase);
+        var set2 = t2.ToHashSet(StringComparer.OrdinalIgnoreCase);
 
-        return overlap >= 2;
+        int overlap = set1.Intersect(set2, StringComparer.OrdinalIgnoreCase).Count();
+        if (overlap >= 2)
+            return true;
+
+        string s1 = t1[^1];
+        string s2 = t2[^1];
+
+        if (!string.Equals(s1, s2, StringComparison.OrdinalIgnoreCase))
+            return false;
+
+        string f1 = t1[0];
+        string f2 = t2[0];
+
+        if (f1.StartsWith(f2, StringComparison.OrdinalIgnoreCase) ||
+            f2.StartsWith(f1, StringComparison.OrdinalIgnoreCase))
+            return true;
+
+        return false;
     }
-
-
-    private static string CanonicalNameKey(string name)
-    {
-        string clean = ExtractNameOnly(name);
-
-        var tokens = CanonicalTokens(clean);
-        return tokens.Length == 0 ? "unknown" : tokens[^1].ToLowerInvariant();
-    }
-
 
     private static string ExtractNameOnly(string raw)
     {
@@ -89,10 +97,10 @@ public sealed partial class PersonDeduper
         return raw.Trim();
     }
 
-
     private static string[] CanonicalTokens(string s)
     {
-        if (string.IsNullOrWhiteSpace(s)) return [];
+        if (string.IsNullOrWhiteSpace(s))
+            return [];
 
         string clean = RegexPatterns.BoundaryMarkers().Replace(s, " ");
         clean = clean.Normalize(NormalizationForm.FormD);
@@ -103,21 +111,21 @@ public sealed partial class PersonDeduper
             if (CharUnicodeInfo.GetUnicodeCategory(c) != UnicodeCategory.NonSpacingMark)
             {
                 if (char.IsLetterOrDigit(c) || char.IsWhiteSpace(c))
-                {
                     sb.Append(c);
-                }
             }
         }
 
-        return [.. sb.ToString()
+        return sb.ToString()
             .Split(' ', StringSplitOptions.RemoveEmptyEntries)
             .Where(t => t.Length > 2)
-            .Select(t => t.ToLowerInvariant())];
+            .Select(t => t.ToLowerInvariant())
+            .ToArray();
     }
 
     private static int GetScore(Person p)
     {
-        if (string.IsNullOrEmpty(p.SourceSlug)) return 0;
+        if (string.IsNullOrEmpty(p.SourceSlug))
+            return 0;
 
         return p.SourceSlug switch
         {
@@ -126,6 +134,5 @@ public sealed partial class PersonDeduper
             var s when s.Equals(Slugs.Genarians, StringComparison.OrdinalIgnoreCase) => 3,
             _ => 4
         };
-
     }
 }

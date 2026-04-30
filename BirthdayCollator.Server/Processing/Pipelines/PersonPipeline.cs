@@ -17,8 +17,7 @@ public sealed class PersonPipeline(
     public async Task<List<Person>> Process(List<Person> people, CancellationToken token)
     {
 
-        //people = [.. people.Where(p => string.Equals(p.Name, "?", StringComparison.OrdinalIgnoreCase))];
-
+      // people = [.. people.Where(p => p.Name.Contains("", StringComparison.OrdinalIgnoreCase))];
 
         people = deduper.Deduplicate(people);
         people = cleaner.CleanPersons(people);
