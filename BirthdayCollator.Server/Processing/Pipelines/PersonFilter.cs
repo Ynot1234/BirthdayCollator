@@ -19,18 +19,18 @@ public sealed partial class PersonFilter(WikiHtmlFetcher fetcher)
         {
             if (RegexPatterns.ExcludeDied().IsMatch(p.Description)) return;
 
+            if (p.Url.Contains("imdb", StringComparison.OrdinalIgnoreCase))
+            {
+                livingPeople.Add(p);
+                return;
+            }
+
 
             if (await IsLikelyDeadAsync(p, token))
             {
                 return;
             }
 
-
-            if (p.Url.Contains("imdb", StringComparison.OrdinalIgnoreCase))
-            {
-                livingPeople.Add(p);
-                return;
-            }
 
             bool hasWiki = p.Url.Contains("wikipedia.org", StringComparison.OrdinalIgnoreCase);
 

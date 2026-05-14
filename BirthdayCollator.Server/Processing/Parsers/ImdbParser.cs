@@ -67,13 +67,6 @@ public sealed partial class ImdbParser(PersonFactory personFactory)
             string secondary = GetDeepString(data, "secondaryText") ?? "";
 
             string searchContext = $"{secondary} {bio}";
-
-            string[] deathKeywords = ["died ", "died in", "passed away", "deceased", "death"];
-            if (deathKeywords.Any(k => searchContext.Contains(k, StringComparison.OrdinalIgnoreCase)))
-            {
-                continue;
-            }
-
             int? birthYear = null;
             var yearMatches = RegexPatterns.YearCandidate().Matches(searchContext);
             foreach (Match m in yearMatches)
