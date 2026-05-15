@@ -26,7 +26,7 @@ public sealed class YearRangeProvider : IYearRangeProvider
     public string? CurrentOverrideYear => _overrides.Count == 1 ? _overrides[0] : null;
     public string CurrentOverrideSuffix { get; private set; } = string.Empty;
     public bool IncludeAll { get; private set; }
-    private static readonly int[] first = [60, 70, 80];
+    private static readonly int[] first = [50, 60, 70, 80];
 
     public void ForceYear(int year) { _overrides.Clear(); _overrides.Add(year.ToString()); }
     public void ForceYears(params string[] years) { _overrides.Clear(); _overrides.AddRange(years); }

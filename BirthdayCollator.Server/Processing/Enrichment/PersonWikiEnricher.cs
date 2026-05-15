@@ -8,11 +8,7 @@ public sealed partial class PersonWikiEnricher(IHttpClientFactory httpFactory)
 
     public async Task<List<Person>> EnrichOnThisDayUrlsAsync(List<Person> people, CancellationToken ct)
     {
-        var targets = people
-            .Where(p => string.Equals(p.SourceSlug, Slugs.OnThisDay, StringComparison.OrdinalIgnoreCase))
-            .ToList();
-
-        if (targets.Count == 0)
+        if (people.Count == 0)
             return people;
 
         ParallelOptions options = new()
@@ -21,7 +17,7 @@ public sealed partial class PersonWikiEnricher(IHttpClientFactory httpFactory)
             CancellationToken = ct
         };
 
-        await Parallel.ForEachAsync(targets, options, async (p, token) =>
+        await Parallel.ForEachAsync(people, options, async (p, token) =>
         {
             var (title, url) = await ResolveWikiMatchAsync(p.Name, p.Description, token);
 
@@ -44,7 +40,7 @@ public sealed partial class PersonWikiEnricher(IHttpClientFactory httpFactory)
                 return false;
 
             if (seen.Contains(p.Url))
-                return true; 
+                return true;
 
             seen.Add(p.Url);
             return false;

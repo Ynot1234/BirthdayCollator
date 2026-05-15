@@ -108,12 +108,6 @@ public sealed partial class ImdbParser(PersonFactory personFactory)
             int? birthYear = null;
             string allText = node.InnerText;
 
-            string[] deathKeywords = ["died ", "died in", "passed away", "deceased", "death"];
-            if (deathKeywords.Any(k => allText.Contains(k, StringComparison.OrdinalIgnoreCase)))
-            {
-                continue;
-            }
-
             var yearMatches = RegexPatterns.YearCandidate().Matches(allText);
 
             foreach (Match m in yearMatches)
